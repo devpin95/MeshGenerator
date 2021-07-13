@@ -10,9 +10,11 @@ public class MeshGenerator : MonoBehaviour
     private Vector3[] _vertices;
     private int[] _triangles;
 
+    private List<GameObject> _visualVerts = new List<GameObject>();
+
     public int xSize = 2;
     public int zSize = 2;
-    
+
     // Start is called before the first frame update
     void Start()
     {
@@ -41,6 +43,8 @@ public class MeshGenerator : MonoBehaviour
 
         _mesh.vertices = _vertices;
         _mesh.triangles = _triangles;
+        
+        _mesh.RecalculateNormals();
     }
 
     public void OnDrawGizmos()
@@ -98,10 +102,31 @@ public class MeshGenerator : MonoBehaviour
                 trilist.Add(tl);
                 trilist.Add(tr);
                 
-                Debug.Log("Creating triangles at <" + bl + ", " + tl + ", " + br + "> and <" + br + ", " + tl + ", " + tr + ">");
+                // Debug.Log("Creating triangles at <" + bl + ", " + tl + ", " + br + "> and <" + br + ", " + tl + ", " + tr + ">");
             }
         }
         
         _triangles = trilist.ToArray();
+    }
+
+    public void ShowVisualVertices(bool show)
+    {
+        if (show)
+        {
+            foreach (var vert in _vertices)
+            {
+                var obj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                obj.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
+                obj.transform.position = vert;
+                _visualVerts.Add(obj);
+            }
+        }
+        else
+        {
+            foreach (var vert in _visualVerts)
+            {
+                Destroy(vert);
+            }
+        }
     }
 }

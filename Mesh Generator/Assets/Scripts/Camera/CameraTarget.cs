@@ -20,4 +20,9 @@ public class CameraTarget : MonoBehaviour
     {
         transform.LookAt(target.transform.position + _targetOffset);
     }
+
+    public Vector3 GetOffset()
+    {
+        return _targetOffset;
+    }
 }
