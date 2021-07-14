@@ -33,6 +33,14 @@ public class @Actions : IInputActionCollection, IDisposable
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """"
+                },
+                {
+                    ""name"": ""Drag Orbit"",
+                    ""type"": ""Value"",
+                    ""id"": ""a7e37a3f-b191-4017-b0c8-2c89e845a058"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -57,6 +65,17 @@ public class @Actions : IInputActionCollection, IDisposable
                     ""action"": ""Click"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""eacc10de-3970-4d10-af68-52a25267fd30"",
+                    ""path"": ""<Mouse>/delta"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Drag Orbit"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -67,6 +86,7 @@ public class @Actions : IInputActionCollection, IDisposable
         m_CameraControl = asset.FindActionMap("Camera Control", throwIfNotFound: true);
         m_CameraControl_Zoom = m_CameraControl.FindAction("Zoom", throwIfNotFound: true);
         m_CameraControl_Click = m_CameraControl.FindAction("Click", throwIfNotFound: true);
+        m_CameraControl_DragOrbit = m_CameraControl.FindAction("Drag Orbit", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -118,12 +138,14 @@ public class @Actions : IInputActionCollection, IDisposable
     private ICameraControlActions m_CameraControlActionsCallbackInterface;
     private readonly InputAction m_CameraControl_Zoom;
     private readonly InputAction m_CameraControl_Click;
+    private readonly InputAction m_CameraControl_DragOrbit;
     public struct CameraControlActions
     {
         private @Actions m_Wrapper;
         public CameraControlActions(@Actions wrapper) { m_Wrapper = wrapper; }
         public InputAction @Zoom => m_Wrapper.m_CameraControl_Zoom;
         public InputAction @Click => m_Wrapper.m_CameraControl_Click;
+        public InputAction @DragOrbit => m_Wrapper.m_CameraControl_DragOrbit;
         public InputActionMap Get() { return m_Wrapper.m_CameraControl; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -139,6 +161,9 @@ public class @Actions : IInputActionCollection, IDisposable
                 @Click.started -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnClick;
                 @Click.performed -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnClick;
                 @Click.canceled -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnClick;
+                @DragOrbit.started -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnDragOrbit;
+                @DragOrbit.performed -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnDragOrbit;
+                @DragOrbit.canceled -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnDragOrbit;
             }
             m_Wrapper.m_CameraControlActionsCallbackInterface = instance;
             if (instance != null)
@@ -149,6 +174,9 @@ public class @Actions : IInputActionCollection, IDisposable
                 @Click.started += instance.OnClick;
                 @Click.performed += instance.OnClick;
                 @Click.canceled += instance.OnClick;
+                @DragOrbit.started += instance.OnDragOrbit;
+                @DragOrbit.performed += instance.OnDragOrbit;
+                @DragOrbit.canceled += instance.OnDragOrbit;
             }
         }
     }
@@ -157,5 +185,6 @@ public class @Actions : IInputActionCollection, IDisposable
     {
         void OnZoom(InputAction.CallbackContext context);
         void OnClick(InputAction.CallbackContext context);
+        void OnDragOrbit(InputAction.CallbackContext context);
     }
 }
