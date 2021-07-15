@@ -40,6 +40,8 @@ public class MeshGenerator : MonoBehaviour
     public int xSize = 2;
     public int zSize = 2;
 
+    public HeightMapList maps;
+
     private HeightMapTypes _mapType = HeightMapTypes.Plane;
 
     private float _remapMin = -5;
@@ -47,9 +49,7 @@ public class MeshGenerator : MonoBehaviour
 
     private float _perlinNoiseMin = 0;
     private float _perlinNoiseMax = 1;
-
-    public int visualVerticeThreshold = 10000;
-
+    
     private float startTime;
     private float endTime;
     private float deltaTime;
@@ -125,20 +125,27 @@ public class MeshGenerator : MonoBehaviour
             {
                 Vector3 newvert = new Vector3(x, 0, z);
 
+                float y = 0;
+                
                 switch (_mapType)
                 {
                     case HeightMapTypes.PerlinNoise:
-                        float y = SamplePerlinNoise(x, z);
-                        newvert.y = y;
+                        y = SamplePerlinNoise(x, z);
+                        break;
+                    case HeightMapTypes.ImageMap:
+                        foreach (var map in maps.mapList)
+                        {
+                            y += SampleHeightMap(x, z, map);
+                        }
                         break;
                     case HeightMapTypes.Plane:
                     case HeightMapTypes.SimpleNoise:
-                    case HeightMapTypes.ImageMap:
                     default:
                         newvert.y = 0;
                         break;
                 }
                 
+                newvert.y = y;
                 vertlist.Add(newvert);
             }
         }
@@ -213,6 +220,11 @@ public class MeshGenerator : MonoBehaviour
         zSize = data.dimension;
 
         _mapType = data.mapType;
+
+        if (_mapType == HeightMapTypes.ImageMap)
+        {
+            Debug.Log("Extracting height from " + maps.mapList.Count + " maps");
+        }
         
         _perlinNoiseMin = data.perlinNoiseSampleMin;
         _perlinNoiseMax = data.perlinNoiseSampleMax;
@@ -250,6 +262,19 @@ public class MeshGenerator : MonoBehaviour
         // Debug.Log("(" + x + ", " + z + "), " + "(" + _remapMin + ", " + _remapMax + "), (" + _perlinNoiseMin + ", " + _perlinNoiseMax + "), (" + xSamplePoint + ", " + zSamplePoint + ") = " + rmperlin);
 
         return rmperlin;
+    }
+
+    public float SampleHeightMap(int x, int z, LayerData data)
+    {
+        float y = 0;
+        int xSamplePoint = (int)Remap(x, 0, xSize, 0, data.map.width);
+        int zSamplePoint = (int)Remap(z, 0, zSize, 0, data.map.height);
+
+        y = data.map.GetPixel(xSamplePoint, zSamplePoint).grayscale;
+
+        float yremap = Remap(y, 0, 1, data.remapMin, data.remapMax);
+
+        return yremap;
     }
     
     public float Remap (float from, float fromMin, float fromMax, float toMin,  float toMax) {

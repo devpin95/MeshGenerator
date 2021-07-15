@@ -41,6 +41,14 @@ public class @Actions : IInputActionCollection, IDisposable
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
                     ""interactions"": """"
+                },
+                {
+                    ""name"": ""Track Mouse"",
+                    ""type"": ""Value"",
+                    ""id"": ""f143805a-743b-4b86-94ad-4f965d3199c2"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -76,6 +84,17 @@ public class @Actions : IInputActionCollection, IDisposable
                     ""action"": ""Drag Orbit"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""58b77e7c-c7d2-4b13-bd66-8a8e98dfd73d"",
+                    ""path"": """",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Track Mouse"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -87,6 +106,7 @@ public class @Actions : IInputActionCollection, IDisposable
         m_CameraControl_Zoom = m_CameraControl.FindAction("Zoom", throwIfNotFound: true);
         m_CameraControl_Click = m_CameraControl.FindAction("Click", throwIfNotFound: true);
         m_CameraControl_DragOrbit = m_CameraControl.FindAction("Drag Orbit", throwIfNotFound: true);
+        m_CameraControl_TrackMouse = m_CameraControl.FindAction("Track Mouse", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -139,6 +159,7 @@ public class @Actions : IInputActionCollection, IDisposable
     private readonly InputAction m_CameraControl_Zoom;
     private readonly InputAction m_CameraControl_Click;
     private readonly InputAction m_CameraControl_DragOrbit;
+    private readonly InputAction m_CameraControl_TrackMouse;
     public struct CameraControlActions
     {
         private @Actions m_Wrapper;
@@ -146,6 +167,7 @@ public class @Actions : IInputActionCollection, IDisposable
         public InputAction @Zoom => m_Wrapper.m_CameraControl_Zoom;
         public InputAction @Click => m_Wrapper.m_CameraControl_Click;
         public InputAction @DragOrbit => m_Wrapper.m_CameraControl_DragOrbit;
+        public InputAction @TrackMouse => m_Wrapper.m_CameraControl_TrackMouse;
         public InputActionMap Get() { return m_Wrapper.m_CameraControl; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -164,6 +186,9 @@ public class @Actions : IInputActionCollection, IDisposable
                 @DragOrbit.started -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnDragOrbit;
                 @DragOrbit.performed -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnDragOrbit;
                 @DragOrbit.canceled -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnDragOrbit;
+                @TrackMouse.started -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnTrackMouse;
+                @TrackMouse.performed -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnTrackMouse;
+                @TrackMouse.canceled -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnTrackMouse;
             }
             m_Wrapper.m_CameraControlActionsCallbackInterface = instance;
             if (instance != null)
@@ -177,6 +202,9 @@ public class @Actions : IInputActionCollection, IDisposable
                 @DragOrbit.started += instance.OnDragOrbit;
                 @DragOrbit.performed += instance.OnDragOrbit;
                 @DragOrbit.canceled += instance.OnDragOrbit;
+                @TrackMouse.started += instance.OnTrackMouse;
+                @TrackMouse.performed += instance.OnTrackMouse;
+                @TrackMouse.canceled += instance.OnTrackMouse;
             }
         }
     }
@@ -186,5 +214,6 @@ public class @Actions : IInputActionCollection, IDisposable
         void OnZoom(InputAction.CallbackContext context);
         void OnClick(InputAction.CallbackContext context);
         void OnDragOrbit(InputAction.CallbackContext context);
+        void OnTrackMouse(InputAction.CallbackContext context);
     }
 }

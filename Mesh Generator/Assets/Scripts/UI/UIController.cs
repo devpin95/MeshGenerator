@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using SFB;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -40,9 +42,12 @@ public class UIController : MonoBehaviour
     public GameObject perlinNoiseOptions;
     public GameObject simpleNoiseOptions;
     private GameObject _activeOptionMenu;
-
+    
     [Header("Events")] 
     public CEvent_MeshGenerationData generateNewMesh;
+
+    [Header("Objects")] 
+    public HeightMapList maps;
 
     // Start is called before the first frame update
     void Start()
@@ -106,6 +111,27 @@ public class UIController : MonoBehaviour
     {
         MeshGenerationData data = new MeshGenerationData();
         
+        if (!ParseDimensions(data)) return;
+        
+        ParseMapType(data);
+
+        if (data.mapType == MeshGenerator.HeightMapTypes.PerlinNoise)
+        {
+            if (!ParsePerlinRange(data)) return;
+            if (!ParseRemap(data)) return;
+        }
+        else if (data.mapType == MeshGenerator.HeightMapTypes.ImageMap && maps.mapList.Count == 0)
+        {
+            Debug.Log("Must add at least one height map.");
+            return;
+        }
+        else if (data.mapType == MeshGenerator.HeightMapTypes.SimpleNoise) return;
+
+        generateNewMesh.Raise(data);
+    }
+
+    private bool ParseDimensions(MeshGenerationData data)
+    {
         bool success;
         
         // Dimension ---------------------------------------------------------------------------------------------------
@@ -115,62 +141,67 @@ public class UIController : MonoBehaviour
         if (dimension <= 0)
         {
             Debug.Log("Dimension must be positive.");
-            return;
+            return false;
         }
         
         if (!success)
         {
             Debug.Log("Something went wrong - dimension");
-            return;
+            return false;
         }
         
         Debug.Log("Generating with dimensions " + dimension + "x" + dimension);
         data.dimension = dimension;
+        
+        return true;
+    }
 
+    private void ParseMapType(MeshGenerationData data)
+    {
         // Map Type ----------------------------------------------------------------------------------------------------
         MeshGenerator.HeightMapTypes maptype = (MeshGenerator.HeightMapTypes)heightMapTypeField.value;
         Debug.Log("Generating height from " + MeshGenerator.HeightMapTypeNames[maptype]);
         data.mapType = maptype;
-        
+    }
+
+    private bool ParsePerlinRange(MeshGenerationData data)
+    {
+        bool success;
         // Perlin Min --------------------------------------------------------------------------------------------------
         float perlinMin;
         success = float.TryParse(perlinNoiseMinField.text, out perlinMin);
         
-        // if (perlinMin < 0 || perlinMin > 1)
-        // {
-        //     Debug.Log("Perlin minimum sample must be between 0 and 1");
-        //     return;
-        // }
         if (!success)
         {
             Debug.Log("Something went wrong - perlin min");
-            return;
+            return false;
         }
         
         // Perlin Max --------------------------------------------------------------------------------------------------
         float perlinMax;
         success = float.TryParse(perlinNoiseMaxField.text, out perlinMax);
         
-        // if (perlinMax < 0 || perlinMax > 1)
-        // {
-        //     Debug.Log("Perlin maximum sample must be between 0 and 1");
-        //     return;
-        // }
         if (!success)
         {
             Debug.Log("Something went wrong - perlin max");
-            return;
+            return false;
         }
 
         if (perlinMin >= perlinMax)
         {
             Debug.Log("Perlin sample min must be less than perlin same max");
-            return;
+            return false;
         }
 
         data.perlinNoiseSampleMin = perlinMin;
         data.perlinNoiseSampleMax = perlinMax;
-        
+
+        return true;
+    }
+
+    private bool ParseRemap(MeshGenerationData data)
+    {
+        bool success;
         // Remap Min --------------------------------------------------------------------------------------------------
         float remapMin;
         success = float.TryParse(remapMinField.text, out remapMin);
@@ -178,7 +209,7 @@ public class UIController : MonoBehaviour
         if (!success)
         {
             Debug.Log("Something went wrong - remap min");
-            return;
+            return false;
         }
         
         // Remap Max ---------------------------------------------------------------------------------------------------
@@ -188,19 +219,19 @@ public class UIController : MonoBehaviour
         if (!success)
         {
             Debug.Log("Something went wrong - remap max");
-            return;
+            return false;
         }
 
         if (remapMin >= remapMax)
         {
             Debug.Log("Remap min range must be less than the remap max range");
-            return;
+            return false;
         }
         
         data.remapMin = remapMin;
         data.remapMax = remapMax;
 
-        generateNewMesh.Raise(data);
+        return true;
     }
 
     public void HeightMapTypeChange(int maptype)
