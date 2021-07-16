@@ -21,6 +21,7 @@ public class UIController : MonoBehaviour
     public TextMeshProUGUI vertCount;
     public TextMeshProUGUI polyCount;
     public TextMeshProUGUI genTime;
+    public Image previewImage;
 
     [Header("Input fields")] 
     public Button generateButton;
@@ -31,6 +32,7 @@ public class UIController : MonoBehaviour
     [Header("Perlin Noise Inputs")]
     public TMP_InputField perlinNoiseMinField;
     public TMP_InputField perlinNoiseMaxField;
+    public Toggle domainWarpToggle;
     
     [Header("Remap Inputs")]
     public TMP_InputField remapMinField;
@@ -41,6 +43,7 @@ public class UIController : MonoBehaviour
     public GameObject planeOptions;
     public GameObject perlinNoiseOptions;
     public GameObject simpleNoiseOptions;
+    public GameObject remapOptions;
     private GameObject _activeOptionMenu;
     
     [Header("Events")] 
@@ -105,6 +108,7 @@ public class UIController : MonoBehaviour
         vertCount.text = "Vertices: " + data.vertexCount.ToString("n0");
         polyCount.text = "Polygons: " + data.polyCount.ToString("n0");
         genTime.text = data.generationTimeMS.ToString("n2") + "ms";
+        previewImage.sprite = NewLayerPromptController.Tex2dToSprite(data.heightMap);
     }
 
     private void CollectGenerationData()
@@ -118,6 +122,9 @@ public class UIController : MonoBehaviour
         if (data.mapType == MeshGenerator.HeightMapTypes.PerlinNoise)
         {
             if (!ParsePerlinRange(data)) return;
+
+            data.domainWarp = domainWarpToggle.isOn;
+            
             if (!ParseRemap(data)) return;
         }
         else if (data.mapType == MeshGenerator.HeightMapTypes.ImageMap && maps.mapList.Count == 0)
@@ -245,21 +252,25 @@ public class UIController : MonoBehaviour
                 if ( _activeOptionMenu ) _activeOptionMenu.SetActive(false);
                 planeOptions.SetActive(true);
                 _activeOptionMenu = planeOptions;
+                remapOptions.SetActive(false);
                 break;
             case MeshGenerator.HeightMapTypes.ImageMap:
                 if ( _activeOptionMenu ) _activeOptionMenu.SetActive(false);
                 imageMapOptions.SetActive(true);
                 _activeOptionMenu = imageMapOptions;
+                remapOptions.SetActive(false);
                 break;
             case MeshGenerator.HeightMapTypes.PerlinNoise: 
                 if ( _activeOptionMenu ) _activeOptionMenu.SetActive(false);
                 perlinNoiseOptions.SetActive(true);
                 _activeOptionMenu = perlinNoiseOptions;
+                remapOptions.SetActive(true);
                 break;
             case MeshGenerator.HeightMapTypes.SimpleNoise: 
                 if ( _activeOptionMenu ) _activeOptionMenu.SetActive(false);
                 simpleNoiseOptions.SetActive(true);
                 _activeOptionMenu = simpleNoiseOptions;
+                remapOptions.SetActive(true);
                 break;
             default: Debug.Log("How did you get here?");
                 break;

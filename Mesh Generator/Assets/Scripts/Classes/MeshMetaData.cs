@@ -7,4 +7,5 @@ public class MeshMetaData
     public int vertexCount = 0;
     public int polyCount = 0;
     public float generationTimeMS = 0f;
+    public Texture2D heightMap;
 }

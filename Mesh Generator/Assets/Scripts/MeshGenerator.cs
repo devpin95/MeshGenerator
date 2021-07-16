@@ -50,9 +50,15 @@ public class MeshGenerator : MonoBehaviour
     private float _perlinNoiseMin = 0;
     private float _perlinNoiseMax = 1;
     
+    private bool _domainWarp = false;
+    private int _octaves = 1;
+    private float _hurstExponent = 0.5f;
+
     private float startTime;
     private float endTime;
     private float deltaTime;
+
+    private Texture2D _generatedMap;
 
     [Header("Events")] 
     public CEvent_MeshMetaData meshDataNotification;
@@ -78,6 +84,9 @@ public class MeshGenerator : MonoBehaviour
         _metaData.vertexCount = _vertices.Length;
         _metaData.polyCount = _triangles.Length / 3;
         _metaData.generationTimeMS = deltaTime * 1000;
+
+        _metaData.heightMap = GenerateHeightMapTexture();
+        
         meshDataNotification.Raise(_metaData);
         
         UpdateMesh();
@@ -228,6 +237,10 @@ public class MeshGenerator : MonoBehaviour
         
         _perlinNoiseMin = data.perlinNoiseSampleMin;
         _perlinNoiseMax = data.perlinNoiseSampleMax;
+
+        _domainWarp = data.domainWarp;
+        _octaves = data.octaves;
+        _hurstExponent = data.hurst;
         
         Debug.Log("PERLIN " + _perlinNoiseMin + " " + _perlinNoiseMax);
 
@@ -255,13 +268,31 @@ public class MeshGenerator : MonoBehaviour
         float zMapProportion = mapRange * zSampleProportion;
         float zSamplePoint = _perlinNoiseMin + zMapProportion;
 
-        float perlin = Mathf.PerlinNoise(xSamplePoint, zSamplePoint);
-        float cperlin = Mathf.Clamp01(perlin); // make sure that the value is actually between 0 and 1
-        float rmperlin = Remap(cperlin, 0, 1, _remapMin, _remapMax);
+        float sample;
+        
+        if (_domainWarp)
+        {
+            Vector2 pos = new Vector2(xSamplePoint, zSamplePoint);
+            
+            Vector2 q = new Vector2( fbm( pos + new Vector2(0.0f,0.0f), _hurstExponent ),
+                fbm( pos + new Vector2(5.2f,1.3f), _hurstExponent ) );
+
+            Vector2 r = new Vector2( fbm( pos + 4.0f * q + new Vector2(1.7f,9.2f), _hurstExponent ),
+                fbm( pos + 4.0f * q + new Vector2(8.3f,2.8f), _hurstExponent ) );
+
+            sample = fbm( pos + 4.0f * r, _hurstExponent );
+        }
+        else
+        {
+            float perlin = Mathf.PerlinNoise(xSamplePoint, zSamplePoint);
+            sample = Mathf.Clamp01(perlin); // make sure that the value is actually between 0 and 1
+        }
+        
+        float rmsample = Remap(sample, 0, 1, _remapMin, _remapMax);
         
         // Debug.Log("(" + x + ", " + z + "), " + "(" + _remapMin + ", " + _remapMax + "), (" + _perlinNoiseMin + ", " + _perlinNoiseMax + "), (" + xSamplePoint + ", " + zSamplePoint + ") = " + rmperlin);
 
-        return rmperlin;
+        return rmsample;
     }
 
     public float SampleHeightMap(int x, int z, LayerData data)
@@ -289,5 +320,41 @@ public class MeshGenerator : MonoBehaviour
         var to = toAbs + toMin;
        
         return to;
+    }
+
+    public float fbm(Vector2 pos, float hurst)
+    {
+        float t = 0.0f;
+        int numOctaves = 2;
+
+        for (int i = 0; i < numOctaves; ++i)
+        {
+            float f = Mathf.Pow(2.0f, (float) i);
+            float a = Mathf.Pow(f, -hurst);
+            t += a * Mathf.PerlinNoise(f * pos.x, f * pos.y);
+        }
+
+        return t;
+    }
+
+    private Texture2D GenerateHeightMapTexture()
+    {
+        Texture2D tex = new Texture2D(xSize, zSize);
+
+        for (int z = 0; z < zSize; ++z)
+        {
+            for (int x = 0; x < xSize; ++x)
+            {
+                float height = _vertices[x + z * zSize].y;
+
+                float heightTo01 = Remap(height, _remapMin, _remapMax, 0, 1);
+                float height01ToRGB = Remap(heightTo01, 0, 1, 0, 255);
+
+                Color color = new Color(height01ToRGB, height01ToRGB, height01ToRGB);
+                tex.SetPixel(x, z, color);
+            }
+        }
+
+        return tex;
     }
 }

@@ -10,6 +10,9 @@ public class MeshGenerationData
     // perlin noise values
     public float perlinNoiseSampleMin;
     public float perlinNoiseSampleMax;
+    public bool domainWarp = false;
+    public float hurst;
+    public int octaves;
     
     // remap values
     public float remapMin;
