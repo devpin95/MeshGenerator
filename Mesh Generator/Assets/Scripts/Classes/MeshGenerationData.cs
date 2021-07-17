@@ -4,19 +4,19 @@ using UnityEngine;
 
 public class MeshGenerationData
 {
-    public int dimension;
+    public int dimension = 3;
     public MeshGenerator.HeightMapTypes mapType;
     
     // perlin noise values
-    public float perlinNoiseSampleMin;
-    public float perlinNoiseSampleMax;
+    public float perlinNoiseSampleMin = 0;
+    public float perlinNoiseSampleMax = 1;
     public bool domainWarp = false;
-    public float hurst;
-    public int octaves;
+    public float hurst = 0.5f;
+    public int octaves = 2;
     
     // remap values
-    public float remapMin;
-    public float remapMax;
+    public float remapMin = 0;
+    public float remapMax = 1;
 
     public override string ToString()
     {

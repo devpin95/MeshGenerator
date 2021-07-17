@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Events/UI/Add Layer")]
+[CreateAssetMenu(menuName = "Events/CEvent <LayerData>")]
 public class CEvent_LayerData : ScriptableObject
 {
     private List<CEventListener_LayerData> listeners = new List<CEventListener_LayerData>();

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Events/Generator/Meta Data Notification")]
+[CreateAssetMenu(menuName = "Events/CEvent <MeshMetaData>")]
 public class CEvent_MeshMetaData : ScriptableObject
 {
     private List<CEventListener_MeshMetaData> listeners = new List<CEventListener_MeshMetaData>();

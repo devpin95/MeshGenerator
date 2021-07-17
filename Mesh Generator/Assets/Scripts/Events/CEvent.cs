@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Events/UI/Camera Perspective Change")]
+[CreateAssetMenu(menuName = "Events/CEvent")]
 public class CEvent : ScriptableObject
 {
     private List<CEventListener> listeners = new List<CEventListener>();

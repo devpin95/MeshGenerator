@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MeshGenerator : MonoBehaviour
 {
@@ -41,11 +43,12 @@ public class MeshGenerator : MonoBehaviour
     public int zSize = 2;
 
     public HeightMapList maps;
+    public CEvent_String checkpointNotification;
 
     private HeightMapTypes _mapType = HeightMapTypes.Plane;
 
-    private float _remapMin = -5;
-    private float _remapMax = 5;
+    private float _remapMin = 0;
+    private float _remapMax = 1;
 
     private float _perlinNoiseMin = 0;
     private float _perlinNoiseMax = 1;
@@ -59,6 +62,7 @@ public class MeshGenerator : MonoBehaviour
     private float deltaTime;
 
     private Texture2D _generatedMap;
+    
 
     [Header("Events")] 
     public CEvent_MeshMetaData meshDataNotification;
@@ -71,25 +75,40 @@ public class MeshGenerator : MonoBehaviour
         _mesh = new Mesh();
         GetComponent<MeshFilter>().mesh = _mesh;
 
-        GenerateMesh();
+        StartCoroutine(GenerateMesh());
     }
 
-    private void GenerateMesh()
+    IEnumerator GenerateMesh()
     {
-        startTime = Time.realtimeSinceStartup;
-        CreateShape();
-        endTime = Time.realtimeSinceStartup;
-        deltaTime = endTime - startTime;
+        while (true)
+        {
+            startTime = Time.realtimeSinceStartup;
+            CreateShape();
+            endTime = Time.realtimeSinceStartup;
+            deltaTime = endTime - startTime;
 
-        _metaData.vertexCount = _vertices.Length;
-        _metaData.polyCount = _triangles.Length / 3;
-        _metaData.generationTimeMS = deltaTime * 1000;
+            yield return null;
+            
+            _metaData.vertexCount = _vertices.Length;
+            _metaData.polyCount = _triangles.Length / 3;
+            _metaData.generationTimeMS = deltaTime * 1000;
+            
+            yield return null;
+        
+            checkpointNotification.Raise("Mesh generation completed in " + _metaData.generationTimeMS +  "ms. Updating mesh object and recalculating normals...");
+            UpdateMesh();
+            
+            
+            checkpointNotification.Raise("Generating height map preview...");
+            _metaData.heightMap = GenerateHeightMapTexture(_vertices.Length, new Vector2(xSize, zSize));
+            
+            yield return new WaitForSeconds(1);
+            meshDataNotification.Raise(_metaData);
 
-        _metaData.heightMap = GenerateHeightMapTexture();
+            break;
+        }
         
-        meshDataNotification.Raise(_metaData);
-        
-        UpdateMesh();
+        yield break;
     }
     
     private void CreateShape()
@@ -127,6 +146,7 @@ public class MeshGenerator : MonoBehaviour
     {
         List<Vector3> vertlist = new List<Vector3>();
         
+        checkpointNotification.Raise("Generating " + (xSize + 1) + "x" + (zSize + 1) + " grid (" + (xSize + 1 * zSize + 1) + " verts)...");
         // create vertices
         for (int z = 0; z <= zSize; ++z)
         {
@@ -164,6 +184,7 @@ public class MeshGenerator : MonoBehaviour
 
     private void CreateTris()
     {
+        checkpointNotification.Raise("Generating " + (xSize + 2) * (zSize + 2) + " polygons...");
         List<int> trilist = new List<int>();
         
         for( int z = 0; z < zSize; ++z )
@@ -251,7 +272,7 @@ public class MeshGenerator : MonoBehaviour
         Array.Clear(_triangles, 0, _triangles.Length);
         Array.Clear(_vertices, 0, _vertices.Length);
         
-        GenerateMesh();
+        StartCoroutine(GenerateMesh());
         
         if ( needToShowVisualVerts /*&& _vertices.Length < visualVerticeThreshold*/ ) ShowVisualVertices(true);
     }
@@ -337,23 +358,31 @@ public class MeshGenerator : MonoBehaviour
         return t;
     }
 
-    private Texture2D GenerateHeightMapTexture()
+    private Texture2D GenerateHeightMapTexture(int size, Vector2 dim)
     {
-        Texture2D tex = new Texture2D(xSize, zSize);
+        Texture2D tex = new Texture2D((int)dim.x + 1, (int)dim.y + 1);
 
-        for (int z = 0; z < zSize; ++z)
+        Color[] colors = new Color[size];
+        
+        
+        // Debug.Log("Size: " + xSize + "x" + zSize + " = " + ((xSize + 1) * (zSize + 1)));
+
+        for (int i = 0; i < size; ++i)
         {
-            for (int x = 0; x < xSize; ++x)
-            {
-                float height = _vertices[x + z * zSize].y;
+            // Debug.Log("Index (" + z + "," + x + ") [" + (z + x * zSize) + "]");
+            float height = _vertices[i].y;
 
-                float heightTo01 = Remap(height, _remapMin, _remapMax, 0, 1);
-                float height01ToRGB = Remap(heightTo01, 0, 1, 0, 255);
+            float heightTo01 = Remap(height, _remapMin, _remapMax, 0, 1);
+            // float height01ToRGB = Remap(heightTo01, 0, 1, 0, 255);
+                
+            colors[i] = new Color(heightTo01, heightTo01, heightTo01, 1);
 
-                Color color = new Color(height01ToRGB, height01ToRGB, height01ToRGB);
-                tex.SetPixel(x, z, color);
-            }
+            // Debug.Log("Index (" + i  + ") [" + " Height " + height + " remapped to (" + heightTo01 + ", " + height01ToRGB + ")");
         }
+
+        tex.wrapMode = TextureWrapMode.Clamp;
+        tex.SetPixels(0, 0, (int)dim.x + 1, (int)dim.y + 1, colors);
+        tex.Apply();
 
         return tex;
     }

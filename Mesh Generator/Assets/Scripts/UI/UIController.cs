@@ -33,6 +33,9 @@ public class UIController : MonoBehaviour
     public TMP_InputField perlinNoiseMinField;
     public TMP_InputField perlinNoiseMaxField;
     public Toggle domainWarpToggle;
+    public CanvasGroup domainWarpOptions;
+    public Slider hurstSlider;
+    public TextMeshProUGUI hurstValueLabel;
     
     [Header("Remap Inputs")]
     public TMP_InputField remapMinField;
@@ -45,6 +48,10 @@ public class UIController : MonoBehaviour
     public GameObject simpleNoiseOptions;
     public GameObject remapOptions;
     private GameObject _activeOptionMenu;
+
+    [Header("Overlay")] 
+    public GameObject overlay;
+    public TextMeshProUGUI overlayText;
     
     [Header("Events")] 
     public CEvent_MeshGenerationData generateNewMesh;
@@ -82,7 +89,7 @@ public class UIController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
     public void OnPerspectiveButtonClick()
@@ -105,12 +112,13 @@ public class UIController : MonoBehaviour
 
     public void UpdateMeshMetaData(MeshMetaData data)
     {
+        overlay.SetActive(false);
         vertCount.text = "Vertices: " + data.vertexCount.ToString("n0");
         polyCount.text = "Polygons: " + data.polyCount.ToString("n0");
         genTime.text = data.generationTimeMS.ToString("n2") + "ms";
         previewImage.sprite = NewLayerPromptController.Tex2dToSprite(data.heightMap);
     }
-
+    
     private void CollectGenerationData()
     {
         MeshGenerationData data = new MeshGenerationData();
@@ -124,6 +132,7 @@ public class UIController : MonoBehaviour
             if (!ParsePerlinRange(data)) return;
 
             data.domainWarp = domainWarpToggle.isOn;
+            data.hurst = hurstSlider.value;
             
             if (!ParseRemap(data)) return;
         }
@@ -274,6 +283,31 @@ public class UIController : MonoBehaviour
                 break;
             default: Debug.Log("How did you get here?");
                 break;
+        }
+    }
+
+    public void ShowGenerationMessage(string message)
+    {
+        overlay.SetActive(true);
+        overlayText.text = message;
+    }
+
+    public void UpdateHurstExponentLabel(float val)
+    {
+        hurstValueLabel.text = val.ToString("f2");
+    }
+
+    public void ToggleDomainWarpOptions(bool state)
+    {
+        if (state)
+        {
+            domainWarpOptions.alpha = 1;
+            domainWarpOptions.interactable = true;
+        }
+        else
+        {
+            domainWarpOptions.alpha = 0.3f;
+            domainWarpOptions.interactable = false;
         }
     }
 }

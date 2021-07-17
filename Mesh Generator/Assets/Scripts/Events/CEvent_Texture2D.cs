@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Events/UI/Add Height Map Layer")]
+[CreateAssetMenu(menuName = "Events/CEvent <Texture2D>")]
 public class CEvent_Texture2D : ScriptableObject
 {
     private List<CEventListener_Texture2D> listeners = new List<CEventListener_Texture2D>();
