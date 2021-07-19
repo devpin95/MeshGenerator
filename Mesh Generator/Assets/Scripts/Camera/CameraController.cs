@@ -200,7 +200,7 @@ public class CameraController : MonoBehaviour
     public void ReaquireTarget(MeshMetaData data)
     {
         _targetMG = target.GetComponent<MeshGenerator>();
-        _targetOffset = new Vector3(_targetMG.xSize / 2f, 0, _targetMG.zSize / 2f);
+        _targetOffset = new Vector3(_targetMG.GetMeshDimensions() / 2f, 0, _targetMG.GetMeshDimensions() / 2f);
         _targetPos = target.transform.position + _targetOffset;
     }
 }

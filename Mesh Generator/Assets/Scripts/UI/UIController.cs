@@ -36,6 +36,17 @@ public class UIController : MonoBehaviour
     public CanvasGroup domainWarpOptions;
     public Slider hurstSlider;
     public TextMeshProUGUI hurstValueLabel;
+
+    [Header("Simple Noise Inputs")] 
+    public TMP_InputField simpleNoiseLatticeSize;
+    public TMP_InputField simpleNoiseMinField;
+    public TMP_InputField simpleNoiseMaxField;
+    public TMP_Dropdown simpleNoiseSmoothingField;
+    public TMP_InputField simpleNoiseFrequencyField;
+    public Slider simpleNoiseScaleField;
+    public Toggle simpleNoiseRandomToggle;
+    public CanvasGroup simpleNoiseRandomCG;
+    public TMP_InputField simpleNoiseSeedField;
     
     [Header("Remap Inputs")]
     public TMP_InputField remapMinField;
@@ -59,6 +70,8 @@ public class UIController : MonoBehaviour
     [Header("Objects")] 
     public HeightMapList maps;
 
+    private float inactiveGroupAlpha = 0.3f;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -74,7 +87,7 @@ public class UIController : MonoBehaviour
         
         generateButton.onClick.AddListener(CollectGenerationData);
 
-        foreach (var map in MeshGenerator.HeightMapTypeNames)
+        foreach (var map in Enums.HeightMapTypeNames)
         {
             heightMapTypeField.options.Add(new TMP_Dropdown.OptionData(map.Value));
         }
@@ -127,21 +140,36 @@ public class UIController : MonoBehaviour
         
         ParseMapType(data);
 
-        if (data.mapType == MeshGenerator.HeightMapTypes.PerlinNoise)
+        // perlin noise ------------------------------------------------------------------------------------------------
+        if (data.mapType == Enums.HeightMapTypes.PerlinNoise)
         {
             if (!ParsePerlinRange(data)) return;
 
-            data.domainWarp = domainWarpToggle.isOn;
-            data.hurst = hurstSlider.value;
+            data.perlin.domainWarp = domainWarpToggle.isOn;
+            data.perlin.hurst = hurstSlider.value;
             
             if (!ParseRemap(data)) return;
         }
-        else if (data.mapType == MeshGenerator.HeightMapTypes.ImageMap && maps.mapList.Count == 0)
+        
+        // image map ---------------------------------------------------------------------------------------------------
+        else if (data.mapType == Enums.HeightMapTypes.ImageMap && maps.mapList.Count == 0)
         {
             Debug.Log("Must add at least one height map.");
             return;
         }
-        else if (data.mapType == MeshGenerator.HeightMapTypes.SimpleNoise) return;
+        
+        // simple noise ------------------------------------------------------------------------------------------------
+        else if (data.mapType == Enums.HeightMapTypes.SimpleNoise)
+        {
+            data.simpleNoise.latticeDim = int.Parse(simpleNoiseLatticeSize.text);
+            data.simpleNoise.smoothing = (Enums.SmoothingAlgorithms)simpleNoiseSmoothingField.value;
+            data.simpleNoise.frequency = int.Parse(simpleNoiseFrequencyField.text);
+            data.simpleNoise.scale = simpleNoiseScaleField.value;
+            data.simpleNoise.random = simpleNoiseRandomToggle.isOn;
+            data.simpleNoise.seed = int.Parse(simpleNoiseSeedField.text);
+            
+            if (!ParseRemap(data)) return;
+        };
 
         generateNewMesh.Raise(data);
     }
@@ -175,8 +203,8 @@ public class UIController : MonoBehaviour
     private void ParseMapType(MeshGenerationData data)
     {
         // Map Type ----------------------------------------------------------------------------------------------------
-        MeshGenerator.HeightMapTypes maptype = (MeshGenerator.HeightMapTypes)heightMapTypeField.value;
-        Debug.Log("Generating height from " + MeshGenerator.HeightMapTypeNames[maptype]);
+        Enums.HeightMapTypes maptype = (Enums.HeightMapTypes)heightMapTypeField.value;
+        Debug.Log("Generating height from " + Enums.HeightMapTypeNames[maptype]);
         data.mapType = maptype;
     }
 
@@ -209,8 +237,8 @@ public class UIController : MonoBehaviour
             return false;
         }
 
-        data.perlinNoiseSampleMin = perlinMin;
-        data.perlinNoiseSampleMax = perlinMax;
+        data.perlin.sampleMin = perlinMin;
+        data.perlin.sampleMax = perlinMax;
 
         return true;
     }
@@ -250,32 +278,37 @@ public class UIController : MonoBehaviour
         return true;
     }
 
+    // private bool ParseSimpleNoiseLatticeDim(MeshGenerationData data)
+    // {
+    //     data.simpleNoise.latticeDim = int.Parse(simpleNoiseLatticeSize.text);
+    // }
+    
     public void HeightMapTypeChange(int maptype)
     {
         if (!heightMapTypeFieldReady) return;
         
-        MeshGenerator.HeightMapTypes mapType = (MeshGenerator.HeightMapTypes) maptype;
+        Enums.HeightMapTypes mapType = (Enums.HeightMapTypes) maptype;
         switch (mapType)
         {
-            case MeshGenerator.HeightMapTypes.Plane: 
+            case Enums.HeightMapTypes.Plane: 
                 if ( _activeOptionMenu ) _activeOptionMenu.SetActive(false);
                 planeOptions.SetActive(true);
                 _activeOptionMenu = planeOptions;
                 remapOptions.SetActive(false);
                 break;
-            case MeshGenerator.HeightMapTypes.ImageMap:
+            case Enums.HeightMapTypes.ImageMap:
                 if ( _activeOptionMenu ) _activeOptionMenu.SetActive(false);
                 imageMapOptions.SetActive(true);
                 _activeOptionMenu = imageMapOptions;
                 remapOptions.SetActive(false);
                 break;
-            case MeshGenerator.HeightMapTypes.PerlinNoise: 
+            case Enums.HeightMapTypes.PerlinNoise: 
                 if ( _activeOptionMenu ) _activeOptionMenu.SetActive(false);
                 perlinNoiseOptions.SetActive(true);
                 _activeOptionMenu = perlinNoiseOptions;
                 remapOptions.SetActive(true);
                 break;
-            case MeshGenerator.HeightMapTypes.SimpleNoise: 
+            case Enums.HeightMapTypes.SimpleNoise: 
                 if ( _activeOptionMenu ) _activeOptionMenu.SetActive(false);
                 simpleNoiseOptions.SetActive(true);
                 _activeOptionMenu = simpleNoiseOptions;
@@ -306,8 +339,109 @@ public class UIController : MonoBehaviour
         }
         else
         {
-            domainWarpOptions.alpha = 0.3f;
+            domainWarpOptions.alpha = inactiveGroupAlpha;
             domainWarpOptions.interactable = false;
         }
     }
+
+    public void ValidateSimpleNoiseLatticeDim(string str)
+    {
+        if (str == "")
+        {
+            str = "1";
+        }
+        else
+        {
+            int val = 0;
+            bool success = int.TryParse(str, out val);
+
+            if (success)
+            {
+                if (val == 0)
+                {
+                    simpleNoiseLatticeSize.text = "1";
+                }
+                else if (val < 0)
+                {
+                    val = -val;
+                    simpleNoiseLatticeSize.text = val.ToString();
+                }
+            }
+        }
+    }
+    
+    public void ValidateSimpleNoiseFrequency(string str)
+    {
+        if (str == "")
+        {
+            str = "1";
+        }
+        else
+        {
+            str = MakeStringPositiveInteger(str);
+        }
+
+        simpleNoiseFrequencyField.text = str;
+    }
+
+    public void ValidateMeshDim(string str)
+    {
+        const int min = 2;
+        const int max = 255;
+        
+        int val;
+        bool success = int.TryParse(str, out val);
+
+        if (success)
+        {
+            if (val < 1 && val >= 0)
+            {
+                dimensionField.text = min.ToString();
+            } else if (val < 0)
+            {
+                val = -val;
+                dimensionField.text = val.ToString();
+            } else if (val > max)
+            {
+                dimensionField.text = max.ToString();
+            }
+        }
+        else
+        {
+            dimensionField.text = "4";
+        }
+    }
+
+    private string MakeStringPositiveInteger(string str)
+    {
+        int val = 1;
+        bool success = int.TryParse(str, out val);
+
+        if (success)
+        {
+            if (val < 0)
+            {
+                val = -val;
+            }   
+            return val.ToString();
+        }
+        else
+        {
+            return "";
+        }
+    }
+
+    public void ToggleSimpleNoiseRandom(bool s)
+    {
+        if (s)
+        {
+            simpleNoiseRandomCG.interactable = false;
+            simpleNoiseRandomCG.alpha = inactiveGroupAlpha;   
+        }
+        else
+        {
+            simpleNoiseRandomCG.interactable = true;
+            simpleNoiseRandomCG.alpha = 1;
+        }
+    } 
 }

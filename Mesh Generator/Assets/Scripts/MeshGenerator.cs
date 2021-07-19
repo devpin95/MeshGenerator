@@ -2,67 +2,32 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using System.Windows.Forms;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = System.Random;
 
 public class MeshGenerator : MonoBehaviour
 {
-    public enum HeightMapTypes
-    {
-        Plane,
-        SimpleNoise,
-        PerlinNoise,
-        ImageMap
-    }
-
-    public static Dictionary<HeightMapTypes, string> HeightMapTypeNames = new Dictionary<HeightMapTypes, string>()
-    {
-        {HeightMapTypes.Plane, "Plane"},
-        {HeightMapTypes.SimpleNoise, "Simple Noise"},
-        {HeightMapTypes.PerlinNoise, "Perlin Noise"},
-        {HeightMapTypes.ImageMap, "Image Map"}
-    };
-    
-    public static Dictionary<string, HeightMapTypes> HeightMapNameTypes = new Dictionary<string, HeightMapTypes>()
-    {
-        {"Plane", HeightMapTypes.Plane},
-        {"Simple Noise", HeightMapTypes.SimpleNoise},
-        {"Perlin Noise", HeightMapTypes.PerlinNoise},
-        {"Image Map", HeightMapTypes.ImageMap}
-    };
-    
     private Mesh _mesh;
     private Vector3[] _vertices;
     private int[] _triangles;
 
     private List<GameObject> _visualVerts = new List<GameObject>();
 
-    public int xSize = 2;
-    public int zSize = 2;
-
     public HeightMapList maps;
     public CEvent_String checkpointNotification;
-
-    private HeightMapTypes _mapType = HeightMapTypes.Plane;
-
-    private float _remapMin = 0;
-    private float _remapMax = 1;
-
-    private float _perlinNoiseMin = 0;
-    private float _perlinNoiseMax = 1;
     
-    private bool _domainWarp = false;
-    private int _octaves = 1;
-    private float _hurstExponent = 0.5f;
-
-    private float startTime;
-    private float endTime;
-    private float deltaTime;
-
-    private Texture2D _generatedMap;
     
+    private float _startTime;
+    private float _endTime;
+    private float _deltaTime;
+
+    private float[,] _lattice;
+    
+    private MeshGenerationData _data = new MeshGenerationData();
 
     [Header("Events")] 
     public CEvent_MeshMetaData meshDataNotification;
@@ -82,25 +47,25 @@ public class MeshGenerator : MonoBehaviour
     {
         while (true)
         {
-            startTime = Time.realtimeSinceStartup;
+            checkpointNotification.Raise("Generating " + Enums.HeightMapTypeNames[_data.mapType] + " mesh...");
+            _startTime = Time.realtimeSinceStartup;
             CreateShape();
-            endTime = Time.realtimeSinceStartup;
-            deltaTime = endTime - startTime;
+            _endTime = Time.realtimeSinceStartup;
+            _deltaTime = _endTime - _startTime;
 
             yield return null;
             
             _metaData.vertexCount = _vertices.Length;
             _metaData.polyCount = _triangles.Length / 3;
-            _metaData.generationTimeMS = deltaTime * 1000;
+            _metaData.generationTimeMS = _deltaTime * 1000;
             
             yield return null;
         
             checkpointNotification.Raise("Mesh generation completed in " + _metaData.generationTimeMS +  "ms. Updating mesh object and recalculating normals...");
             UpdateMesh();
             
-            
             checkpointNotification.Raise("Generating height map preview...");
-            _metaData.heightMap = GenerateHeightMapTexture(_vertices.Length, new Vector2(xSize, zSize));
+            _metaData.heightMap = GenerateHeightMapTexture(_vertices.Length, new Vector2(_data.dimension, _data.dimension));
             
             yield return new WaitForSeconds(1);
             meshDataNotification.Raise(_metaData);
@@ -146,29 +111,32 @@ public class MeshGenerator : MonoBehaviour
     {
         List<Vector3> vertlist = new List<Vector3>();
         
-        checkpointNotification.Raise("Generating " + (xSize + 1) + "x" + (zSize + 1) + " grid (" + (xSize + 1 * zSize + 1) + " verts)...");
+        checkpointNotification.Raise("Generating " + (_data.dimension + 1) + "x" + (_data.dimension + 1) + " grid (" + (_data.dimension + 1 * _data.dimension + 1) + " verts)...");
         // create vertices
-        for (int z = 0; z <= zSize; ++z)
+        for (int z = 0; z <= _data.dimension; ++z)
         {
-            for (int x = 0; x <= xSize; ++x)
+            for (int x = 0; x <= _data.dimension; ++x)
             {
                 Vector3 newvert = new Vector3(x, 0, z);
 
                 float y = 0;
                 
-                switch (_mapType)
+                switch (_data.mapType)
                 {
-                    case HeightMapTypes.PerlinNoise:
+                    case Enums.HeightMapTypes.PerlinNoise:
                         y = SamplePerlinNoise(x, z);
                         break;
-                    case HeightMapTypes.ImageMap:
+                    case Enums.HeightMapTypes.ImageMap:
                         foreach (var map in maps.mapList)
                         {
                             y += SampleHeightMap(x, z, map);
                         }
                         break;
-                    case HeightMapTypes.Plane:
-                    case HeightMapTypes.SimpleNoise:
+                    case Enums.HeightMapTypes.Plane:
+                        break;
+                    case Enums.HeightMapTypes.SimpleNoise:
+                        y = SampleSimpleNoise(x, z);
+                        break;
                     default:
                         newvert.y = 0;
                         break;
@@ -184,17 +152,17 @@ public class MeshGenerator : MonoBehaviour
 
     private void CreateTris()
     {
-        checkpointNotification.Raise("Generating " + (xSize + 2) * (zSize + 2) + " polygons...");
+        checkpointNotification.Raise("Generating " + (_data.dimension + 2) * (_data.dimension + 2) + " polygons...");
         List<int> trilist = new List<int>();
         
-        for( int z = 0; z < zSize; ++z )
+        for( int z = 0; z < _data.dimension; ++z )
         {
-            int y = z * (xSize + 1); // offset
-            for (int x = 0; x < xSize; ++x)
+            int y = z * (_data.dimension + 1); // offset
+            for (int x = 0; x < _data.dimension; ++x)
             {
                 int bl = x + y;
-                int tl = x + xSize + y + 1;
-                int tr = x + xSize + y + 2;
+                int tl = x + _data.dimension + y + 1;
+                int tr = x + _data.dimension + y + 2;
                 int br = x + y + 1;
                 
                 // left tri
@@ -206,8 +174,6 @@ public class MeshGenerator : MonoBehaviour
                 trilist.Add(br);
                 trilist.Add(tl);
                 trilist.Add(tr);
-                
-                // Debug.Log("Creating triangles at <" + bl + ", " + tl + ", " + br + "> and <" + br + ", " + tl + ", " + tr + ">");
             }
         }
         
@@ -246,27 +212,40 @@ public class MeshGenerator : MonoBehaviour
 
         ShowVisualVertices(false);
 
-        xSize = data.dimension;
-        zSize = data.dimension;
+        _data = data;
 
-        _mapType = data.mapType;
-
-        if (_mapType == HeightMapTypes.ImageMap)
+        if (_data.mapType == Enums.HeightMapTypes.SimpleNoise)
         {
-            Debug.Log("Extracting height from " + maps.mapList.Count + " maps");
+            if (_data.simpleNoise.random)
+            {
+                UnityEngine.Random.InitState((int)Time.time * 432134 / 546632);
+                _data.simpleNoise.seed = UnityEngine.Random.Range(int.MinValue, int.MinValue);
+            }
+
+            GenerateLattice();
         }
-        
-        _perlinNoiseMin = data.perlinNoiseSampleMin;
-        _perlinNoiseMax = data.perlinNoiseSampleMax;
 
-        _domainWarp = data.domainWarp;
-        _octaves = data.octaves;
-        _hurstExponent = data.hurst;
-        
-        Debug.Log("PERLIN " + _perlinNoiseMin + " " + _perlinNoiseMax);
-
-        _remapMin = data.remapMin;
-        _remapMax = data.remapMax;
+        // xSize = data.dimension;
+        // zSize = data.dimension;
+        //
+        // _mapType = data.mapType;
+        //
+        // if (_mapType == Enums.HeightMapTypes.ImageMap)
+        // {
+        //     Debug.Log("Extracting height from " + maps.mapList.Count + " maps");
+        // }
+        //
+        // _perlinNoiseMin = data.perlin.sampleMin;
+        // _perlinNoiseMax = data.perlin.sampleMax;
+        //
+        // _domainWarp = data.perlin.domainWarp;
+        // _octaves = data.perlin.octaves;
+        // _hurstExponent = data.perlin.hurst;
+        //
+        // Debug.Log("PERLIN " + _perlinNoiseMin + " " + _perlinNoiseMax);
+        //
+        // _remapMin = data.remapMin;
+        // _remapMax = data.remapMax;
         
         _mesh.Clear();
         Array.Clear(_triangles, 0, _triangles.Length);
@@ -279,29 +258,29 @@ public class MeshGenerator : MonoBehaviour
 
     public float SamplePerlinNoise(int x, int z)
     {
-        float mapRange = _perlinNoiseMax - _perlinNoiseMin;
+        float mapRange = _data.perlin.sampleMax - _data.perlin.sampleMin;
         
-        float xSampleProportion = x / (float)xSize + 1;
+        float xSampleProportion = x / (float)_data.dimension + 1;
         float xMapProportion = mapRange * xSampleProportion;
-        float xSamplePoint = _perlinNoiseMin + xMapProportion;
+        float xSamplePoint = _data.perlin.sampleMax + xMapProportion;
         
-        float zSampleProportion = z / (float)zSize + 1;
+        float zSampleProportion = z / (float)_data.dimension + 1;
         float zMapProportion = mapRange * zSampleProportion;
-        float zSamplePoint = _perlinNoiseMin + zMapProportion;
+        float zSamplePoint = _data.perlin.sampleMax + zMapProportion;
 
         float sample;
         
-        if (_domainWarp)
+        if (_data.perlin.domainWarp)
         {
             Vector2 pos = new Vector2(xSamplePoint, zSamplePoint);
             
-            Vector2 q = new Vector2( fbm( pos + new Vector2(0.0f,0.0f), _hurstExponent ),
-                fbm( pos + new Vector2(5.2f,1.3f), _hurstExponent ) );
+            Vector2 q = new Vector2( fbm( pos + new Vector2(0.0f,0.0f), _data.perlin.hurst ),
+                fbm( pos + new Vector2(5.2f,1.3f), _data.perlin.hurst ) );
 
-            Vector2 r = new Vector2( fbm( pos + 4.0f * q + new Vector2(1.7f,9.2f), _hurstExponent ),
-                fbm( pos + 4.0f * q + new Vector2(8.3f,2.8f), _hurstExponent ) );
+            Vector2 r = new Vector2( fbm( pos + 4.0f * q + new Vector2(1.7f,9.2f), _data.perlin.hurst ),
+                fbm( pos + 4.0f * q + new Vector2(8.3f,2.8f), _data.perlin.hurst ) );
 
-            sample = fbm( pos + 4.0f * r, _hurstExponent );
+            sample = fbm( pos + 4.0f * r, _data.perlin.hurst );
         }
         else
         {
@@ -309,18 +288,55 @@ public class MeshGenerator : MonoBehaviour
             sample = Mathf.Clamp01(perlin); // make sure that the value is actually between 0 and 1
         }
         
-        float rmsample = Remap(sample, 0, 1, _remapMin, _remapMax);
-        
-        // Debug.Log("(" + x + ", " + z + "), " + "(" + _remapMin + ", " + _remapMax + "), (" + _perlinNoiseMin + ", " + _perlinNoiseMax + "), (" + xSamplePoint + ", " + zSamplePoint + ") = " + rmperlin);
+        float rmsample = Remap(sample, 0, 1, _data.remapMin, _data.remapMax);
 
         return rmsample;
+    }
+
+    public float SampleSimpleNoise(int x, int z)
+    {
+        // Debug.Log(x + ", " + z);
+        //https://en.wikipedia.org/wiki/Bilinear_interpolation
+        
+        // bring the values back to the origin block [0, latticeDim]
+        float modX = x % _data.simpleNoise.latticeDim;
+        float modY = z % _data.simpleNoise.latticeDim;
+
+        int xmin = (int) modX;
+        int xmax = xmin + 1;
+        int ymin = (int) modY;
+        int ymax = ymin + 1;
+
+        // if we go off the edge of the lattice, we need to loop back around from the bottom
+        int yrounded = ymax;
+        int xrounded = xmax;
+
+        if (ymax >= _data.simpleNoise.latticeDim) yrounded = 0;
+        if (xmax >= _data.simpleNoise.latticeDim) xrounded = 0;
+        
+        float Q11 = _lattice[xmin, ymin]; // bottom left point
+        float Q12 = _lattice[xmin, yrounded]; // top left point
+        float Q21 = _lattice[xrounded, ymin]; // bottom right point
+        float Q22 = _lattice[xrounded, yrounded]; // top right point
+        
+        // linear interpolation in the x direction
+        float R1 = (xmax - modX) * Q11 + (modX - xmin) * Q21; // x on the line between Q11 and Q21, y = ymin
+        float R2 = (xmax - modX) * Q12 + (modX - xmin) * Q22; // x on the line between Q12 and Q22, y = ymax
+        
+        // linear interpolation in the y direction (between R1 and R2)
+        float p = (ymax - modY) * R1 + (modY - ymin) * R2;
+
+
+        float remapp = Remap(p, 0, 1, _data.remapMin, _data.remapMax);
+        
+        return remapp;
     }
 
     public float SampleHeightMap(int x, int z, LayerData data)
     {
         float y = 0;
-        int xSamplePoint = (int)Remap(x, 0, xSize, 0, data.map.width);
-        int zSamplePoint = (int)Remap(z, 0, zSize, 0, data.map.height);
+        int xSamplePoint = (int)Remap(x, 0, _data.dimension, 0, data.map.width);
+        int zSamplePoint = (int)Remap(z, 0, _data.dimension, 0, data.map.height);
 
         y = data.map.GetPixel(xSamplePoint, zSamplePoint).grayscale;
 
@@ -360,7 +376,7 @@ public class MeshGenerator : MonoBehaviour
 
     private Texture2D GenerateHeightMapTexture(int size, Vector2 dim)
     {
-        Texture2D tex = new Texture2D((int)dim.x + 1, (int)dim.y + 1);
+        Texture2D tex = new Texture2D(_data.dimension + 1, _data.dimension + 1);
 
         Color[] colors = new Color[size];
         
@@ -372,7 +388,7 @@ public class MeshGenerator : MonoBehaviour
             // Debug.Log("Index (" + z + "," + x + ") [" + (z + x * zSize) + "]");
             float height = _vertices[i].y;
 
-            float heightTo01 = Remap(height, _remapMin, _remapMax, 0, 1);
+            float heightTo01 = Remap(height, _data.remapMin, _data.remapMax, 0, 1);
             // float height01ToRGB = Remap(heightTo01, 0, 1, 0, 255);
                 
             colors[i] = new Color(heightTo01, heightTo01, heightTo01, 1);
@@ -381,9 +397,29 @@ public class MeshGenerator : MonoBehaviour
         }
 
         tex.wrapMode = TextureWrapMode.Clamp;
-        tex.SetPixels(0, 0, (int)dim.x + 1, (int)dim.y + 1, colors);
+        tex.SetPixels(0, 0, _data.dimension + 1, _data.dimension + 1, colors);
         tex.Apply();
 
         return tex;
+    }
+
+    public int GetMeshDimensions()
+    {
+        return _data.dimension;
+    }
+
+    private void GenerateLattice()
+    {
+        UnityEngine.Random.InitState(_data.simpleNoise.seed);
+        
+        _lattice = new float[_data.simpleNoise.latticeDim, _data.simpleNoise.latticeDim];
+        
+        for (int x = 0; x < _data.simpleNoise.latticeDim; ++x)
+        {
+            for (int y = 0; y < _data.simpleNoise.latticeDim; ++y)
+            {
+                _lattice[x, y] = UnityEngine.Random.Range(0.0f, 1.0f);
+            }
+        }
     }
 }

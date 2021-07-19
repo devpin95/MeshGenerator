@@ -12,7 +12,7 @@ public class CameraTarget : MonoBehaviour
     void Start()
     {
         _targetMG = target.GetComponent<MeshGenerator>();
-        _targetOffset = new Vector3(_targetMG.xSize / 2f, 0, _targetMG.zSize / 2f);
+        _targetOffset = new Vector3(_targetMG.GetMeshDimensions() / 2f, 0, _targetMG.GetMeshDimensions() / 2f);
     }
 
     // Update is called once per frame
