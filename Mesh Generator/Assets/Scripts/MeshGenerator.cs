@@ -141,7 +141,8 @@ public class MeshGenerator : MonoBehaviour
                         newvert.y = 0;
                         break;
                 }
-                
+
+                if (_data.invert) y = 1 - y;
                 newvert.y = y;
                 vertlist.Add(newvert);
             }
@@ -220,33 +221,17 @@ public class MeshGenerator : MonoBehaviour
             {
                 UnityEngine.Random.InitState((int)Time.time * 432134 / 546632);
                 _data.simpleNoise.seed = UnityEngine.Random.Range(int.MinValue, int.MinValue);
+
+                while (_data.simpleNoise.sampleMin < 0)
+                {
+                    _data.simpleNoise.sampleMin += 10;
+                    _data.simpleNoise.sampleMax += 10;
+                }
             }
 
             GenerateLattice();
         }
 
-        // xSize = data.dimension;
-        // zSize = data.dimension;
-        //
-        // _mapType = data.mapType;
-        //
-        // if (_mapType == Enums.HeightMapTypes.ImageMap)
-        // {
-        //     Debug.Log("Extracting height from " + maps.mapList.Count + " maps");
-        // }
-        //
-        // _perlinNoiseMin = data.perlin.sampleMin;
-        // _perlinNoiseMax = data.perlin.sampleMax;
-        //
-        // _domainWarp = data.perlin.domainWarp;
-        // _octaves = data.perlin.octaves;
-        // _hurstExponent = data.perlin.hurst;
-        //
-        // Debug.Log("PERLIN " + _perlinNoiseMin + " " + _perlinNoiseMax);
-        //
-        // _remapMin = data.remapMin;
-        // _remapMax = data.remapMax;
-        
         _mesh.Clear();
         Array.Clear(_triangles, 0, _triangles.Length);
         Array.Clear(_vertices, 0, _vertices.Length);
@@ -295,12 +280,17 @@ public class MeshGenerator : MonoBehaviour
 
     public float SampleSimpleNoise(int x, int z)
     {
+        float remappedx = Remap(x, 0, _data.dimension, _data.simpleNoise.sampleMin, _data.simpleNoise.sampleMax);
+        remappedx += _data.simpleNoise.frequency;
+        float remappedz = Remap(z, 0, _data.dimension, _data.simpleNoise.sampleMin, _data.simpleNoise.sampleMax);
+        remappedz += _data.simpleNoise.frequency;
+        
         // Debug.Log(x + ", " + z);
         //https://en.wikipedia.org/wiki/Bilinear_interpolation
         
         // bring the values back to the origin block [0, latticeDim]
-        float modX = x % _data.simpleNoise.latticeDim;
-        float modY = z % _data.simpleNoise.latticeDim;
+        float modX = remappedx % _data.simpleNoise.latticeDim;
+        float modY = remappedz % _data.simpleNoise.latticeDim;
 
         int xmin = (int) modX;
         int xmax = xmin + 1;
@@ -326,10 +316,12 @@ public class MeshGenerator : MonoBehaviour
         // linear interpolation in the y direction (between R1 and R2)
         float p = (ymax - modY) * R1 + (modY - ymin) * R2;
 
+        var smooth = Smoothing.Algorithms[_data.simpleNoise.smoothing];
+        float psmooth = smooth(p);
 
-        float remapp = Remap(p, 0, 1, _data.remapMin, _data.remapMax);
+        float remapp = Remap(psmooth, 0, 1, _data.remapMin, _data.remapMax);
         
-        return remapp;
+        return remapp * _data.simpleNoise.scale;
     }
 
     public float SampleHeightMap(int x, int z, LayerData data)

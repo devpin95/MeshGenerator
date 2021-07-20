@@ -17,6 +17,7 @@ public class Enums
         None,
         GaussianBlur,
         Smoothstep,
+        PerlinSmoothstep,
         Cosine
     }
 
@@ -42,6 +43,7 @@ public class Enums
             {SmoothingAlgorithms.None, "None"},
             {SmoothingAlgorithms.GaussianBlur, "Gaussian Blur"},
             {SmoothingAlgorithms.Smoothstep, "Smoothstep"},
+            {SmoothingAlgorithms.PerlinSmoothstep, "Perlin Smoothstep"},
             {SmoothingAlgorithms.Cosine, "Cosine"}
         };
 
@@ -51,6 +53,7 @@ public class Enums
             {"None", SmoothingAlgorithms.None},
             {"Gaussian Blur", SmoothingAlgorithms.GaussianBlur},
             {"Smoothstep", SmoothingAlgorithms.Smoothstep},
+            {"Perlin Smoothstep", SmoothingAlgorithms.PerlinSmoothstep},
             {"Cosine", SmoothingAlgorithms.Cosine}
         };
 }

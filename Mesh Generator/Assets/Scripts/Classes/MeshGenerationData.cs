@@ -9,6 +9,8 @@ public class MeshGenerationData
     // remap values
     public float remapMin = 0;
     public float remapMax = 1;
+
+    public bool invert = false;
     
     // perlin noise values
     public PerlinMetaData perlin = new PerlinMetaData();

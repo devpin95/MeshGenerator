@@ -5,6 +5,7 @@ using System.IO;
 using SFB;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public class UIController : MonoBehaviour
@@ -28,6 +29,7 @@ public class UIController : MonoBehaviour
     public TMP_InputField dimensionField;
     public TMP_Dropdown heightMapTypeField;
     private bool heightMapTypeFieldReady = false;
+    public Toggle invertToggle;
 
     [Header("Perlin Noise Inputs")]
     public TMP_InputField perlinNoiseMinField;
@@ -43,7 +45,8 @@ public class UIController : MonoBehaviour
     public TMP_InputField simpleNoiseMaxField;
     public TMP_Dropdown simpleNoiseSmoothingField;
     public TMP_InputField simpleNoiseFrequencyField;
-    public Slider simpleNoiseScaleField;
+    [FormerlySerializedAs("simpleNoiseScaleField")] public Slider simpleNoiseScaleSlider;
+    public TextMeshProUGUI simpleNoiseScaleLabel;
     public Toggle simpleNoiseRandomToggle;
     public CanvasGroup simpleNoiseRandomCG;
     public TMP_InputField simpleNoiseSeedField;
@@ -96,6 +99,14 @@ public class UIController : MonoBehaviour
         heightMapTypeField.value = 0;
         heightMapTypeFieldReady = true;
 
+        foreach (var algo in Enums.SmoothingAlgorithmNames)
+        {
+            simpleNoiseSmoothingField.options.Add(new TMP_Dropdown.OptionData(algo.Value));
+        }
+        
+        simpleNoiseSmoothingField.value = 1;
+        simpleNoiseSmoothingField.value = 0;
+
         _activeOptionMenu = planeOptions;
     }
 
@@ -139,6 +150,7 @@ public class UIController : MonoBehaviour
         if (!ParseDimensions(data)) return;
         
         ParseMapType(data);
+        data.invert = invertToggle.isOn;
 
         // perlin noise ------------------------------------------------------------------------------------------------
         if (data.mapType == Enums.HeightMapTypes.PerlinNoise)
@@ -164,9 +176,11 @@ public class UIController : MonoBehaviour
             data.simpleNoise.latticeDim = int.Parse(simpleNoiseLatticeSize.text);
             data.simpleNoise.smoothing = (Enums.SmoothingAlgorithms)simpleNoiseSmoothingField.value;
             data.simpleNoise.frequency = int.Parse(simpleNoiseFrequencyField.text);
-            data.simpleNoise.scale = simpleNoiseScaleField.value;
+            data.simpleNoise.scale = simpleNoiseScaleSlider.value;
             data.simpleNoise.random = simpleNoiseRandomToggle.isOn;
             data.simpleNoise.seed = int.Parse(simpleNoiseSeedField.text);
+            data.simpleNoise.sampleMin = float.Parse(simpleNoiseMinField.text);
+            data.simpleNoise.sampleMax = float.Parse(simpleNoiseMaxField.text);
             
             if (!ParseRemap(data)) return;
         };
@@ -443,5 +457,10 @@ public class UIController : MonoBehaviour
             simpleNoiseRandomCG.interactable = true;
             simpleNoiseRandomCG.alpha = 1;
         }
-    } 
+    }
+
+    public void UpdateSimpleNoiseScaleLabel(float val)
+    {
+        simpleNoiseScaleLabel.text = val.ToString("n2");
+    }
 }
