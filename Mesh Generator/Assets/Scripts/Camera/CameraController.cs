@@ -197,10 +197,8 @@ public class CameraController : MonoBehaviour
         return Mathf.Clamp(angle, min, max);
     }
 
-    public void ReaquireTarget(MeshMetaData data)
+    public void ReaquireTarget(Vector3 pos)
     {
-        _targetMG = target.GetComponent<MeshGenerator>();
-        _targetOffset = new Vector3(_targetMG.GetMeshDimensions() / 2f, 0, _targetMG.GetMeshDimensions() / 2f);
-        _targetPos = target.transform.position + _targetOffset;
+        _targetPos = pos;
     }
 }

@@ -11,69 +11,73 @@ using Random = System.Random;
 
 public class MeshGenerator : MonoBehaviour
 {
+    public int xMeshOffset = 0;
+    public int zMeshOffset = 0;
+
+    public int row = 0;
+    public int column = 0;
+    
+    private const int meshDim = 254;
+
     private Mesh _mesh;
     private Vector3[] _vertices;
     private int[] _triangles;
 
-    private List<GameObject> _visualVerts = new List<GameObject>();
-
     public HeightMapList maps;
-    public CEvent_String checkpointNotification;
+    // public CEvent_String checkpointNotification;
     
     
-    private float _startTime;
-    private float _endTime;
-    private float _deltaTime;
+    // private float _startTime;
+    // private float _endTime;
+    // private float _deltaTime;
 
     private float[,] _lattice;
     
     private MeshGenerationData _data = new MeshGenerationData();
 
-    [Header("Events")] 
-    public CEvent_MeshMetaData meshDataNotification;
+    // [Header("Events")] 
+    // public CEvent_MeshMetaData meshDataNotification;
     private MeshMetaData _metaData = new MeshMetaData();
 
     // Start is called before the first frame update
     void Start()
     {
-       
-        _mesh = new Mesh();
-        GetComponent<MeshFilter>().mesh = _mesh;
-
-        StartCoroutine(GenerateMesh());
+        // StartCoroutine(GenerateMesh());
     }
 
-    IEnumerator GenerateMesh()
+    public void GenerateMesh()
     {
         while (true)
         {
-            checkpointNotification.Raise("Generating " + Enums.HeightMapTypeNames[_data.mapType] + " mesh...");
-            _startTime = Time.realtimeSinceStartup;
+            // checkpointNotification.Raise("Generating " + Enums.HeightMapTypeNames[_data.mapType] + " mesh...");
+            // _startTime = Time.realtimeSinceStartup;
+            
             CreateShape();
-            _endTime = Time.realtimeSinceStartup;
-            _deltaTime = _endTime - _startTime;
+            
+            // _endTime = Time.realtimeSinceStartup;
+            // _deltaTime = _endTime - _startTime;
 
-            yield return null;
+            // yield return null;
             
-            _metaData.vertexCount = _vertices.Length;
-            _metaData.polyCount = _triangles.Length / 3;
-            _metaData.generationTimeMS = _deltaTime * 1000;
+            // _metaData.vertexCount = _vertices.Length;
+            // _metaData.polyCount = _triangles.Length / 3;
+            // _metaData.generationTimeMS = _deltaTime * 1000;
             
-            yield return null;
+            // yield return null;
         
-            checkpointNotification.Raise("Mesh generation completed in " + _metaData.generationTimeMS +  "ms. Updating mesh object and recalculating normals...");
+            // checkpointNotification.Raise("Mesh generation completed in " + _metaData.generationTimeMS +  "ms. Updating mesh object and recalculating normals...");
             UpdateMesh();
             
-            checkpointNotification.Raise("Generating height map preview...");
+            // checkpointNotification.Raise("Generating height map preview...");
             _metaData.heightMap = GenerateHeightMapTexture(_vertices.Length, new Vector2(_data.dimension, _data.dimension));
             
-            yield return new WaitForSeconds(1);
-            meshDataNotification.Raise(_metaData);
+            // yield return new WaitForSeconds(1);
+            // meshDataNotification.Raise(_metaData);
 
             break;
         }
         
-        yield break;
+        // yield break;
     }
     
     private void CreateShape()
@@ -92,50 +96,60 @@ public class MeshGenerator : MonoBehaviour
         _mesh.RecalculateNormals();
     }
 
-    // public void OnDrawGizmos()
-    // {
-    //     if (_vertices == null) return;
-    //
-    //     int i = 0;
-    //     foreach (var vert in _vertices)
-    //     {
-    //         Gizmos.color = Color.red;
-    //         Gizmos.DrawSphere(vert, .01f);
-    //         Handles.Label(vert, i.ToString());
-    //
-    //         ++i;
-    //     }
-    // }
+    public void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawSphere(new Vector3(xMeshOffset, 0, zMeshOffset), 1);
+    }
 
     private void CreateVerts()
     {
         List<Vector3> vertlist = new List<Vector3>();
         
-        checkpointNotification.Raise("Generating " + (_data.dimension + 1) + "x" + (_data.dimension + 1) + " grid (" + (_data.dimension + 1 * _data.dimension + 1) + " verts)...");
+        Debug.Log("Generating mesh starting at (" + xMeshOffset + ", " + zMeshOffset + ") up to (" + (xMeshOffset + meshDim) + ", " + (zMeshOffset + meshDim) + ") using " + _data.mapType);
+        
+        // checkpointNotification.Raise("Generating " + (_data.dimension + 1) + "x" + (_data.dimension + 1) + " grid (" + (_data.dimension + 1 * _data.dimension + 1) + " verts)...");
         // create vertices
-        for (int z = 0; z <= _data.dimension; ++z)
+        for (int z = 0; z <= meshDim; ++z)
         {
-            for (int x = 0; x <= _data.dimension; ++x)
+            for (int x = 0; x <= meshDim; ++x)
             {
                 Vector3 newvert = new Vector3(x, 0, z);
 
                 float y = 0;
+
+                int realx = x + xMeshOffset;
+                int realz = z + zMeshOffset;
+                
+                // if (row > 0 && column > 0)
+                // {
+                //     realx = x + 1;
+                //     realz = z + 1;
+                // }
+                // else if (row == 0 && column > 0)
+                // {
+                //     realx = x + 1;
+                // }
+                // else if (row > 0 && column == 0)
+                // {
+                //     realz = z + 1;
+                // }
                 
                 switch (_data.mapType)
                 {
                     case Enums.HeightMapTypes.PerlinNoise:
-                        y = SamplePerlinNoise(x, z);
+                        y = SamplePerlinNoise(realx, realz);
                         break;
                     case Enums.HeightMapTypes.ImageMap:
                         foreach (var map in maps.mapList)
                         {
-                            y += SampleHeightMap(x, z, map);
+                            y += SampleHeightMap(realx, realz, map);
                         }
                         break;
                     case Enums.HeightMapTypes.Plane:
                         break;
                     case Enums.HeightMapTypes.SimpleNoise:
-                        y = SampleSimpleNoise(x, z);
+                        y = SampleSimpleNoise(realx, realz);
                         break;
                     default:
                         newvert.y = 0;
@@ -148,23 +162,24 @@ public class MeshGenerator : MonoBehaviour
             }
         }
 
+        // Debug.Log("Mesh has " + vertlist.Count + " vertices" );
         _vertices = vertlist.ToArray();
     }
 
     private void CreateTris()
     {
-        checkpointNotification.Raise("Generating " + (_data.dimension + 2) * (_data.dimension + 2) + " polygons...");
+        // checkpointNotification.Raise("Generating " + (_data.dimension + 2) * (_data.dimension + 2) + " polygons...");
         List<int> trilist = new List<int>();
-        
-        for( int z = 0; z < _data.dimension; ++z )
+
+        for( int z = 0; z < meshDim; ++z )
         {
-            int y = z * (_data.dimension + 1); // offset
-            for (int x = 0; x < _data.dimension; ++x)
+            int offset = z * (meshDim + 1); // offset
+            for (int x = 0; x < meshDim; ++x)
             {
-                int bl = x + y;
-                int tl = x + _data.dimension + y + 1;
-                int tr = x + _data.dimension + y + 2;
-                int br = x + y + 1;
+                int bl = x + offset;
+                int tl = x + meshDim + offset + 1;
+                int tr = x + meshDim + offset + 2;
+                int br = x + offset + 1;
                 
                 // left tri
                 trilist.Add(bl);
@@ -178,40 +193,40 @@ public class MeshGenerator : MonoBehaviour
             }
         }
         
+        // Debug.Log("Mesh has " + trilist.Count / 3 + " triangles");
         _triangles = trilist.ToArray();
     }
 
-    public void ShowVisualVertices(bool show)
-    {
-        if (show)
-        {
-            foreach (var vert in _vertices)
-            {
-                var obj = PrimativePool.Instance.GetPooledObject();
-                if (obj)
-                {
-                    obj.transform.position = vert;
-                    _visualVerts.Add(obj);
-                }
-            }
-        }
-        else
-        {
-            foreach (var obj in _visualVerts)
-            {
-                PrimativePool.Instance.ReturnToPool(obj);
-            }
-            _visualVerts = new List<GameObject>();
-        }
-    }
+    // public void ShowVisualVertices(bool show)
+    // {
+    //     if (show)
+    //     {
+    //         foreach (var vert in _vertices)
+    //         {
+    //             var obj = PrimativePool.Instance.GetPooledObject();
+    //             if (obj)
+    //             {
+    //                 obj.transform.position = vert;
+    //                 _visualVerts.Add(obj);
+    //             }
+    //         }
+    //     }
+    //     else
+    //     {
+    //         foreach (var obj in _visualVerts)
+    //         {
+    //             PrimativePool.Instance.ReturnToPool(obj);
+    //         }
+    //         _visualVerts = new List<GameObject>();
+    //     }
+    // }
 
     public void RegenerateMesh(MeshGenerationData data)
     {
         Debug.Log(data.ToString());
         
-        bool needToShowVisualVerts = _visualVerts.Count > 0;
-
-        ShowVisualVertices(false);
+        // bool needToShowVisualVerts = _visualVerts.Count > 0;
+        // ShowVisualVertices(false);
 
         _data = data;
 
@@ -236,22 +251,25 @@ public class MeshGenerator : MonoBehaviour
         Array.Clear(_triangles, 0, _triangles.Length);
         Array.Clear(_vertices, 0, _vertices.Length);
         
-        StartCoroutine(GenerateMesh());
+        // StartCoroutine(GenerateMesh());
         
-        if ( needToShowVisualVerts /*&& _vertices.Length < visualVerticeThreshold*/ ) ShowVisualVertices(true);
+        // if ( needToShowVisualVerts /*&& _vertices.Length < visualVerticeThreshold*/ ) ShowVisualVertices(true);
     }
 
     public float SamplePerlinNoise(int x, int z)
     {
-        float mapRange = _data.perlin.sampleMax - _data.perlin.sampleMin;
+        float xSamplePoint = Remap(x, 0, _data.dimension, _data.perlin.sampleMin, _data.perlin.sampleMax);
+        float zSamplePoint = Remap(z, 0, _data.dimension, _data.perlin.sampleMin, _data.perlin.sampleMax);
         
-        float xSampleProportion = x / (float)_data.dimension + 1;
-        float xMapProportion = mapRange * xSampleProportion;
-        float xSamplePoint = _data.perlin.sampleMax + xMapProportion;
-        
-        float zSampleProportion = z / (float)_data.dimension + 1;
-        float zMapProportion = mapRange * zSampleProportion;
-        float zSamplePoint = _data.perlin.sampleMax + zMapProportion;
+        // float mapRange = _data.perlin.sampleMax - _data.perlin.sampleMin;
+        //
+        // float xSampleProportion = x / (float)_data.dimension;
+        // float xMapProportion = mapRange * xSampleProportion;
+        // float xSamplePoint = _data.perlin.sampleMax + xMapProportion;
+        //
+        // float zSampleProportion = z / (float)_data.dimension;
+        // float zMapProportion = mapRange * zSampleProportion;
+        // float zSamplePoint = _data.perlin.sampleMax + zMapProportion;
 
         float sample;
         
@@ -389,7 +407,7 @@ public class MeshGenerator : MonoBehaviour
         }
 
         tex.wrapMode = TextureWrapMode.Clamp;
-        tex.SetPixels(0, 0, _data.dimension + 1, _data.dimension + 1, colors);
+        tex.SetPixels(0, 0, meshDim, meshDim, colors);
         tex.Apply();
 
         return tex;
@@ -413,5 +431,19 @@ public class MeshGenerator : MonoBehaviour
                 _lattice[x, y] = UnityEngine.Random.Range(0.0f, 1.0f);
             }
         }
+    }
+
+    public void InitData(MeshGenerationData ndata)
+    {
+        _data = ndata;
+        _mesh = new Mesh();
+        GetComponent<MeshFilter>().mesh = _mesh;
+    }
+
+    public void ClearMesh()
+    {
+        _mesh.Clear();
+        Array.Clear(_triangles, 0, _triangles.Length);
+        Array.Clear(_vertices, 0, _vertices.Length);
     }
 }
