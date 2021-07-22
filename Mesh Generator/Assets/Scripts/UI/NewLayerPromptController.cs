@@ -128,6 +128,7 @@ public class NewLayerPromptController : MonoBehaviour
 
     public static Sprite Tex2dToSprite(Texture2D tex)
     {
+        if (tex == null) return null;
         return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100.0f);
     }
 }

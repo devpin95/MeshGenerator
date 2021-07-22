@@ -18,12 +18,21 @@ public class MeshManager : MonoBehaviour
     private List<MeshGenerator> _generators = new List<MeshGenerator>();
 
     private MeshGenerationData _data = new MeshGenerationData();
+    
+    [Header("Events")]
+    public CEvent_MeshMetaData meshDataNotification;
+    public CEvent_String checkpointNotification;
+    
+    private float _startTime;
+    private float _endTime;
+    private float _deltaTime;
+    private MeshMetaData _metaData = new MeshMetaData();
 
     // Start is called before the first frame update
     void Start()
     {
         // meshOffest = spacing * 255f;
-        StartMeshGeneration();
+        StartCoroutine(StartMeshGeneration());
     }
 
     // Update is called once per frame
@@ -32,13 +41,46 @@ public class MeshManager : MonoBehaviour
         
     }
 
-    public void StartMeshGeneration()
+    IEnumerator StartMeshGeneration()
     {
+        float totalDelay = 1.5f;
+        _startTime = Time.realtimeSinceStartup;
+
+        if (_data.mapType == Enums.HeightMapTypes.SimpleNoise)
+        {
+            checkpointNotification.Raise("Generating " + _data.simpleNoise.latticeDim + "x" + _data.simpleNoise.latticeDim + " lattice with seed " + _data.simpleNoise.seed + "...");
+            yield return new WaitForSeconds(0.25f);
+            Lattice.Instance.GenerateLattice(_data.simpleNoise.latticeDim, _data.simpleNoise.seed);
+            totalDelay += .25f;
+        }
+        
+        checkpointNotification.Raise("Creating and initializing " + meshCount + "x" + meshCount + " mesh grid...");
+        yield return new WaitForSeconds(0.25f);
         InitMeshes();
+        yield return null;
+        
+        checkpointNotification.Raise("Generating meshes...");
+        yield return new WaitForSeconds(0.25f);
         GenerateMesh();
+        
+        checkpointNotification.Raise("Updating metadata...");
+        yield return new WaitForSeconds(1);
+        
+        _endTime = Time.realtimeSinceStartup;
+        _deltaTime = _endTime - _startTime;
+
+        int gridarea = meshCount * meshCount;
+        int vertcount = gridarea * _meshDim;
+        _metaData.vertexCount = vertcount;
+        _metaData.polyCount = 5;
+        _metaData.generationTimeMS = _deltaTime * 1000 - (totalDelay * 1000);
+        
+        meshDataNotification.Raise(new MeshMetaData());
+
+        yield return null;
     }
 
-    public void InitMeshes()
+    private void InitMeshes()
     {
         _data.dimension = meshCount * _meshDim;
         
@@ -117,7 +159,7 @@ public class MeshManager : MonoBehaviour
         _meshes = new List<GameObject>();
         _generators = new List<MeshGenerator>();
 
-        StartMeshGeneration();
+        StartCoroutine(StartMeshGeneration());
 
         // StartCoroutine(GenerateMesh());
 

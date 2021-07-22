@@ -8,6 +8,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 using Random = System.Random;
+using Unity.Mathematics;
 
 public class MeshGenerator : MonoBehaviour
 {
@@ -289,6 +290,8 @@ public class MeshGenerator : MonoBehaviour
         {
             float perlin = Mathf.PerlinNoise(xSamplePoint, zSamplePoint);
             sample = Mathf.Clamp01(perlin); // make sure that the value is actually between 0 and 1
+
+            if (_data.perlin.ridged) sample = InvertAbs(sample);
         }
         
         float rmsample = Remap(sample, 0, 1, _data.remapMin, _data.remapMax);
@@ -322,10 +325,10 @@ public class MeshGenerator : MonoBehaviour
         if (ymax >= _data.simpleNoise.latticeDim) yrounded = 0;
         if (xmax >= _data.simpleNoise.latticeDim) xrounded = 0;
         
-        float Q11 = _lattice[xmin, ymin]; // bottom left point
-        float Q12 = _lattice[xmin, yrounded]; // top left point
-        float Q21 = _lattice[xrounded, ymin]; // bottom right point
-        float Q22 = _lattice[xrounded, yrounded]; // top right point
+        float Q11 = Lattice.Instance.SampleLattice(xmin, ymin); // bottom left point
+        float Q12 = Lattice.Instance.SampleLattice(xmin, yrounded); // top left point
+        float Q21 = Lattice.Instance.SampleLattice(xrounded, ymin); // bottom right point
+        float Q22 = Lattice.Instance.SampleLattice(xrounded, yrounded); // top right point
         
         // linear interpolation in the x direction
         float R1 = (xmax - modX) * Q11 + (modX - xmin) * Q21; // x on the line between Q11 and Q21, y = ymin
@@ -378,7 +381,14 @@ public class MeshGenerator : MonoBehaviour
         {
             float f = Mathf.Pow(2.0f, (float) i);
             float a = Mathf.Pow(f, -hurst);
-            t += a * Mathf.PerlinNoise(f * pos.x, f * pos.y);
+            
+            float perlin = Mathf.PerlinNoise(f * pos.x, f * pos.y);
+            float sample = Mathf.Clamp01(perlin); // make sure that the value is actually between 0 and 1
+
+            if (_data.perlin.ridged) sample = InvertAbs(sample);
+            
+            // t += a * Mathf.PerlinNoise(f * pos.x, f * pos.y);
+            t += a * sample;
         }
 
         return t;
@@ -445,5 +455,14 @@ public class MeshGenerator : MonoBehaviour
         _mesh.Clear();
         Array.Clear(_triangles, 0, _triangles.Length);
         Array.Clear(_vertices, 0, _vertices.Length);
+    }
+
+    private float InvertAbs(float val)
+    {
+        val = Remap(val, 0, 1, -1, 1);
+        val = Mathf.Abs(val);
+        val *= -1;
+        val = Remap(val, -1, 0, 0, 1);
+        return val;
     }
 }

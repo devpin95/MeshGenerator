@@ -30,6 +30,9 @@ public class UIController : MonoBehaviour
     public TMP_Dropdown heightMapTypeField;
     private bool heightMapTypeFieldReady = false;
     public Toggle invertToggle;
+    public GameObject mainUIContainer;
+    public GameObject generationStatsContainer;
+    public GameObject debugContainer;
 
     [Header("Perlin Noise Inputs")]
     public TMP_InputField perlinNoiseMinField;
@@ -38,6 +41,7 @@ public class UIController : MonoBehaviour
     public CanvasGroup domainWarpOptions;
     public Slider hurstSlider;
     public TextMeshProUGUI hurstValueLabel;
+    public Toggle perlinRidgedToggle;
 
     [Header("Simple Noise Inputs")] 
     public TMP_InputField simpleNoiseLatticeSize;
@@ -159,6 +163,7 @@ public class UIController : MonoBehaviour
 
             data.perlin.domainWarp = domainWarpToggle.isOn;
             data.perlin.hurst = hurstSlider.value;
+            data.perlin.ridged = perlinRidgedToggle.isOn;
             
             if (!ParseRemap(data)) return;
         }
@@ -462,5 +467,23 @@ public class UIController : MonoBehaviour
     public void UpdateSimpleNoiseScaleLabel(float val)
     {
         simpleNoiseScaleLabel.text = val.ToString("n2");
+    }
+
+    public void ToggleHud(bool s)
+    {
+        if (s)
+        {
+            mainUIContainer.SetActive(true);
+            generationStatsContainer.SetActive(true);
+            debugContainer.SetActive(true);
+            generateButton.gameObject.SetActive(true);
+        }
+        else
+        {
+            mainUIContainer.SetActive(false);
+            generationStatsContainer.SetActive(false);
+            debugContainer.SetActive(false);
+            generateButton.gameObject.SetActive(false);
+        }
     }
 }
