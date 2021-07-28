@@ -18,7 +18,6 @@ public class MeshGenerator : MonoBehaviour
     public int row = 0;
     public int column = 0;
     
-    private const int meshDim = 254;
 
     private Mesh _mesh;
     private Vector3[] _vertices;
@@ -70,7 +69,7 @@ public class MeshGenerator : MonoBehaviour
             UpdateMesh();
             
             // checkpointNotification.Raise("Generating height map preview...");
-            _metaData.heightMap = GenerateHeightMapTexture(_vertices.Length, new Vector2(_data.dimension, _data.dimension));
+            // _metaData.heightMap = GenerateHeightMapTexture(_vertices.Length, new Vector2(_data.dimension, _data.dimension));
             
             // yield return new WaitForSeconds(1);
             // meshDataNotification.Raise(_metaData);
@@ -107,13 +106,13 @@ public class MeshGenerator : MonoBehaviour
     {
         List<Vector3> vertlist = new List<Vector3>();
         
-        Debug.Log("Generating mesh starting at (" + xMeshOffset + ", " + zMeshOffset + ") up to (" + (xMeshOffset + meshDim) + ", " + (zMeshOffset + meshDim) + ") using " + _data.mapType);
+        Debug.Log("Generating mesh starting at (" + xMeshOffset + ", " + zMeshOffset + ") up to (" + (xMeshOffset + Constants.meshSquares) + ", " + (zMeshOffset + Constants.meshSquares) + ") using " + _data.mapType);
         
         // checkpointNotification.Raise("Generating " + (_data.dimension + 1) + "x" + (_data.dimension + 1) + " grid (" + (_data.dimension + 1 * _data.dimension + 1) + " verts)...");
         // create vertices
-        for (int z = 0; z <= meshDim; ++z)
+        for (int z = 0; z < Constants.meshVerts; ++z)
         {
-            for (int x = 0; x <= meshDim; ++x)
+            for (int x = 0; x < Constants.meshVerts; ++x)
             {
                 Vector3 newvert = new Vector3(x, 0, z);
 
@@ -172,14 +171,14 @@ public class MeshGenerator : MonoBehaviour
         // checkpointNotification.Raise("Generating " + (_data.dimension + 2) * (_data.dimension + 2) + " polygons...");
         List<int> trilist = new List<int>();
 
-        for( int z = 0; z < meshDim; ++z )
+        for( int z = 0; z < Constants.meshSquares; ++z )
         {
-            int offset = z * (meshDim + 1); // offset
-            for (int x = 0; x < meshDim; ++x)
+            int offset = z * (Constants.meshSquares + 1); // offset
+            for (int x = 0; x < Constants.meshSquares; ++x)
             {
                 int bl = x + offset;
-                int tl = x + meshDim + offset + 1;
-                int tr = x + meshDim + offset + 2;
+                int tl = x + Constants.meshSquares + offset + 1;
+                int tr = x + Constants.meshSquares + offset + 2;
                 int br = x + offset + 1;
                 
                 // left tri
@@ -417,7 +416,7 @@ public class MeshGenerator : MonoBehaviour
         }
 
         tex.wrapMode = TextureWrapMode.Clamp;
-        tex.SetPixels(0, 0, meshDim, meshDim, colors);
+        tex.SetPixels(0, 0, Constants.meshSquares, Constants.meshSquares, colors);
         tex.Apply();
 
         return tex;

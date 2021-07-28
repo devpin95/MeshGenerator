@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class MeshGenerationData
 {
-    public int dimension = 3;
+    public int dimension = 1;
     public Enums.HeightMapTypes mapType = Enums.HeightMapTypes.Plane;
     // remap values
     public float remapMin = 0;

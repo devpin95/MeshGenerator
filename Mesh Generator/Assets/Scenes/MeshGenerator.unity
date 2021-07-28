@@ -16330,7 +16330,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a8feedb44805f16488c33728a84d0ae9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  meshCount: 3
+  meshCount: 1
   meshPrefab: {fileID: 1441114623303638303, guid: 34b9913d82f3f344484f8e996bca980b, type: 3}
   updateCameraEvent: {fileID: 11400000, guid: 75699fefeac3c1244b4562bb90cfb19a, type: 2}
   meshDataNotification: {fileID: 11400000, guid: 64ee600ab3c387e439d370e6eb283780, type: 2}

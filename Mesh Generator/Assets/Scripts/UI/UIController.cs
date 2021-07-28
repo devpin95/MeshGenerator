@@ -144,7 +144,7 @@ public class UIController : MonoBehaviour
         vertCount.text = "Vertices: " + data.vertexCount.ToString("n0");
         polyCount.text = "Polygons: " + data.polyCount.ToString("n0");
         genTime.text = data.generationTimeMS.ToString("n2") + "ms";
-        previewImage.sprite = NewLayerPromptController.Tex2dToSprite(data.heightMap);
+        previewImage.sprite = data.heightMap;
     }
     
     private void CollectGenerationData()
