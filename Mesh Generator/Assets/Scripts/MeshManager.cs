@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Parameters;
 using UnityEngine;
 
 public class MeshManager : MonoBehaviour
@@ -21,6 +22,9 @@ public class MeshManager : MonoBehaviour
     [Header("Events")]
     public CEvent_MeshMetaData meshDataNotification;
     public CEvent_String checkpointNotification;
+
+    [Header("Parameters")] 
+    public GlobalParameters globalParameters;
     
     private float _startTime;
     private float _endTime;
@@ -33,6 +37,7 @@ public class MeshManager : MonoBehaviour
     {
         // meshOffest = spacing * 255f;
         StartCoroutine(StartMeshGeneration());
+        _heightMap.globalParams = globalParameters;
     }
 
     // Update is called once per frame

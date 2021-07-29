@@ -16335,6 +16335,7 @@ MonoBehaviour:
   updateCameraEvent: {fileID: 11400000, guid: 75699fefeac3c1244b4562bb90cfb19a, type: 2}
   meshDataNotification: {fileID: 11400000, guid: 64ee600ab3c387e439d370e6eb283780, type: 2}
   checkpointNotification: {fileID: 11400000, guid: 600c6801859c07b4c8fc2aaa38257fdd, type: 2}
+  globalParameters: {fileID: 11400000, guid: 0b718655b52a4e6419965c8e60fae1e3, type: 2}
 --- !u!4 &1627832509
 Transform:
   m_ObjectHideFlags: 0

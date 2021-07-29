@@ -1,21 +1,39 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Parameters;
 using UnityEngine;
 
 public class HeightMap
 {
-    public class Cell
+    private class Cell
     {
         public float tl = 0;
         public float tr = 0;
         public float bl = 0;
         public float br = 0;
+        public Vector3 lnorm = Vector3.up;
+        public Vector3 rnorm = Vector3.up;
+
+        public void ChangeLeftTriangle(float amount)
+        {
+            bl += amount;
+            tl += amount;
+            br += amount;
+        }
+
+        public void ChangeRightTriangle(float amount)
+        {
+            br += amount;
+            tl += amount;
+            tr += amount;
+        }
     }
 
     public int meshCount = 1;
-    public Cell[] map;
+    private Cell[] map;
 
+    public GlobalParameters globalParams;
     private int _area = 0;
 
     public void InitMap(int size)
@@ -65,44 +83,16 @@ public class HeightMap
                 cell.br = verts[lx + offset + 1].y;
                 cell.tl = verts[lx + Constants.meshVerts + offset].y;
                 cell.tr = verts[lx + Constants.meshVerts + offset + 1].y;
+
+                cell.lnorm = CalculateNormal(cell.bl, cell.tl, cell.br);
+                cell.rnorm = CalculateNormal(cell.tr, cell.br, cell.tl);
+                
                 map[index] = cell;
-                // Debug.Log(index);
             }
         }
-        
-        // for (int y = 0; y < Constants.meshSquares; ++y)
-        // {
-        //     for (int x = 0; x < Constants.meshSquares; ++x)
-        //     {
-        //         // get the local index of the cell
-        //         int vertind = x + y * Constants.meshSize;
-        //         
-        //         // get the 4 corners of the cell
-        //         Vector3 vertbl = verts[vertind];
-        //         Vector3 vertbr = verts[vertind + 1];
-        //         Vector3 verttl = verts[vertind + Constants.meshSize + 1];
-        //         Vector3 verttr = verts[vertind + Constants.meshSize + 2];
-        //         
-        //         // get the global index of the cell in the map
-        //         int xglobal = (xoffset * Constants.meshSize) + x;
-        //         int yglobal = (yoffset * Constants.meshSize) + y;
-        //         int mapind = xglobal + (yglobal * meshCount * Constants.meshSquares);
-        //
-        //         // Debug.Log("M(" + xoffset + ", " + yoffset + ") L(" + x + ", " + y + ") => G(" + xglobal + ", " + yglobal + ") = " + mapind);
-        //         // Debug.Log("X: " + xglobal + " Y: " + yglobal + " = " + map_ind);
-        //         
-        //         // add the cell to the map
-        //         Cell cell = new Cell();
-        //         cell.tl = verttl.y;
-        //         cell.tr = verttr.y;
-        //         cell.bl = vertbl.y;
-        //         cell.br = vertbr.y;
-        //         map[mapind] = cell;
-        //     }
-        // }
     }
 
-    public Cell GetCellAtPosition(int x, int y)
+    private Cell GetCellAtPosition(int x, int y)
     {
         return map[ x + y * meshCount];
     }
@@ -179,5 +169,63 @@ public class HeightMap
         var to = toAbs + toMin;
        
         return to;
+    }
+
+    private Vector3 CalculateNormal(float a, float b, float c)
+    {
+        Vector3 p1 = Vector3.zero;
+        p1.y = a;
+        
+        Vector3 p2 = Vector3.forward;
+        p2.y = b;
+        
+        Vector3 p3 = Vector3.right;
+        p3.y = c;
+
+        Vector3 v1 = p2 - p1;
+        Vector3 v2 = p3 - p1;
+
+        Vector3 norm = Vector3.Cross(v1, v2).normalized;
+        
+        return norm;
+    }
+
+    public int WidthAndHeight()
+    {
+        return meshCount * Constants.meshSquares;
+    }
+
+    public Vector3 SampleNormalAtXY(float x, float y)
+    {
+        Vector3 norm = Vector3.up;
+
+        int intx = (int) x;
+        int inty = (int) y;
+        float decx = x - intx;
+        float decy = y - inty;
+
+        if (intx < 0 || intx > WidthAndHeight()) return norm;
+        if (inty < 0 || inty > WidthAndHeight()) return norm;
+
+        Cell cell = map[intx + inty * WidthAndHeight()];
+
+        if (decx >= decy) norm = cell.rnorm;
+        else norm = cell.lnorm;
+
+        return norm.normalized;
+    }
+
+    public void ChangeCell(float x, float y, float amount)
+    {
+        int intx = (int) x;
+        int inty = (int) y;
+        float decx = x - intx;
+        float decy = y - inty;
+        
+
+        Cell cell = map[intx + inty * WidthAndHeight()];
+
+        if (decx >= decy) cell.ChangeRightTriangle(amount);
+        else cell.ChangeLeftTriangle(amount);
     }
 }

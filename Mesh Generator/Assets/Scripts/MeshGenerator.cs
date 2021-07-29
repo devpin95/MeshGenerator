@@ -106,7 +106,7 @@ public class MeshGenerator : MonoBehaviour
     {
         List<Vector3> vertlist = new List<Vector3>();
         
-        Debug.Log("Generating mesh starting at (" + xMeshOffset + ", " + zMeshOffset + ") up to (" + (xMeshOffset + Constants.meshSquares) + ", " + (zMeshOffset + Constants.meshSquares) + ") using " + _data.mapType);
+        // Debug.Log("Generating mesh starting at (" + xMeshOffset + ", " + zMeshOffset + ") up to (" + (xMeshOffset + Constants.meshSquares) + ", " + (zMeshOffset + Constants.meshSquares) + ") using " + _data.mapType);
         
         // checkpointNotification.Raise("Generating " + (_data.dimension + 1) + "x" + (_data.dimension + 1) + " grid (" + (_data.dimension + 1 * _data.dimension + 1) + " verts)...");
         // create vertices
