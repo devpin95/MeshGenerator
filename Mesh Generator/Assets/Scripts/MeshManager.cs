@@ -204,4 +204,9 @@ public class MeshManager : MonoBehaviour
 
         // if ( needToShowVisualVerts /*&& _vertices.Length < visualVerticeThreshold*/ ) ShowVisualVertices(true);
     }
+
+    public void RunSimulation(ErosionMetaData data)
+    {
+        Debug.Log(data.algorithm);
+    }
 }

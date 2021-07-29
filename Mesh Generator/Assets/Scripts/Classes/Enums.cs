@@ -21,6 +21,11 @@ public class Enums
         Cosine
     }
 
+    public enum ErosionAlgorithms
+    {
+        Hydraulic
+    }
+
     public static Dictionary<HeightMapTypes, string> HeightMapTypeNames = new Dictionary<HeightMapTypes, string>()
     {
         {HeightMapTypes.Plane, "Plane"},
@@ -55,5 +60,11 @@ public class Enums
             {"Smoothstep", SmoothingAlgorithms.Smoothstep},
             {"Perlin Smoothstep", SmoothingAlgorithms.PerlinSmoothstep},
             {"Cosine", SmoothingAlgorithms.Cosine}
+        };
+
+    public static Dictionary<ErosionAlgorithms, string> ErosionSimulationNames =
+        new Dictionary<ErosionAlgorithms, string>()
+        {
+            {ErosionAlgorithms.Hydraulic, "Hydraulic Erosion"}
         };
 }

@@ -14,9 +14,19 @@ public class UIController : MonoBehaviour
     public TextMeshProUGUI perspectiveLabel;
     public Sprite perspectiveSprite;
     public Sprite orthgraphicSprite;
+
     private SpriteState _perspectiveModeState;
     private SpriteState _orthographicModeState;
     private bool _inPerspectiveMode = true;
+
+    [Header("Menu Groups")] 
+    public Image mainMenuBg;
+    public GameObject meshGenerationMenuGroup;
+    public GameObject simulationMenuGroup;
+    
+    [Header("Main Action Buttons")]
+    public Button generateButton;
+    public Button runSimulationButton;
 
     [Header("Mesh Meta Data")] 
     public TextMeshProUGUI vertCount;
@@ -24,8 +34,7 @@ public class UIController : MonoBehaviour
     public TextMeshProUGUI genTime;
     public Image previewImage;
 
-    [Header("Input fields")] 
-    public Button generateButton;
+    [Header("Input fields")]
     public TMP_InputField dimensionField;
     public TMP_Dropdown heightMapTypeField;
     private bool heightMapTypeFieldReady = false;
@@ -71,6 +80,9 @@ public class UIController : MonoBehaviour
     public GameObject overlay;
     public TextMeshProUGUI overlayText;
     
+    [Header("Simulations Menu")]
+    public TMP_Dropdown simulationsTypeDropdown;
+    
     [Header("Events")] 
     public CEvent_MeshGenerationData generateNewMesh;
 
@@ -93,6 +105,7 @@ public class UIController : MonoBehaviour
         _orthographicModeState.disabledSprite = orthgraphicSprite;
         
         generateButton.onClick.AddListener(CollectGenerationData);
+        runSimulationButton.onClick.AddListener(CollectSimulationData);
 
         foreach (var map in Enums.HeightMapTypeNames)
         {
@@ -112,6 +125,13 @@ public class UIController : MonoBehaviour
         simpleNoiseSmoothingField.value = 0;
 
         _activeOptionMenu = planeOptions;
+
+        foreach (var sim in Enums.ErosionSimulationNames)
+        {
+            simulationsTypeDropdown.options.Add(new TMP_Dropdown.OptionData(sim.Value));
+        }
+        simulationsTypeDropdown.value = 1;
+        simulationsTypeDropdown.value = 0;
     }
 
     // Update is called once per frame
@@ -193,6 +213,11 @@ public class UIController : MonoBehaviour
         generateNewMesh.Raise(data);
     }
 
+    private void CollectSimulationData()
+    {
+        Debug.Log("Collecting Simulation Data");
+    }
+    
     private bool ParseDimensions(MeshGenerationData data)
     {
         bool success;
@@ -484,6 +509,36 @@ public class UIController : MonoBehaviour
             generationStatsContainer.SetActive(false);
             debugContainer.SetActive(false);
             generateButton.gameObject.SetActive(false);
+        }
+    }
+
+    public void OpacitySliderChange(float val)
+    {
+        float a = Putils.Remap(val, 0, 255, 0, 1);
+        mainMenuBg.color = new Color(1f, 1f, 1f, a);
+    }
+    
+    public void MenuSelectionDropdownChange(int menu)
+    {
+        if (menu == 0)
+        {
+            // menus 
+            meshGenerationMenuGroup.SetActive(true);
+            simulationMenuGroup.SetActive(false);
+            
+            // action buttons
+            generateButton.gameObject.SetActive(true);
+            runSimulationButton.gameObject.SetActive(false);
+        } 
+        else if (menu == 1)
+        {
+            // menus
+            simulationMenuGroup.SetActive(true);
+            meshGenerationMenuGroup.SetActive(false);
+            
+            // action buttons
+            generateButton.gameObject.SetActive(false);
+            runSimulationButton.gameObject.SetActive(true);
         }
     }
 }

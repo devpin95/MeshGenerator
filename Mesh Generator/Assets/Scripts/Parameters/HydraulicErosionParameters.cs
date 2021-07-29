@@ -66,10 +66,5 @@ namespace Parameters
             get => _iterationScale;
             set => _iterationScale = value;
         }
-
-        public static bool normIsFlat(Vector3 norm)
-        {
-            return norm.y >= 1 - flatThreshold && norm.y <= 1 + flatThreshold;
-        }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 public class CameraController : MonoBehaviour
@@ -53,7 +54,11 @@ public class CameraController : MonoBehaviour
     {
         _actions = new Actions();
         _actions.CameraControl.Zoom.performed += ZoomCamera;
-        _actions.CameraControl.Click.performed += (ctx => orbitable = true);
+        _actions.CameraControl.Click.performed += (ctx =>
+        {
+            if (EventSystem.current.IsPointerOverGameObject()) orbitable = false;
+            else orbitable = true;
+        });
         _actions.CameraControl.Click.canceled += (ctx => orbitable = false);
         _actions.CameraControl.DragOrbit.performed += MouseDrag;
 
@@ -185,6 +190,9 @@ public class CameraController : MonoBehaviour
 
     public void MouseDrag(InputAction.CallbackContext context)
     {
+        if (EventSystem.current.IsPointerOverGameObject()) return;
+        else if (!orbitable) return;
+        
         mouseAxisDelta = context.ReadValue<Vector2>();
     }
     

@@ -43,7 +43,7 @@ public class HydraulicErosion
             // get the normal at the random position
             Vector3 norm = _map.SampleNormalAtXY(xpos + xoffset, ypos + yoffset);
 
-            if (normIsFlat(norm)) break; // we are either flat or off the map, so we need to stop
+            if (Putils.normIsUp(norm)) break; // we are either straight up or off the map, so we need to stop
 
             float deposite = sediment * _parameters.DepositeRate * norm.y;
             float erosion = _parameters.ErosionRate * (1 - norm.y) * Mathf.Min(1, i * _parameters.IterationScale);
@@ -60,11 +60,5 @@ public class HydraulicErosion
 
             sediment += erosion - deposite;
         }
-    }
-    
-    private bool normIsFlat(Vector3 norm)
-    {
-        return norm.y >= 1 - HydraulicErosionParameters.flatThreshold && 
-               norm.y <= 1 + HydraulicErosionParameters.flatThreshold;
     }
 }

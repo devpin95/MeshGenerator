@@ -115,13 +115,13 @@ public class HeightMap
                 bool didskip = false;
                 int index = x + y * rowlength;
                 
-                float rmbl = Remap(map[index].bl, min, max, 0, 1);
+                float rmbl = Putils.Remap(map[index].bl, min, max, 0, 1);
                 colors[index + skipped] = new Color(rmbl, rmbl, rmbl, 1);
 
                 // set the right column
                 if (x == rowlength - 1)
                 {
-                    float rmbr = Remap(map[index].br, min, max, 0, 1);
+                    float rmbr = Putils.Remap(map[index].br, min, max, 0, 1);
                     colors[index + 1 + skipped] = new Color(rmbr, rmbr, rmbr, 1);
                     didskip = true;
                 }
@@ -129,14 +129,14 @@ public class HeightMap
                 // set the top row
                 if (y == rowlength - 1)
                 {
-                    float rmtl = Remap(map[index].tl, min, max, 0, 1);
+                    float rmtl = Putils.Remap(map[index].tl, min, max, 0, 1);
                     colors[index + rowlength + skipped + 1] = new Color(rmtl, rmtl, rmtl, 1);
                 }
 
                 // set the top right element
                 if (x == rowlength - 1 && y == rowlength - 1)
                 {
-                    float rmtr = Remap(map[index].tr, min, max, 0, 1);
+                    float rmtr = Putils.Remap(map[index].tr, min, max, 0, 1);
                     colors[index + rowlength + skipped + 2] = new Color(rmtr, rmtr, rmtr, 1);
                 } 
                 
@@ -154,22 +154,22 @@ public class HeightMap
         tex.SetPixels(0, 0, mapedge, mapedge, colors);
         tex.Apply();
 
-        return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100.0f);
+        return Putils.Tex2dToSprite(tex);
     }
     
-    public float Remap (float from, float fromMin, float fromMax, float toMin,  float toMax) {
-        var fromAbs  =  from - fromMin;
-        var fromMaxAbs = fromMax - fromMin;      
-       
-        var normal = fromAbs / fromMaxAbs;
- 
-        var toMaxAbs = toMax - toMin;
-        var toAbs = toMaxAbs * normal;
- 
-        var to = toAbs + toMin;
-       
-        return to;
-    }
+    // public float Remap (float from, float fromMin, float fromMax, float toMin,  float toMax) {
+    //     var fromAbs  =  from - fromMin;
+    //     var fromMaxAbs = fromMax - fromMin;      
+    //    
+    //     var normal = fromAbs / fromMaxAbs;
+    //
+    //     var toMaxAbs = toMax - toMin;
+    //     var toAbs = toMaxAbs * normal;
+    //
+    //     var to = toAbs + toMin;
+    //    
+    //     return to;
+    // }
 
     private Vector3 CalculateNormal(float a, float b, float c)
     {
