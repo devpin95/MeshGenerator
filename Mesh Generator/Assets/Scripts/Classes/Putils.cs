@@ -29,4 +29,36 @@ public static class Putils
         return norm.y >= 1 - HydraulicErosionParameters.flatThreshold && 
                norm.y <= 1 + HydraulicErosionParameters.flatThreshold;
     }
+    
+    public static T[,] FlatArrayToTwoDArray<T>(T[] flat, int width, int height)
+    {
+        var grid = new T[width, height];
+
+        for (int y = 0; y < height; ++y)
+        {
+            for (int x = 0; x < width; ++x)
+            {
+                int index = x + y * width;
+                grid[x, y] = flat[index];
+            }
+        }
+
+        return grid;
+    }
+
+    public static Vector3 CalculateTriangleCentroid(Vector3 a, Vector3 b, Vector3 c)
+    {
+        float x = (a.x + b.x + c.x) / 3f;
+        float y = (a.y + b.y + c.y) / 3f;
+        float z = (a.z + b.z + c.z) / 3f;
+
+        return new Vector3(x, y, z);
+    }
+
+    public static Vector3 CalculateTriangleNormal(Vector3 a, Vector3 b, Vector3 c)
+    {
+        Vector3 n1 = b - a;
+        Vector3 n2 = c - a;
+        return Vector3.Cross(n1, n2).normalized;
+    }
 }

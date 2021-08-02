@@ -9,7 +9,6 @@ using UnityEngine.InputSystem;
 public class CameraController : MonoBehaviour
 {
     [Header("Target")]
-    public GameObject target;
     private MeshGenerator _targetMG;
     private Vector3 _targetOffset;
     private Vector3 _targetPos;
@@ -155,17 +154,17 @@ public class CameraController : MonoBehaviour
         _mouseScrollY = context.ReadValue<float>();
     }
     
-    private void OnDrawGizmos()
-    {
-        Vector3 meshCenter = target.transform.position + _targetOffset;
-        Vector3 dirVector = meshCenter + transform.position; // a vector from the center of the mesh to the camera
-        Vector3 normalDirVector = dirVector.normalized;
-        Vector3 extendedDirVector = normalDirVector * zoomVal;
-
-        Gizmos.color = Color.green;
-        // Gizmos.DrawLine(meshCenter, normalDirVector);
-        Gizmos.DrawWireSphere(meshCenter, .5f);
-    }
+    // private void OnDrawGizmos()
+    // {
+    //     Vector3 meshCenter = target.transform.position + _targetOffset;
+    //     Vector3 dirVector = meshCenter + transform.position; // a vector from the center of the mesh to the camera
+    //     Vector3 normalDirVector = dirVector.normalized;
+    //     Vector3 extendedDirVector = normalDirVector * zoomVal;
+    //
+    //     Gizmos.color = Color.green;
+    //     // Gizmos.DrawLine(meshCenter, normalDirVector);
+    //     Gizmos.DrawWireSphere(meshCenter, .5f);
+    // }
     
 
     public void ChangeCameraPerspective()

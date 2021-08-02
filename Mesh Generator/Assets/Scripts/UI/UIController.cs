@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using Parameters;
 using SFB;
 using TMPro;
 using UnityEngine;
@@ -76,6 +77,25 @@ public class UIController : MonoBehaviour
     public GameObject remapOptions;
     private GameObject _activeOptionMenu;
 
+    [Header("Simulations Inputs")] 
+    public TMP_Dropdown simulationTypeDropdown;
+
+    [Header("Hydraulic Erosion Menu")] 
+    public TMP_InputField hydraulicErosionDropCountField;
+    public TMP_InputField hydraulicErosionMaxIterationField;
+    public Slider hydraulicErosionRateSlider;
+    public TextMeshProUGUI hydraulicErosionRateSliderValue;
+    public Slider hydraulicErosionDepositeRateSlider;
+    public TextMeshProUGUI hydraulicErosionDepositeRateSliderValue;
+    public Slider hydraulicErosionSpeedSlider;
+    public TextMeshProUGUI hydraulicErosionSpeedSliderValue;
+    public Slider hydraulicErosionFrictionSlider;
+    public TextMeshProUGUI hydraulicErosionFrictionSliderValue;
+    public Slider hydraulicErosionRadiusSlider;
+    public TextMeshProUGUI hydraulicErosionRadiusSliderValue;
+    public Slider hydraulicErosionIterationScaleSlider;
+    public TextMeshProUGUI hydraulicErosionIterationScaleSliderValue;
+
     [Header("Overlay")] 
     public GameObject overlay;
     public TextMeshProUGUI overlayText;
@@ -85,6 +105,7 @@ public class UIController : MonoBehaviour
     
     [Header("Events")] 
     public CEvent_MeshGenerationData generateNewMesh;
+    public CEvent_ErosionMetaData erosionSim;
 
     [Header("Objects")] 
     public HeightMapList maps;
@@ -132,6 +153,13 @@ public class UIController : MonoBehaviour
         }
         simulationsTypeDropdown.value = 1;
         simulationsTypeDropdown.value = 0;
+        
+        hydraulicErosionRateSlider.onValueChanged.AddListener((arg0 => hydraulicErosionRateSliderValue.text = arg0.ToString("n2")));
+        hydraulicErosionDepositeRateSlider.onValueChanged.AddListener(arg0 => hydraulicErosionDepositeRateSliderValue.text = arg0.ToString("n2"));
+        hydraulicErosionSpeedSlider.onValueChanged.AddListener(arg0 => hydraulicErosionSpeedSliderValue.text = arg0.ToString("n2"));
+        hydraulicErosionFrictionSlider.onValueChanged.AddListener(arg0 => hydraulicErosionFrictionSliderValue.text = arg0.ToString("n2"));
+        hydraulicErosionRadiusSlider.onValueChanged.AddListener(arg0 => hydraulicErosionRadiusSliderValue.text = arg0.ToString("n2"));
+        hydraulicErosionIterationScaleSlider.onValueChanged.AddListener(arg0 => hydraulicErosionIterationScaleSliderValue.text = arg0.ToString("n2"));
     }
 
     // Update is called once per frame
@@ -215,7 +243,45 @@ public class UIController : MonoBehaviour
 
     private void CollectSimulationData()
     {
-        Debug.Log("Collecting Simulation Data");
+        ErosionMetaData data = new ErosionMetaData();
+        Enums.ErosionAlgorithms algo = (Enums.ErosionAlgorithms)simulationTypeDropdown.value;
+
+        data.algorithm = algo;
+
+        switch (algo)
+        {
+            case Enums.ErosionAlgorithms.Hydraulic:
+                HydraulicErosionParameters hydparams = new HydraulicErosionParameters();
+                hydparams.DropCount = int.Parse(hydraulicErosionDropCountField.text);
+                if (hydparams.DropCount <= 0)
+                {
+                    Debug.Log("Drop count must be a positive, non-zero integer");
+                    return;
+                }
+
+                hydparams.MaxIterations = int.Parse(hydraulicErosionMaxIterationField.text);
+                if (hydparams.MaxIterations <= 0)
+                {
+                    Debug.Log("Max interations must be a positive, non-zero integer");
+                    return;
+                }
+
+                hydparams.Friction = hydraulicErosionFrictionSlider.value;
+                hydparams.Radius = hydraulicErosionRadiusSlider.value;
+                hydparams.Speed = hydraulicErosionSpeedSlider.value;
+                hydparams.DepositeRate = hydraulicErosionDepositeRateSlider.value;
+                hydparams.ErosionRate = hydraulicErosionRateSlider.value;
+                hydparams.IterationScale = hydraulicErosionIterationScaleSlider.value;
+
+                data.HydraulicErosionParameters = hydparams;
+
+                break;
+            default:
+                Debug.Log("Must select a simulation to run...");
+                return;
+        }
+        
+        erosionSim.Raise(data);
     }
     
     private bool ParseDimensions(MeshGenerationData data)
@@ -321,11 +387,6 @@ public class UIController : MonoBehaviour
 
         return true;
     }
-
-    // private bool ParseSimpleNoiseLatticeDim(MeshGenerationData data)
-    // {
-    //     data.simpleNoise.latticeDim = int.Parse(simpleNoiseLatticeSize.text);
-    // }
     
     public void HeightMapTypeChange(int maptype)
     {

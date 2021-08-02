@@ -162,6 +162,17 @@ public class MeshManager : MonoBehaviour
 
         return _heightMap.GenerateHeightMapPreview(_data.remapMin, _data.remapMax);
     }
+
+    private void ApplyHeightMapToMesh()
+    {
+        for (int y = 0; y < meshCount; ++y)
+        {
+            for (int x = 0; x < meshCount; ++x)
+            {
+                _generators[x + y * meshCount].UpdateVerts(_heightMap, x, y);
+            }
+        }
+    }
     
     public void RegenerateMesh(MeshGenerationData data)
     {
@@ -172,23 +183,6 @@ public class MeshManager : MonoBehaviour
 
         _data = data;
         meshCount = _data.dimension;
-
-        // if (_data.mapType == Enums.HeightMapTypes.SimpleNoise)
-        // {
-        //     if (_data.simpleNoise.random)
-        //     {
-        //         UnityEngine.Random.InitState((int)Time.time * 432134 / 546632);
-        //         _data.simpleNoise.seed = UnityEngine.Random.Range(int.MinValue, int.MinValue);
-        //
-        //         while (_data.simpleNoise.sampleMin < 0)
-        //         {
-        //             _data.simpleNoise.sampleMin += 10;
-        //             _data.simpleNoise.sampleMax += 10;
-        //         }
-        //     }
-        //
-        //     GenerateLattice();
-        // }
 
         for (int i = _meshes.Count - 1; i >= 0; --i)
         {
@@ -207,6 +201,30 @@ public class MeshManager : MonoBehaviour
 
     public void RunSimulation(ErosionMetaData data)
     {
-        Debug.Log(data.algorithm);
+        switch (data.algorithm)
+        {
+            case Enums.ErosionAlgorithms.Hydraulic:
+                StartCoroutine(Simulation(data));
+                break;
+            default:
+                break;
+        }
+    }
+
+    IEnumerator Simulation(ErosionMetaData data)
+    {
+        yield return HydraulicErosion.Simulate(_heightMap, data.HydraulicErosionParameters, checkpointNotification);
+
+        checkpointNotification.Raise("Updating meshes...");
+        yield return new WaitForSeconds(1);
+        ApplyHeightMapToMesh();
+        
+        checkpointNotification.Raise("Generating height map preview...");
+        yield return new WaitForSeconds(.2f);
+        _metaData.heightMap = _heightMap.GenerateHeightMapPreview(_data.remapMin, _data.remapMax);
+        
+        checkpointNotification.Raise("Updating metadata...");
+        yield return new WaitForSeconds(.2f);
+        meshDataNotification.Raise(_metaData);
     }
 }

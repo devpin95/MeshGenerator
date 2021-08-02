@@ -47,37 +47,8 @@ public class MeshGenerator : MonoBehaviour
 
     public void GenerateMesh()
     {
-        while (true)
-        {
-            // checkpointNotification.Raise("Generating " + Enums.HeightMapTypeNames[_data.mapType] + " mesh...");
-            // _startTime = Time.realtimeSinceStartup;
-            
-            CreateShape();
-            
-            // _endTime = Time.realtimeSinceStartup;
-            // _deltaTime = _endTime - _startTime;
-
-            // yield return null;
-            
-            // _metaData.vertexCount = _vertices.Length;
-            // _metaData.polyCount = _triangles.Length / 3;
-            // _metaData.generationTimeMS = _deltaTime * 1000;
-            
-            // yield return null;
-        
-            // checkpointNotification.Raise("Mesh generation completed in " + _metaData.generationTimeMS +  "ms. Updating mesh object and recalculating normals...");
-            UpdateMesh();
-            
-            // checkpointNotification.Raise("Generating height map preview...");
-            // _metaData.heightMap = GenerateHeightMapTexture(_vertices.Length, new Vector2(_data.dimension, _data.dimension));
-            
-            // yield return new WaitForSeconds(1);
-            // meshDataNotification.Raise(_metaData);
-
-            break;
-        }
-        
-        // yield break;
+        CreateShape();
+        UpdateMesh();
     }
     
     private void CreateShape()
@@ -92,10 +63,18 @@ public class MeshGenerator : MonoBehaviour
 
         _mesh.vertices = _vertices;
         _mesh.triangles = _triangles;
-        
+
         _mesh.RecalculateNormals();
     }
 
+    private void UpdateDirtyMesh()
+    {
+        // I guess our _mesh isnt the same anymore so just go get it from the mesh filter
+        MeshFilter meshfilter = GetComponent<MeshFilter>();
+        meshfilter.mesh.vertices = _vertices;
+        meshfilter.mesh.RecalculateNormals();
+    }
+    
     public void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
@@ -143,7 +122,7 @@ public class MeshGenerator : MonoBehaviour
                     case Enums.HeightMapTypes.ImageMap:
                         foreach (var map in maps.mapList)
                         {
-                            y += SampleHeightMap(realx, realz, map);
+                            y += SampleHeightMapImage(realx, realz, map);
                         }
                         break;
                     case Enums.HeightMapTypes.Plane:
@@ -197,30 +176,6 @@ public class MeshGenerator : MonoBehaviour
         _triangles = trilist.ToArray();
     }
 
-    // public void ShowVisualVertices(bool show)
-    // {
-    //     if (show)
-    //     {
-    //         foreach (var vert in _vertices)
-    //         {
-    //             var obj = PrimativePool.Instance.GetPooledObject();
-    //             if (obj)
-    //             {
-    //                 obj.transform.position = vert;
-    //                 _visualVerts.Add(obj);
-    //             }
-    //         }
-    //     }
-    //     else
-    //     {
-    //         foreach (var obj in _visualVerts)
-    //         {
-    //             PrimativePool.Instance.ReturnToPool(obj);
-    //         }
-    //         _visualVerts = new List<GameObject>();
-    //     }
-    // }
-
     public void RegenerateMesh(MeshGenerationData data)
     {
         Debug.Log(data.ToString());
@@ -258,8 +213,8 @@ public class MeshGenerator : MonoBehaviour
 
     public float SamplePerlinNoise(int x, int z)
     {
-        float xSamplePoint = Remap(x, 0, _data.dimension, _data.perlin.sampleMin, _data.perlin.sampleMax);
-        float zSamplePoint = Remap(z, 0, _data.dimension, _data.perlin.sampleMin, _data.perlin.sampleMax);
+        float xSamplePoint = Putils.Remap(x, 0, _data.dimension, _data.perlin.sampleMin, _data.perlin.sampleMax);
+        float zSamplePoint = Putils.Remap(z, 0, _data.dimension, _data.perlin.sampleMin, _data.perlin.sampleMax);
         
         // float mapRange = _data.perlin.sampleMax - _data.perlin.sampleMin;
         //
@@ -293,16 +248,16 @@ public class MeshGenerator : MonoBehaviour
             if (_data.perlin.ridged) sample = InvertAbs(sample);
         }
         
-        float rmsample = Remap(sample, 0, 1, _data.remapMin, _data.remapMax);
+        float rmsample = Putils.Remap(sample, 0, 1, _data.remapMin, _data.remapMax);
 
         return rmsample;
     }
 
     public float SampleSimpleNoise(int x, int z)
     {
-        float remappedx = Remap(x, 0, _data.dimension, _data.simpleNoise.sampleMin, _data.simpleNoise.sampleMax);
+        float remappedx = Putils.Remap(x, 0, _data.dimension, _data.simpleNoise.sampleMin, _data.simpleNoise.sampleMax);
         remappedx += _data.simpleNoise.frequency;
-        float remappedz = Remap(z, 0, _data.dimension, _data.simpleNoise.sampleMin, _data.simpleNoise.sampleMax);
+        float remappedz = Putils.Remap(z, 0, _data.dimension, _data.simpleNoise.sampleMin, _data.simpleNoise.sampleMax);
         remappedz += _data.simpleNoise.frequency;
         
         // Debug.Log(x + ", " + z);
@@ -339,36 +294,22 @@ public class MeshGenerator : MonoBehaviour
         var smooth = Smoothing.Algorithms[_data.simpleNoise.smoothing];
         float psmooth = smooth(p);
 
-        float remapp = Remap(psmooth, 0, 1, _data.remapMin, _data.remapMax);
+        float remapp = Putils.Remap(psmooth, 0, 1, _data.remapMin, _data.remapMax);
         
         return remapp * _data.simpleNoise.scale;
     }
 
-    public float SampleHeightMap(int x, int z, LayerData data)
+    public float SampleHeightMapImage(int x, int z, LayerData data)
     {
         float y = 0;
-        int xSamplePoint = (int)Remap(x, 0, _data.dimension, 0, data.map.width);
-        int zSamplePoint = (int)Remap(z, 0, _data.dimension, 0, data.map.height);
+        int xSamplePoint = (int)Putils.Remap(x, 0, _data.dimension, 0, data.map.width);
+        int zSamplePoint = (int)Putils.Remap(z, 0, _data.dimension, 0, data.map.height);
 
         y = data.map.GetPixel(xSamplePoint, zSamplePoint).grayscale;
 
-        float yremap = Remap(y, 0, 1, data.remapMin, data.remapMax);
+        float yremap = Putils.Remap(y, 0, 1, data.remapMin, data.remapMax);
 
         return yremap;
-    }
-    
-    public float Remap (float from, float fromMin, float fromMax, float toMin,  float toMax) {
-        var fromAbs  =  from - fromMin;
-        var fromMaxAbs = fromMax - fromMin;      
-       
-        var normal = fromAbs / fromMaxAbs;
- 
-        var toMaxAbs = toMax - toMin;
-        var toAbs = toMaxAbs * normal;
- 
-        var to = toAbs + toMin;
-       
-        return to;
     }
 
     public float fbm(Vector2 pos, float hurst)
@@ -407,7 +348,7 @@ public class MeshGenerator : MonoBehaviour
             // Debug.Log("Index (" + z + "," + x + ") [" + (z + x * zSize) + "]");
             float height = _vertices[i].y;
 
-            float heightTo01 = Remap(height, _data.remapMin, _data.remapMax, 0, 1);
+            float heightTo01 = Putils.Remap(height, _data.remapMin, _data.remapMax, 0, 1);
             // float height01ToRGB = Remap(heightTo01, 0, 1, 0, 255);
                 
             colors[i] = new Color(heightTo01, heightTo01, heightTo01, 1);
@@ -458,10 +399,48 @@ public class MeshGenerator : MonoBehaviour
 
     private float InvertAbs(float val)
     {
-        val = Remap(val, 0, 1, -1, 1);
+        val = Putils.Remap(val, 0, 1, -1, 1);
         val = Mathf.Abs(val);
         val *= -1;
-        val = Remap(val, -1, 0, 0, 1);
+        val = Putils.Remap(val, -1, 0, 0, 1);
         return val;
+    }
+
+    public void UpdateVerts(HeightMap map, int xoffset, int yoffset)
+    {
+        int skippedx = 0;
+        
+        for (int y = 0; y < Constants.meshSquares; ++y)
+        {
+            for (int x = 0; x < Constants.meshSquares; ++x)
+            {
+                bool skip = false;
+                int index = x + y * Constants.meshSquares;
+
+                _vertices[index + skippedx].y = map.SampleMapAtXY(x, xoffset, y, yoffset, HeightMap.Nodes.BottomLeft);
+                
+                if (x == Constants.meshSquares - 1)
+                {
+                    // we're at the end of the row
+                    // we need to take the bottom right cell point too
+                    _vertices[index + skippedx + 1].y = map.SampleMapAtXY(x, xoffset, y, yoffset, HeightMap.Nodes.BottomRight);
+                    skip = true;
+                }
+
+                if (y == Constants.meshSquares - 1)
+                {
+                    _vertices[index + Constants.meshVerts + skippedx ].y = map.SampleMapAtXY(x, xoffset, y, yoffset, HeightMap.Nodes.TopLeft);
+                }
+
+                if (x == Constants.meshSquares - 1 && y == Constants.meshSquares - 1)
+                {
+                    _vertices[index + Constants.meshVerts + skippedx + 1].y = map.SampleMapAtXY(x, xoffset, y, yoffset, HeightMap.Nodes.TopRight);
+                }
+
+                if (skip) ++skippedx;
+            }
+        }
+
+        UpdateDirtyMesh();
     }
 }

@@ -6,6 +6,14 @@ using UnityEngine;
 
 public class HeightMap
 {
+    public enum Nodes
+    {
+        BottomRight,
+        BottomLeft,
+        TopLeft,
+        TopRight
+    }
+    
     private class Cell
     {
         public float tl = 0;
@@ -208,11 +216,20 @@ public class HeightMap
         if (inty < 0 || inty > WidthAndHeight()) return norm;
 
         Cell cell = map[intx + inty * WidthAndHeight()];
+        
+        // recalculate the normala in case the cell changed
+        cell.lnorm = CalculateNormal(cell.bl, cell.tl, cell.br);
+        cell.rnorm = CalculateNormal(cell.tr, cell.br, cell.tl);
 
         if (decx >= decy) norm = cell.rnorm;
         else norm = cell.lnorm;
 
         return norm.normalized;
+    }
+
+    public bool SampleOutOfBounds(float x, float y)
+    {
+        return (y < 0 || y > WidthAndHeight()) || (x < 0 || x > WidthAndHeight());
     }
 
     public void ChangeCell(float x, float y, float amount)
@@ -221,11 +238,112 @@ public class HeightMap
         int inty = (int) y;
         float decx = x - intx;
         float decy = y - inty;
+
+        int rowlength = WidthAndHeight();
+        int rowoffset = inty * rowlength;
         
+        int center = intx + rowoffset;
+        int centerleft = center - 1;
+        int centerright = center + 1;
+        
+        if (centerright % rowlength == 0) centerright = -1; // right 1 is off the mesh
+        else if (center % rowlength + 1 == rowlength) centerleft = -1; // left 1 is off the mesh
 
-        Cell cell = map[intx + inty * WidthAndHeight()];
+        int bottomcenter = center - rowlength;
+        int bottomleft = bottomcenter - 1;
+        int bottomright = bottomcenter + 1;
+        
+        if (bottomright % rowlength == 0) bottomright = -1; // right 1 is off the mesh
+        else if (bottomleft % rowlength + 1 == rowlength) bottomleft = -1; // left 1 is off the mesh
+        
+        int topcenter = center + rowlength;
+        int topleft = topcenter - 1;
+        int topright = topcenter + 1;
+        
+        if (topright % rowlength == 0) topright = -1; // right 1 is off the mesh
+        else if (topleft % rowlength + 1 == rowlength) topleft = -1; // left 1 is off the mesh
 
-        if (decx >= decy) cell.ChangeRightTriangle(amount);
-        else cell.ChangeLeftTriangle(amount);
+
+        if (center < 0 || center >= map.Length) return;
+        
+        if (decy + decx > 1)
+        {
+            // we only need to change the cells on the right
+            map[center].ChangeRightTriangle(amount);
+            
+            // oh god, oh god no
+            // what have I done
+            if (bottomcenter >= 0 && bottomcenter < map.Length) map[bottomcenter].tr += amount;
+            if ( bottomright >= 0 && bottomright < map.Length ) map[bottomright].tl += amount;
+            if (centerright >= 0 && centerright < map.Length)
+            {
+                map[centerright].bl += amount;
+                map[centerright].tl += amount;
+            }
+
+            if (centerleft >= 0 && centerleft < map.Length) map[centerleft].tr += amount;
+            
+            if ( topright >= 0 && topright < map.Length ) map[topright].bl += amount;
+            if (topcenter >= 0 && topcenter < map.Length)
+            {
+                map[topcenter].bl += amount;
+                map[topcenter].br += amount;
+            }
+
+            if (topleft >= 0 && topleft < map.Length) map[topleft].br += amount;
+        }
+        else
+        {
+            // we only need to change the cells on the left
+            map[center].ChangeLeftTriangle(amount);
+            
+            if (bottomleft >= 0 && bottomleft < map.Length) map[bottomleft].tr += amount;
+            if (bottomcenter >= 0 && bottomcenter < map.Length)
+            {
+                map[bottomcenter].tl += amount;
+                map[bottomcenter].tr += amount;
+            }
+            if (bottomright >= 0 && bottomright < map.Length) map[bottomright].tl += amount;
+            
+            if (centerleft >= 0 && centerleft < map.Length)
+            {
+                map[centerleft].br += amount;
+                map[centerleft].tr += amount;
+            }
+
+            if (centerright >= 0 && centerright < map.Length) map[centerright].bl += amount;
+            
+            if (topleft >= 0 && topleft < map.Length) map[topleft].br += amount;
+            if (topcenter >= 0 && topcenter < map.Length) map[topcenter].bl += amount;
+        }
+        
+        
+    }
+
+    public float SampleMapAtXY(int x, int xoffset, int y, int yoffset, Nodes position)
+    {
+        float height = 0;
+
+        int rowlength = Constants.meshSquares * meshCount;
+
+        int cols = x + xoffset * Constants.meshSquares;
+        int rows = y * rowlength + 2 * yoffset * rowlength;
+        int index = cols + rows;
+        
+        Cell cell = map[index];
+
+        switch (position)
+        {
+            case Nodes.BottomLeft: height = cell.bl;
+                break;
+            case Nodes.BottomRight: height = cell.br;
+                break;
+            case Nodes.TopLeft: height = cell.tl;
+                break;
+            case Nodes.TopRight: height = cell.tr;
+                break;
+        }
+        
+        return height;
     }
 }
