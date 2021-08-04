@@ -419,7 +419,7 @@ public class MeshGenerator : MonoBehaviour
                 // bool skip = false;
                 // int index = x + y * Constants.meshSquares;
 
-                vertgrid[row, col].y = map.SampleMapAtXY(row, rowoffset, col, coloffset);
+                vertgrid[row, col].y = map.SampleMapAtXYOffset(row, rowoffset, col, coloffset);
                 
                 // if (x == Constants.meshSquares - 1)
                 // {

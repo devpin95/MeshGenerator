@@ -60,12 +60,12 @@ public class MeshManager : MonoBehaviour
         }
         
         checkpointNotification.Raise("Creating and initializing " + meshCount + "x" + meshCount + " mesh grid...");
-        yield return new WaitForSeconds(0.25f);
+        // yield return new WaitForSeconds(0.25f);
         InitMeshes();
         yield return null;
         
         checkpointNotification.Raise("Generated mesh 0/" + meshCount * meshCount);
-        yield return new WaitForSeconds(.1f);
+        // yield return new WaitForSeconds(.1f);
 
         int count = 1;
         for (int z = 0; z < meshCount; ++z)
@@ -75,7 +75,7 @@ public class MeshManager : MonoBehaviour
                 int index = x + z * meshCount;
                 _generators[index].GenerateMesh();
                 checkpointNotification.Raise("Generated mesh " + count + "/" + meshCount * meshCount);
-                yield return new WaitForSeconds(.01f);
+                // yield return new WaitForSeconds(.01f);
                 ++count;
             }
         }
@@ -83,11 +83,11 @@ public class MeshManager : MonoBehaviour
         // GenerateMesh();
         
         checkpointNotification.Raise("Generating height map...");
-        yield return new WaitForSeconds(1);
+        // yield return new WaitForSeconds(1);
         _metaData.heightMap = GenerateHeightMap();
         
         checkpointNotification.Raise("Updating metadata...");
-        yield return new WaitForSeconds(1);
+        // yield return new WaitForSeconds(1);
         
         _endTime = Time.realtimeSinceStartup;
         _deltaTime = _endTime - _startTime;

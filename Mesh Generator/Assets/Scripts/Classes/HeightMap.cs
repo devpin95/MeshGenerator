@@ -6,14 +6,6 @@ using UnityEngine;
 
 public class HeightMap
 {
-    public enum Nodes
-    {
-        BottomRight,
-        BottomLeft,
-        TopLeft,
-        TopRight
-    }
-    
     // private class Cell
     // {
     //     public float tl = 0;
@@ -330,14 +322,53 @@ public class HeightMap
         // return norm.normalized;
     }
 
+    public Vector3 SampleBetaNormalAtXY(int r, int c)
+    {
+        Vector3 normal = Vector3.zero;
+
+        // direct neightbors
+        if (r + 1 < _meshedge) normal += Vector3.Normalize(new Vector3(map[r, c].y - map[r + 1, c].y, 1f, 0)) * NeighborWeight;
+        if (r - 1 >= 0) normal += Vector3.Normalize(new Vector3(map[r - 1, c].y - map[r, c].y, 1f, 0)) * NeighborWeight;
+        if ( c + 1 < _meshedge ) normal += Vector3.Normalize(new Vector3(0, 1f, map[r, c].y - map[r, c + 1].y)) * NeighborWeight;
+        if ( c - 1 >= 0 ) normal += Vector3.Normalize(new Vector3(0, 1f, map[r, c-1].y - map[r, c].y)) * NeighborWeight;
+        
+        // diagonals
+        float sqrt2 = Mathf.Sqrt(2);
+        if (r + 1 < _meshedge && c + 1 < _meshedge)
+        {
+            float val = map[r, c].y - map[r + 1, c + 1].y;
+            normal += Vector3.Normalize(new Vector3(val/sqrt2, sqrt2, val/sqrt2)) * DiagonalWeight;
+        }
+
+        if (r + 1 < _meshedge && c - 1 >= 0)
+        {
+            float val = map[r, c].y - map[r + 1, c - 1].y;
+            normal += Vector3.Normalize(new Vector3(val/sqrt2, sqrt2, val/sqrt2)) * DiagonalWeight;
+        }
+        
+        if (r - 1 >= 0 && c + 1 < _meshedge)
+        {
+            float val = map[r, c].y - map[r - 1, c + 1].y;
+            normal += Vector3.Normalize(new Vector3(val/sqrt2, sqrt2, val/sqrt2)) * DiagonalWeight;
+        }
+        
+        if (r - 1 >= 0 && c - 1 >= 0)
+        {
+            float val = map[r, c].y - map[r - 1, c - 1].y;
+            normal += Vector3.Normalize(new Vector3(val/sqrt2, sqrt2, val/sqrt2)) * DiagonalWeight;
+        }
+
+        return normal;
+    }
+    
     public bool SampleOutOfBounds(float x, float y)
     {
-        return (y < 0 || y > WidthAndHeight()) || (x < 0 || x > WidthAndHeight());
+        return (y < 0 || y >= WidthAndHeight()) || (x < 0 || x >= WidthAndHeight());
     }
 
     public void ChangeCell(int row, int column, float amount)
     {
-        map[row, column].y += amount;
+        map[row, column].y -= amount;
         // int intx = (int) x;
         // int inty = (int) y;
         // float decx = x - intx;
@@ -424,7 +455,7 @@ public class HeightMap
         //
     }
 
-    public float SampleMapAtXY(int row, int rowoffset, int column, int columnoffset)
+    public float SampleMapAtXYOffset(int row, int rowoffset, int column, int columnoffset)
     {
         float height = 0;
 
@@ -455,5 +486,10 @@ public class HeightMap
         // }
         
         return height;
+    }
+
+    public float SampleMapAtXY(int x, int y)
+    {
+        return map[x, y].y;
     }
 }
