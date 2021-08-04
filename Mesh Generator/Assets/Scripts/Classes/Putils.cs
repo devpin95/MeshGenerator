@@ -39,11 +39,26 @@ public static class Putils
             for (int x = 0; x < width; ++x)
             {
                 int index = x + y * width;
-                grid[x, y] = flat[index];
+                grid[y, x] = flat[index];
             }
         }
 
         return grid;
+    }
+
+    public static T[] Flatten2DArray<T>(T[,] grid, int width, int height)
+    {
+        List<T> flatlist = new List<T>();
+        
+        for ( int y = 0; y < height; ++y )
+        {
+            for (int x = 0; x < width; ++x)
+            {
+                flatlist.Add(grid[y, x]);
+            }
+        }
+
+        return flatlist.ToArray();
     }
 
     public static Vector3 CalculateTriangleCentroid(Vector3 a, Vector3 b, Vector3 c)

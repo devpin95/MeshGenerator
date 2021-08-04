@@ -17,7 +17,7 @@ RenderSettings:
   m_Fog: 1
   m_FogColor: {r: 0.8820755, g: 0.9857937, b: 1, a: 1}
   m_FogMode: 2
-  m_FogDensity: 0.001
+  m_FogDensity: 0.0001
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
   m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
@@ -13586,7 +13586,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6ba25f58bc74bf46942c90b6faa572b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 224003785}
   zoomVal: 2
   _mouseScrollY: 0
   _inPerspectiveMode: 1

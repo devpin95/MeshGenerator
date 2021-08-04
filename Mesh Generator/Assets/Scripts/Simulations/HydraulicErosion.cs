@@ -6,6 +6,14 @@ using UnityEngine;
 
 public static class HydraulicErosion
 {
+    
+    public class HydraulicParticle
+    {
+        public Vector2 pos;
+        public Vector2 speed = Vector2.zero;
+        public float volume = Constants.hydraulicParticleInitialVolume;
+        public float sediment = 0;
+    }
    
     public static IEnumerator Simulate(HeightMap map, HydraulicErosionParameters parameters, CEvent_String checkpointNotification)
     {
@@ -14,11 +22,10 @@ public static class HydraulicErosion
 
         for (int drop = 0; drop < parameters.DropCount; ++drop)
         {
-            // checkpointNotification.Raise("Simulating drop " + drop);
-            // Debug.Log("Drop " + drop);
-            
             checkpointNotification.Raise("Simulating drop " + drop + " of " + parameters.DropCount);
             yield return null;
+            
+            HydraulicParticle particle = new HydraulicParticle();
 
             float x = Random.Range(0f, mapdim);
             float y = Random.Range(0f, mapdim);
@@ -26,60 +33,47 @@ public static class HydraulicErosion
             float xoffset = Random.Range(-1f, 1f) * parameters.Radius; // get a random offset in the x direction
             float yoffset = Random.Range(-1f, 1f) * parameters.Radius; // get a random offset in the y direction
             float sediment = 0; // how much sediment the current drop is holding
-            float xpos = x; // the current x pos
-            float ypos = y; // the current y pos
-            float xvelocity = 0; // drop velocity in the x direction
-            float yvelocity = 0; // drop velocity in the y direction
+            // float xpos = x; // the current x pos
+            // float ypos = y; // the current y pos
+
+            particle.pos.x = x + xoffset;
+            particle.pos.y = y + yoffset;
+            particle.speed.x = 0;
+            particle.speed.y = 0;
+            particle.sediment = 0;
 
             // do the trace for MaxInterations
             for (int i = 0; i < parameters.MaxIterations; ++i)
             {
-                // checkpointNotification.Raise("x: " + (xpos + xoffset) + " y: " + (ypos + yoffset));
-                // yield return new WaitForSeconds(1f);
-                
+
                 // make sure the sample is still in bounds
-                if (map.SampleOutOfBounds(xpos + xoffset, ypos + yoffset)) break;
+                if (map.SampleOutOfBounds(particle.pos.x, particle.pos.y)) break;
                 
-                // checkpointNotification.Raise("In Bounds");
-                // yield return new WaitForSeconds(1f);
                 
                 // get the normal at the random position
-                Vector3 norm = map.SampleNormalAtXY(xpos + xoffset, ypos + yoffset);
+                Vector3 norm = map.SampleNormalAtXY((int)particle.pos.y, (int)particle.pos.x);
                 
-                // checkpointNotification.Raise("Normal " + norm);
-                // yield return new WaitForSeconds(1f);
                 
                 if (Putils.normIsUp(norm)) break; // we are either straight up or off the map, so we need to stop
                 
-                // checkpointNotification.Raise("Normal is not too flat" );
-                // yield return new WaitForSeconds(1f);
 
                 float deposit = sediment * parameters.DepositeRate * norm.y;
                 float erosion = parameters.ErosionRate * (1 - norm.y) * Mathf.Min(1, i * parameters.IterationScale);
 
-                map.ChangeCell(xpos, ypos, deposit - erosion);
+                map.ChangeCell((int)particle.pos.y, (int)particle.pos.x, deposit - erosion);
 
-                xvelocity = parameters.Friction * xvelocity + norm.x * parameters.Speed * 10;
-                yvelocity = parameters.Friction * yvelocity + norm.z * parameters.Speed * 10;
+                particle.speed.x = parameters.Friction * particle.speed.x + norm.x * parameters.Speed * 10;
+                particle.speed.y = parameters.Friction * particle.speed.y + norm.z * parameters.Speed * 10;
                 
-                // checkpointNotification.Raise("X Velocity: " + xvelocity + " Y Velocity: " + yvelocity);
-                // yield return new WaitForSeconds(1f);
                 
-                if (xvelocity == 0 && yvelocity == 0) break;
-                //
-                // checkpointNotification.Raise("Velocity is not too low");
-                // yield return new WaitForSeconds(1f);
-                
-                xpos = x;
-                ypos = y;
-                x += xvelocity;
-                y += yvelocity;
+                if (particle.speed.x == 0 && particle.speed.y == 0) break;
+
+                particle.pos.x = x;
+                particle.pos.y = y;
+                x += particle.speed.x;
+                y += particle.speed.y;
 
                 sediment += erosion - deposit;
-                
-                // checkpointNotification.Raise("Sediment: " + sediment + " Erosion: " + erosion + " Deposition: " + deposite);
-                // yield return new WaitForSeconds(1f);
-
             }
             
             yield return null;

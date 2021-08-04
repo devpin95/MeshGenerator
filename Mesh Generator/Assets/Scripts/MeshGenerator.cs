@@ -406,40 +406,44 @@ public class MeshGenerator : MonoBehaviour
         return val;
     }
 
-    public void UpdateVerts(HeightMap map, int xoffset, int yoffset)
+    public void UpdateVerts(HeightMap map, int coloffset, int rowoffset)
     {
         int skippedx = 0;
+
+        var vertgrid = Putils.FlatArrayToTwoDArray(_vertices, Constants.meshVerts, Constants.meshVerts);
         
-        for (int y = 0; y < Constants.meshSquares; ++y)
+        for (int row = 0; row < Constants.meshSquares; ++row)
         {
-            for (int x = 0; x < Constants.meshSquares; ++x)
+            for (int col = 0; col < Constants.meshSquares; ++col)
             {
-                bool skip = false;
-                int index = x + y * Constants.meshSquares;
+                // bool skip = false;
+                // int index = x + y * Constants.meshSquares;
 
-                _vertices[index + skippedx].y = map.SampleMapAtXY(x, xoffset, y, yoffset, HeightMap.Nodes.BottomLeft);
+                vertgrid[row, col].y = map.SampleMapAtXY(row, rowoffset, col, coloffset);
                 
-                if (x == Constants.meshSquares - 1)
-                {
-                    // we're at the end of the row
-                    // we need to take the bottom right cell point too
-                    _vertices[index + skippedx + 1].y = map.SampleMapAtXY(x, xoffset, y, yoffset, HeightMap.Nodes.BottomRight);
-                    skip = true;
-                }
-
-                if (y == Constants.meshSquares - 1)
-                {
-                    _vertices[index + Constants.meshVerts + skippedx ].y = map.SampleMapAtXY(x, xoffset, y, yoffset, HeightMap.Nodes.TopLeft);
-                }
-
-                if (x == Constants.meshSquares - 1 && y == Constants.meshSquares - 1)
-                {
-                    _vertices[index + Constants.meshVerts + skippedx + 1].y = map.SampleMapAtXY(x, xoffset, y, yoffset, HeightMap.Nodes.TopRight);
-                }
-
-                if (skip) ++skippedx;
+                // if (x == Constants.meshSquares - 1)
+                // {
+                //     // we're at the end of the row
+                //     // we need to take the bottom right cell point too
+                //     _vertices[index + skippedx + 1].y = map.SampleMapAtXY(x, xoffset, y, yoffset, HeightMap.Nodes.BottomRight);
+                //     skip = true;
+                // }
+                //
+                // if (y == Constants.meshSquares - 1)
+                // {
+                //     _vertices[index + Constants.meshVerts + skippedx ].y = map.SampleMapAtXY(x, xoffset, y, yoffset, HeightMap.Nodes.TopLeft);
+                // }
+                //
+                // if (x == Constants.meshSquares - 1 && y == Constants.meshSquares - 1)
+                // {
+                //     _vertices[index + Constants.meshVerts + skippedx + 1].y = map.SampleMapAtXY(x, xoffset, y, yoffset, HeightMap.Nodes.TopRight);
+                // }
+                //
+                // if (skip) ++skippedx;
             }
         }
+
+        _vertices = Putils.Flatten2DArray(vertgrid, Constants.meshVerts, Constants.meshVerts);
 
         UpdateDirtyMesh();
     }

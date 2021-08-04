@@ -156,7 +156,10 @@ public class MeshManager : MonoBehaviour
             for (int x = 0; x < meshCount; ++x)
             {
                 // Debug.Log("SETTING CHUNK XOFFSET: " + x + " YOFFSET: " + y);
-                _heightMap.SetChunk(_meshes[x + y * meshCount].GetComponent<MeshFilter>().mesh.vertices, x, y);
+                var meshgrid = Putils.FlatArrayToTwoDArray(
+                    _generators[x + y * meshCount].GetComponent<MeshFilter>().mesh.vertices, Constants.meshVerts,
+                    Constants.meshVerts);
+                _heightMap.SetChunk(meshgrid, x, y);
             }
         }
 
@@ -188,7 +191,7 @@ public class MeshManager : MonoBehaviour
         {
             Destroy(_meshes[i].gameObject);
         }
-
+        
         _meshes = new List<GameObject>();
         _generators = new List<MeshGenerator>();
 
