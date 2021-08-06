@@ -56,32 +56,41 @@ public static class HydraulicErosion
             drop.speed.x = 0;
             drop.speed.y = 0;
             drop.sediment = 0;
+            drop.volume = parameters.StartingVolume;
 
-            while (drop.volume > HydraulicParticleMinVolume)
+            while (drop.volume > parameters.MINVolume)
             {
                 // make sure the drop is still in the bounds of the mesh
                 if (map.SampleOutOfBounds(drop.pos.x, drop.pos.y)) break;
 
                 Vector2 initialPos = drop.pos;
-                Vector3 norm = map.SampleBetaNormalAtXY((int)initialPos.y, (int)initialPos.x);
+                Vector3 norm;
+                if ( parameters.FlipXY ) norm = map.SampleBetaNormalAtXY((int)initialPos.x, (int)initialPos.y);
+                else norm = map.SampleBetaNormalAtXY((int)initialPos.y, (int)initialPos.x);
 
-                Vector2 F = DT * new Vector2(norm.x, norm.z); // force
-                float m = (drop.volume * HydraulicParticleDensity); // mass
+                Vector2 F = parameters.DT * new Vector2(norm.x, norm.z); // force
+                float m = (drop.volume * parameters.Density); // mass
 
                 // a = F/m
                 drop.speed += F / m;
 
                 // update pos
-                drop.pos += DT * drop.speed;
+                drop.pos += parameters.DT * drop.speed;
 
                 if (map.SampleOutOfBounds(drop.pos.x, drop.pos.y)) break;
 
                 // apply friction
-                drop.speed *= 1f - (DT * HydraulicParticleFriction);
+                drop.speed *= 1f - (parameters.DT * parameters.Friction);
 
                 // figure out sediment levels
-                float prevY = map.SampleMapAtXY((int) initialPos.y, (int) initialPos.x);
-                float curY = map.SampleMapAtXY((int) drop.pos.y, (int) drop.pos.x);
+                float prevY;
+                if (parameters.FlipXY) prevY = map.SampleMapAtXY((int) initialPos.x, (int) initialPos.y);
+                else prevY = map.SampleMapAtXY((int) initialPos.y, (int) initialPos.x);
+
+                float curY;
+                if (parameters.FlipXY) curY = map.SampleMapAtXY((int) drop.pos.x, (int) drop.pos.y);
+                else curY = map.SampleMapAtXY((int) drop.pos.y, (int) drop.pos.x);
+                
                 float travelDistance = drop.speed.magnitude * (prevY - curY);
                 float maxsed = drop.volume * travelDistance;
 
@@ -89,14 +98,15 @@ public static class HydraulicErosion
                 float seddiff = maxsed - drop.sediment;
 
                 // change the map based on the sediment
-                drop.sediment += DT * HydraulicParticleDepositionRate * seddiff;
+                drop.sediment += parameters.DT * parameters.DepositeRate * seddiff;
 
-                float amount = DT * drop.volume * HydraulicParticleDepositionRate * seddiff;
-
-                map.ChangeCell((int)initialPos.y, (int)initialPos.x, amount);
+                float amount = parameters.DT * drop.volume * parameters.DepositeRate * seddiff;
                 
-                // do some friction
-                drop.volume *= 1f - (DT * HydraulicParticleEvaporationRate);
+                if ( parameters.FlipXY ) map.ChangeCell((int)initialPos.x, (int)initialPos.y, amount);
+                else map.ChangeCell((int)initialPos.y, (int)initialPos.x, amount);
+                
+                // do some evaporation
+                drop.volume *= 1f - (parameters.DT * parameters.EvaporationRate);
             }
 
             // do the trace for MaxInterations

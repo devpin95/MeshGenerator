@@ -30,7 +30,7 @@ public class MeshNormalGenerator : MonoBehaviour
     private List<GameObject> _vertobjs = new List<GameObject>();
     private List<GameObject> _normobjs = new List<GameObject>();
     private List<Triangle> _triobjs = new List<Triangle>();
-    
+
     // Start is called before the first frame update
     void Start()
     {

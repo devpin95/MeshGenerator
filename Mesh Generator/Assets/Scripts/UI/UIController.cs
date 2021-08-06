@@ -28,6 +28,7 @@ public class UIController : MonoBehaviour
     [Header("Main Action Buttons")]
     public Button generateButton;
     public Button runSimulationButton;
+    public TextMeshProUGUI errorMessage;
 
     [Header("Mesh Meta Data")] 
     public TextMeshProUGUI vertCount;
@@ -81,20 +82,18 @@ public class UIController : MonoBehaviour
     public TMP_Dropdown simulationTypeDropdown;
 
     [Header("Hydraulic Erosion Menu")] 
+    public TMP_InputField hydraulicErosionTimeStepField;
     public TMP_InputField hydraulicErosionDropCountField;
-    public TMP_InputField hydraulicErosionMaxIterationField;
-    public Slider hydraulicErosionRateSlider;
-    public TextMeshProUGUI hydraulicErosionRateSliderValue;
-    public Slider hydraulicErosionDepositeRateSlider;
-    public TextMeshProUGUI hydraulicErosionDepositeRateSliderValue;
-    public Slider hydraulicErosionSpeedSlider;
-    public TextMeshProUGUI hydraulicErosionSpeedSliderValue;
+    public TMP_InputField hydraulicErosionStartingVolumeField;
+    public TMP_InputField hydraulicErosionMinVolumeField;
+    public TMP_InputField hydraulicErosionDensityField;
+    public Slider hydraulicErosionDepositionSlider;
+    public TextMeshProUGUI hydraulicErosionDepositionSliderValue;
+    public Slider hydraulicErosionEvaporationSlider;
+    public TextMeshProUGUI hydraulicErosionEvaporationSliderValue;
+    public Toggle hydraulicErosionFlipXYToggle;
     public Slider hydraulicErosionFrictionSlider;
     public TextMeshProUGUI hydraulicErosionFrictionSliderValue;
-    public Slider hydraulicErosionRadiusSlider;
-    public TextMeshProUGUI hydraulicErosionRadiusSliderValue;
-    public Slider hydraulicErosionIterationScaleSlider;
-    public TextMeshProUGUI hydraulicErosionIterationScaleSliderValue;
 
     [Header("Overlay")] 
     public GameObject overlay;
@@ -154,12 +153,11 @@ public class UIController : MonoBehaviour
         simulationsTypeDropdown.value = 1;
         simulationsTypeDropdown.value = 0;
         
-        hydraulicErosionRateSlider.onValueChanged.AddListener((arg0 => hydraulicErosionRateSliderValue.text = arg0.ToString("n2")));
-        hydraulicErosionDepositeRateSlider.onValueChanged.AddListener(arg0 => hydraulicErosionDepositeRateSliderValue.text = arg0.ToString("n2"));
-        hydraulicErosionSpeedSlider.onValueChanged.AddListener(arg0 => hydraulicErosionSpeedSliderValue.text = arg0.ToString("n2"));
-        hydraulicErosionFrictionSlider.onValueChanged.AddListener(arg0 => hydraulicErosionFrictionSliderValue.text = arg0.ToString("n2"));
-        hydraulicErosionRadiusSlider.onValueChanged.AddListener(arg0 => hydraulicErosionRadiusSliderValue.text = arg0.ToString("n2"));
-        hydraulicErosionIterationScaleSlider.onValueChanged.AddListener(arg0 => hydraulicErosionIterationScaleSliderValue.text = arg0.ToString("n2"));
+        hydraulicErosionFrictionSlider.onValueChanged.AddListener(arg0 => hydraulicErosionFrictionSliderValue.text = (arg0/100f).ToString("n2"));
+        hydraulicErosionDepositionSlider.onValueChanged.AddListener(arg0 => hydraulicErosionDepositionSliderValue.text = (arg0/999f).ToString("n3"));
+        hydraulicErosionEvaporationSlider.onValueChanged.AddListener(arg0 => hydraulicErosionEvaporationSliderValue.text = (arg0/999f).ToString("n3"));
+        
+        errorMessage.text = "";
     }
 
     // Update is called once per frame
@@ -220,6 +218,7 @@ public class UIController : MonoBehaviour
         else if (data.mapType == Enums.HeightMapTypes.ImageMap && maps.mapList.Count == 0)
         {
             Debug.Log("Must add at least one height map.");
+            errorMessage.text = "Must add at least one height map.";
             return;
         }
         
@@ -238,6 +237,7 @@ public class UIController : MonoBehaviour
             if (!ParseRemap(data)) return;
         };
 
+        errorMessage.text = "";
         generateNewMesh.Raise(data);
     }
 
@@ -247,40 +247,76 @@ public class UIController : MonoBehaviour
         Enums.ErosionAlgorithms algo = (Enums.ErosionAlgorithms)simulationTypeDropdown.value;
 
         data.algorithm = algo;
+        float fval;
+        int ival;
+        bool success = false;
 
         switch (algo)
         {
             case Enums.ErosionAlgorithms.Hydraulic:
                 HydraulicErosionParameters hydparams = new HydraulicErosionParameters();
-                hydparams.DropCount = int.Parse(hydraulicErosionDropCountField.text);
-                if (hydparams.DropCount <= 0)
+                
+                success = float.TryParse(hydraulicErosionTimeStepField.text, out fval);
+                if (!success || fval <= 0)
+                {
+                    Debug.Log("Time step must be a positive, non-zero integer");
+                    errorMessage.text = "Time step must be a positive, non-zero integer";
+                    return;
+                }
+                hydparams.DT = fval;
+                
+                success = int.TryParse(hydraulicErosionDropCountField.text, out ival);
+                if (!success || ival < 0)
                 {
                     Debug.Log("Drop count must be a positive, non-zero integer");
+                    errorMessage.text = "Drop count must be a positive, non-zero integer";
                     return;
                 }
+                hydparams.DropCount = ival;
 
-                hydparams.MaxIterations = int.Parse(hydraulicErosionMaxIterationField.text);
-                if (hydparams.MaxIterations <= 0)
+                success = float.TryParse(hydraulicErosionStartingVolumeField.text, out fval);
+                if (!success || fval <= 0)
                 {
-                    Debug.Log("Max interations must be a positive, non-zero integer");
+                    Debug.Log("Starting drop volume must be greater than 0");
+                    errorMessage.text = "Starting drop volume must be greater than 0";
                     return;
                 }
+                hydparams.StartingVolume = fval;
+                
+                success = float.TryParse(hydraulicErosionMinVolumeField.text, out fval);
+                if (!success || fval <= 0)
+                {
+                    Debug.Log("Minimum drop volume must be greater than 0");
+                    errorMessage.text = "Minimum drop volume must be greater than 0";
+                    return;
+                }
+                hydparams.MINVolume = fval;
+                
+                success = float.TryParse(hydraulicErosionDensityField.text, out fval);
+                if (!success || fval <= 0)
+                {
+                    Debug.Log("Density must be greater than 0");
+                    errorMessage.text = "Density must be greater than 0";
+                    return;
+                }
+                hydparams.Density = fval;
 
-                hydparams.Friction = hydraulicErosionFrictionSlider.value;
-                hydparams.Radius = hydraulicErosionRadiusSlider.value;
-                hydparams.Speed = hydraulicErosionSpeedSlider.value;
-                hydparams.DepositeRate = hydraulicErosionDepositeRateSlider.value;
-                hydparams.ErosionRate = hydraulicErosionRateSlider.value;
-                hydparams.IterationScale = hydraulicErosionIterationScaleSlider.value;
-
+                hydparams.DepositeRate = hydraulicErosionDepositionSlider.value/999f;
+                hydparams.EvaporationRate = hydraulicErosionEvaporationSlider.value/999f;
+                hydparams.Friction = hydraulicErosionFrictionSlider.value/100f;
+                hydparams.FlipXY = hydraulicErosionFlipXYToggle.isOn;
+                
                 data.HydraulicErosionParameters = hydparams;
 
                 break;
+            
             default:
                 Debug.Log("Must select a simulation to run...");
+                errorMessage.text = "Must select a simulation to run...";
                 return;
         }
         
+        errorMessage.text = "";
         erosionSim.Raise(data);
     }
     
@@ -295,12 +331,14 @@ public class UIController : MonoBehaviour
         if (dimension <= 0)
         {
             Debug.Log("Dimension must be positive.");
+            errorMessage.text = "Dimension must be positive.";
             return false;
         }
         
         if (!success)
         {
             Debug.Log("Something went wrong - dimension");
+            errorMessage.text = "Something went wrong - dimension";
             return false;
         }
         
@@ -328,6 +366,7 @@ public class UIController : MonoBehaviour
         if (!success)
         {
             Debug.Log("Something went wrong - perlin min");
+            errorMessage.text = "Something went wrong - perlin min";
             return false;
         }
         
@@ -363,6 +402,7 @@ public class UIController : MonoBehaviour
         if (!success)
         {
             Debug.Log("Something went wrong - remap min");
+            errorMessage.text = "Something went wrong - remap min";
             return false;
         }
         
@@ -373,12 +413,14 @@ public class UIController : MonoBehaviour
         if (!success)
         {
             Debug.Log("Something went wrong - remap max");
+            errorMessage.text = "Something went wrong - remap max";
             return false;
         }
 
         if (remapMin >= remapMax)
         {
             Debug.Log("Remap min range must be less than the remap max range");
+            errorMessage.text = "Remap min range must be less than the remap max range";
             return false;
         }
         

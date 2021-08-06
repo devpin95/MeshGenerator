@@ -10,13 +10,15 @@ namespace Parameters
         public static float flatThreshold = 0.00001f;
         // variables -------------------------------------------------------------------------------------------------------
         private int _dropCount = 80;
-        private float _erosionRate = 0.04f;
-        private float _depositeRate = 0.03f;
-        private float _speed = 0.15f;
-        private float _friction = 0.7f;
+        private float _dt = 1.2f;
+        private float _startingVolume = 1;
+        private float _minVolume = 0.1f;
+        private float _density = 1f;
+        private float _depositeRate = 0.05f;
+        private float _evaporationRate = 0.001f;
+        private float _friction = 0.05f;
         private float _radius = 0.8f;
-        private int _maxIterations = 80;
-        private float _iterationScale = 0.04f;
+        private bool _flipXY = false;
 
         // accessors + Mutators --------------------------------------------------------------------------------------------
         public int DropCount
@@ -25,10 +27,34 @@ namespace Parameters
             set => _dropCount = value;
         }
 
-        public float ErosionRate
+        public float DT
         {
-            get => _erosionRate;
-            set => _erosionRate = value;
+            get => _dt;
+            set => _dt = value;
+        }
+
+        public float StartingVolume
+        {
+            get => _startingVolume;
+            set => _startingVolume = value;
+        }
+
+        public float MINVolume
+        {
+            get => _minVolume;
+            set => _minVolume = value;
+        }
+
+        public float Density
+        {
+            get => _density;
+            set => _density = value;
+        }
+
+        public float EvaporationRate
+        {
+            get => _evaporationRate;
+            set => _evaporationRate = value;
         }
 
         public float DepositeRate
@@ -37,34 +63,22 @@ namespace Parameters
             set => _depositeRate = value;
         }
 
-        public float Speed
-        {
-            get => _speed;
-            set => _speed = value;
-        }
-
         public float Friction
         {
             get => _friction;
             set => _friction = value;
         }
 
-        public int MaxIterations
-        {
-            get => _maxIterations;
-            set => _maxIterations = value;
-        }
-        
         public float Radius
         {
             get => _radius;
             set => _radius = value;
         }
 
-        public float IterationScale
+        public bool FlipXY
         {
-            get => _iterationScale;
-            set => _iterationScale = value;
+            get => _flipXY;
+            set => _flipXY = value;
         }
     }
 }

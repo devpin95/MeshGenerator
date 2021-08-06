@@ -412,9 +412,9 @@ public class MeshGenerator : MonoBehaviour
 
         var vertgrid = Putils.FlatArrayToTwoDArray(_vertices, Constants.meshVerts, Constants.meshVerts);
         
-        for (int row = 0; row < Constants.meshSquares; ++row)
+        for (int row = 0; row < Constants.meshVerts; ++row)
         {
-            for (int col = 0; col < Constants.meshSquares; ++col)
+            for (int col = 0; col < Constants.meshVerts; ++col)
             {
                 // bool skip = false;
                 // int index = x + y * Constants.meshSquares;
