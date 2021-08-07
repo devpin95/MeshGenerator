@@ -4,6 +4,6 @@ using UnityEngine;
 
 public static class Constants
 {
-    public static int meshSquares = 255;
+    public static int meshSquares = 2;
     public static int meshVerts = meshSquares + 1;
 }

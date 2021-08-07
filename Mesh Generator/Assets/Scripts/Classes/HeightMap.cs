@@ -366,7 +366,7 @@ public class HeightMap
         return (y < 0 || y >= WidthAndHeight()) || (x < 0 || x >= WidthAndHeight());
     }
 
-    public void ChangeCell(int row, int column, float amount)
+    public void ChangeNode(int row, int column, float amount)
     {
         map[row, column].y -= amount;
         // int intx = (int) x;
@@ -453,6 +453,11 @@ public class HeightMap
         // }
         //
         //
+    }
+
+    public void SetNode(int row, int col, int val)
+    {
+        map[row, col].y = val;
     }
 
     public float SampleMapAtXYOffset(int row, int rowoffset, int column, int columnoffset)

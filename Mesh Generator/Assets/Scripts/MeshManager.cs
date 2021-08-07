@@ -202,6 +202,37 @@ public class MeshManager : MonoBehaviour
         // if ( needToShowVisualVerts /*&& _vertices.Length < visualVerticeThreshold*/ ) ShowVisualVertices(true);
     }
 
+    public void Blur(BlurMetaData data)
+    {
+        StartCoroutine(RunBlur(data));
+    }
+
+    IEnumerator RunBlur(BlurMetaData data)
+    {
+        checkpointNotification.Raise("Applying blur with " + data.KernelSize + " kernel size and mode " + data.Mode + "...");
+        yield return new WaitForSeconds(0.2f);
+        
+        _startTime = Time.realtimeSinceStartup;
+        
+        GaussianBlur.Blur(_heightMap, data, _data.remapMin, _data.remapMax, checkpointNotification);
+        
+        _endTime = Time.realtimeSinceStartup;
+        _deltaTime = _startTime - _endTime;
+        _metaData.generationTimeMS = _deltaTime / 1000;
+        
+        checkpointNotification.Raise("Updating meshes...");
+        yield return new WaitForSeconds(1);
+        ApplyHeightMapToMesh();
+        
+        checkpointNotification.Raise("Generating height map preview...");
+        yield return new WaitForSeconds(.2f);
+        _metaData.heightMap = _heightMap.GenerateHeightMapPreview(_data.remapMin, _data.remapMax);
+        
+        checkpointNotification.Raise("Updating metadata...");
+        yield return new WaitForSeconds(.2f);
+        meshDataNotification.Raise(_metaData);
+    }
+
     public void RunSimulation(ErosionMetaData data)
     {
         switch (data.algorithm)
@@ -216,7 +247,11 @@ public class MeshManager : MonoBehaviour
 
     IEnumerator Simulation(ErosionMetaData data)
     {
+        _startTime = Time.realtimeSinceStartup;
         yield return HydraulicErosion.Simulate(_heightMap, data.HydraulicErosionParameters, checkpointNotification);
+        _endTime = Time.realtimeSinceStartup;
+        _deltaTime = _startTime - _endTime;
+        _metaData.generationTimeMS = _deltaTime / 1000;
 
         checkpointNotification.Raise("Updating meshes...");
         yield return new WaitForSeconds(1);

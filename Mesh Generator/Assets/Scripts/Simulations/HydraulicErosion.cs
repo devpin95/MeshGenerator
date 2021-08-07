@@ -102,8 +102,8 @@ public static class HydraulicErosion
 
                 float amount = parameters.DT * drop.volume * parameters.DepositeRate * seddiff;
                 
-                if ( parameters.FlipXY ) map.ChangeCell((int)initialPos.x, (int)initialPos.y, amount);
-                else map.ChangeCell((int)initialPos.y, (int)initialPos.x, amount);
+                if ( parameters.FlipXY ) map.ChangeNode((int)initialPos.x, (int)initialPos.y, amount);
+                else map.ChangeNode((int)initialPos.y, (int)initialPos.x, amount);
                 
                 // do some evaporation
                 drop.volume *= 1f - (parameters.DT * parameters.EvaporationRate);

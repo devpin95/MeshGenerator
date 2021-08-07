@@ -11,23 +11,16 @@ using UnityEngine.UI;
 
 public class UIController : MonoBehaviour
 {
-    public Button perspectiveButton;
-    public TextMeshProUGUI perspectiveLabel;
-    public Sprite perspectiveSprite;
-    public Sprite orthgraphicSprite;
-
-    private SpriteState _perspectiveModeState;
-    private SpriteState _orthographicModeState;
-    private bool _inPerspectiveMode = true;
-
     [Header("Menu Groups")] 
     public Image mainMenuBg;
     public GameObject meshGenerationMenuGroup;
     public GameObject simulationMenuGroup;
+    public GameObject gaussianBlurGroup;
     
     [Header("Main Action Buttons")]
     public Button generateButton;
     public Button runSimulationButton;
+    public Button blurMapButton;
     public TextMeshProUGUI errorMessage;
 
     [Header("Mesh Meta Data")] 
@@ -81,7 +74,7 @@ public class UIController : MonoBehaviour
     [Header("Simulations Inputs")] 
     public TMP_Dropdown simulationTypeDropdown;
 
-    [Header("Hydraulic Erosion Menu")] 
+    [Header("Hydraulic Erosion Inputs")] 
     public TMP_InputField hydraulicErosionTimeStepField;
     public TMP_InputField hydraulicErosionDropCountField;
     public TMP_InputField hydraulicErosionStartingVolumeField;
@@ -95,6 +88,10 @@ public class UIController : MonoBehaviour
     public Slider hydraulicErosionFrictionSlider;
     public TextMeshProUGUI hydraulicErosionFrictionSliderValue;
 
+    [Header("Gaussian Blur Inputs")] 
+    public TMP_InputField gaussianBlurKernelField;
+    public TMP_Dropdown gaussianBlurBorderModeDropdown;
+
     [Header("Overlay")] 
     public GameObject overlay;
     public TextMeshProUGUI overlayText;
@@ -105,6 +102,7 @@ public class UIController : MonoBehaviour
     [Header("Events")] 
     public CEvent_MeshGenerationData generateNewMesh;
     public CEvent_ErosionMetaData erosionSim;
+    public CEvent_BlurMetaData blurHeightMap;
 
     [Header("Objects")] 
     public HeightMapList maps;
@@ -114,44 +112,18 @@ public class UIController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        _perspectiveModeState.selectedSprite = perspectiveSprite;
-        _perspectiveModeState.highlightedSprite = perspectiveSprite;
-        _perspectiveModeState.pressedSprite = perspectiveSprite;
-        _perspectiveModeState.disabledSprite = perspectiveSprite;
-        
-        _orthographicModeState.selectedSprite = orthgraphicSprite;
-        _orthographicModeState.highlightedSprite = orthgraphicSprite;
-        _orthographicModeState.pressedSprite = orthgraphicSprite;
-        _orthographicModeState.disabledSprite = orthgraphicSprite;
-        
         generateButton.onClick.AddListener(CollectGenerationData);
         runSimulationButton.onClick.AddListener(CollectSimulationData);
+        blurMapButton.onClick.AddListener(CollectGaussianBlurData);
 
-        foreach (var map in Enums.HeightMapTypeNames)
-        {
-            heightMapTypeField.options.Add(new TMP_Dropdown.OptionData(map.Value));
-        }
-
-        heightMapTypeField.value = 1;
-        heightMapTypeField.value = 0;
+        InitializeDropdown(heightMapTypeField, Enums.HeightMapTypeNames);
         heightMapTypeFieldReady = true;
 
-        foreach (var algo in Enums.SmoothingAlgorithmNames)
-        {
-            simpleNoiseSmoothingField.options.Add(new TMP_Dropdown.OptionData(algo.Value));
-        }
-        
-        simpleNoiseSmoothingField.value = 1;
-        simpleNoiseSmoothingField.value = 0;
-
+        InitializeDropdown(simpleNoiseSmoothingField, Enums.SmoothingAlgorithmNames);
         _activeOptionMenu = planeOptions;
 
-        foreach (var sim in Enums.ErosionSimulationNames)
-        {
-            simulationsTypeDropdown.options.Add(new TMP_Dropdown.OptionData(sim.Value));
-        }
-        simulationsTypeDropdown.value = 1;
-        simulationsTypeDropdown.value = 0;
+        InitializeDropdown(simulationsTypeDropdown, Enums.ErosionSimulationNames);
+        InitializeDropdown(gaussianBlurBorderModeDropdown, Enums.GaussianBlurBorderModeNames);
         
         hydraulicErosionFrictionSlider.onValueChanged.AddListener(arg0 => hydraulicErosionFrictionSliderValue.text = (arg0/100f).ToString("n2"));
         hydraulicErosionDepositionSlider.onValueChanged.AddListener(arg0 => hydraulicErosionDepositionSliderValue.text = (arg0/999f).ToString("n3"));
@@ -165,25 +137,7 @@ public class UIController : MonoBehaviour
     {
 
     }
-
-    public void OnPerspectiveButtonClick()
-    {
-        _inPerspectiveMode = !_inPerspectiveMode;
-
-        if (_inPerspectiveMode)
-        {
-            perspectiveButton.spriteState = _perspectiveModeState;
-            perspectiveButton.GetComponent<Image>().sprite = perspectiveSprite;
-            perspectiveLabel.text = "Perspective";
-        }
-        else
-        {
-            perspectiveButton.spriteState = _orthographicModeState;
-            perspectiveButton.GetComponent<Image>().sprite = orthgraphicSprite;
-            perspectiveLabel.text = "Orthographic";
-        }
-    }
-
+    
     public void UpdateMeshMetaData(MeshMetaData data)
     {
         overlay.SetActive(false);
@@ -319,7 +273,29 @@ public class UIController : MonoBehaviour
         errorMessage.text = "";
         erosionSim.Raise(data);
     }
-    
+
+    private void CollectGaussianBlurData()
+    {
+        BlurMetaData data = new BlurMetaData();
+        
+        bool success;
+        int kernelSize = 1;
+        success = int.TryParse(gaussianBlurKernelField.text, out kernelSize);
+
+        if (!success || kernelSize <= 0 || kernelSize % 2 == 0)
+        {
+            Debug.Log("Kernel size must be a positive, odd integer");
+            errorMessage.text = "Kernel size must be a positive, odd integer";
+            return;
+        }
+
+        data.KernelSize = kernelSize;
+
+        Enums.GaussianBlurBorderModes mode = (Enums.GaussianBlurBorderModes) gaussianBlurBorderModeDropdown.value;
+        data.Mode = mode;
+        
+        blurHeightMap.Raise(data);
+    }
     private bool ParseDimensions(MeshGenerationData data)
     {
         bool success;
@@ -628,20 +604,45 @@ public class UIController : MonoBehaviour
             // menus 
             meshGenerationMenuGroup.SetActive(true);
             simulationMenuGroup.SetActive(false);
+            gaussianBlurGroup.SetActive(false);
             
             // action buttons
             generateButton.gameObject.SetActive(true);
             runSimulationButton.gameObject.SetActive(false);
+            blurMapButton.gameObject.SetActive(false);
         } 
         else if (menu == 1)
         {
             // menus
-            simulationMenuGroup.SetActive(true);
             meshGenerationMenuGroup.SetActive(false);
+            simulationMenuGroup.SetActive(true);
+            gaussianBlurGroup.SetActive(false);
             
             // action buttons
             generateButton.gameObject.SetActive(false);
             runSimulationButton.gameObject.SetActive(true);
+            blurMapButton.gameObject.SetActive(false);
         }
+        else if (menu == 2)
+        {
+            simulationMenuGroup.SetActive(false);
+            meshGenerationMenuGroup.SetActive(false);
+            gaussianBlurGroup.SetActive(true);
+            
+            // action buttons
+            generateButton.gameObject.SetActive(false);
+            runSimulationButton.gameObject.SetActive(false);
+            blurMapButton.gameObject.SetActive(true);
+        }
+    }
+
+    private void InitializeDropdown<T>(TMP_Dropdown dropdown, Dictionary<T, string> list)
+    {
+        foreach (var mode in list)
+        {
+            dropdown.options.Add(new TMP_Dropdown.OptionData(mode.Value));
+        }
+        dropdown.value = 1;
+        dropdown.value = 0;
     }
 }

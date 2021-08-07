@@ -26,6 +26,14 @@ public class Enums
         Hydraulic
     }
 
+    public enum GaussianBlurBorderModes
+    {
+        BlendBlack,
+        BlendWhite,
+        Mirror,
+        Nearest
+    }
+
     public static Dictionary<HeightMapTypes, string> HeightMapTypeNames = new Dictionary<HeightMapTypes, string>()
     {
         {HeightMapTypes.Plane, "Plane"},
@@ -66,5 +74,14 @@ public class Enums
         new Dictionary<ErosionAlgorithms, string>()
         {
             {ErosionAlgorithms.Hydraulic, "Hydraulic Erosion"}
+        };
+    
+    public static Dictionary<GaussianBlurBorderModes, string> GaussianBlurBorderModeNames =
+        new Dictionary<GaussianBlurBorderModes, string>()
+        {
+            {GaussianBlurBorderModes.BlendWhite, "Blend White"},
+            {GaussianBlurBorderModes.BlendBlack, "Blend Black"},
+            {GaussianBlurBorderModes.Mirror, "Mirror"},
+            {GaussianBlurBorderModes.Nearest, "Nearest"}
         };
 }
