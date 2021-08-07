@@ -5,6 +5,7 @@ using UnityEngine;
 
 public static class GaussianBlur
 {
+    private const float NearBlack = 0.0000001f;
     public static float E = 2.718281828459045f;
     public static float[,] Blur(HeightMap map, BlurMetaData metaData, float min, float max, CEvent_String checkpoint)
     {
@@ -29,12 +30,19 @@ public static class GaussianBlur
     {
         float[] kernel = new float[ksize];
         int center = (ksize - 1) / 2;
+        float sum = 0;
 
-        for ( int i = 0; i < (ksize - 1) / 2; ++i )
+        for ( int i = 0; i < ((ksize - 1) / 2) + 1; ++i )
         {
             float co = Guassian2D(center, center + i, ksize);
             kernel[center + i] = co;
             kernel[center - i] = co;
+            sum += co;
+        }
+
+        for (int i = 0; i < ksize; ++i)
+        {
+            kernel[i] /= sum;
         }
 
         return kernel;
@@ -42,9 +50,8 @@ public static class GaussianBlur
     
     public static float CalculateGaussSigma(int ksize)
     {
-        // from OpenCV docs
-        // https://docs.opencv.org/3.3.1/d4/d86/group__imgproc__filter.html#gac05a120c1ae92a6060dd0db190a61afa
-        return 0.3f * ((ksize - 1) * 0.5f - 1) + 0.8f;
+        float radius = (ksize - 1) / 2f;
+        return radius / 2f;
     }
 
     public static float Guassian2D(int x, int y, int ksize)
@@ -71,7 +78,7 @@ public static class GaussianBlur
         float sum = height * kernel[kcenter];
         float weight = 0;
         
-        for (int k = 0; k < kcenter; ++k)
+        for (int k = 1; k < kcenter + 1; ++k)
         {
             // look down k rows
             weight = kernel[kcenter - k];
@@ -85,7 +92,7 @@ public static class GaussianBlur
                 
                 // blend with black
                 else if ( metaData.Mode == Enums.GaussianBlurBorderModes.BlendBlack ) 
-                    sum += weight * 0f;
+                    sum += weight * NearBlack;
                 
                 // mirror the values to the side of the kernel off the edge of the grid
                 // look at the top half of the kernel
@@ -112,7 +119,7 @@ public static class GaussianBlur
                 
                 // blend with black
                 else if ( metaData.Mode == Enums.GaussianBlurBorderModes.BlendBlack ) 
-                    sum += kernel[kcenter + k] * 0f;
+                    sum += kernel[kcenter + k] * NearBlack;
                 
                 // mirror the values to the side of the kernel off the edge of the grid
                 // look at the bottom half of the kernel
@@ -140,7 +147,7 @@ public static class GaussianBlur
                 
                 // blend with black
                 else if ( metaData.Mode == Enums.GaussianBlurBorderModes.BlendBlack ) 
-                    sum += kernel[kcenter + k] * 0f;
+                    sum += kernel[kcenter + k] * NearBlack;
                 
                 // mirror the values to the side of the kernel off the edge of the grid
                 // look at the left side of the kernel
@@ -166,7 +173,7 @@ public static class GaussianBlur
                 
                 // blend with black
                 else if ( metaData.Mode == Enums.GaussianBlurBorderModes.BlendBlack ) 
-                    sum += weight * 0f;
+                    sum += weight * NearBlack;
                 
                 // mirror the values to the side of the kernel off the edge of the grid
                 // look at the top half of the kernel

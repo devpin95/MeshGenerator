@@ -90,6 +90,7 @@ public class UIController : MonoBehaviour
 
     [Header("Gaussian Blur Inputs")] 
     public TMP_InputField gaussianBlurKernelField;
+    public TMP_InputField gaussianBlurStandardDevField;
     public TMP_Dropdown gaussianBlurBorderModeDropdown;
 
     [Header("Overlay")] 
@@ -290,6 +291,19 @@ public class UIController : MonoBehaviour
         }
 
         data.KernelSize = kernelSize;
+        
+        float stdev = 1;
+        success = float.TryParse(gaussianBlurStandardDevField.text, out stdev);
+
+        if (!success || stdev <= 0)
+        {
+            Debug.Log("Standard deviation must be positive real");
+            errorMessage.text = "Standard deviation must be position real";
+            return;
+        }
+
+        data.StandardDeviation = stdev;
+        
 
         Enums.GaussianBlurBorderModes mode = (Enums.GaussianBlurBorderModes) gaussianBlurBorderModeDropdown.value;
         data.Mode = mode;

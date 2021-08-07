@@ -497,4 +497,15 @@ public class HeightMap
     {
         return map[x, y].y;
     }
+
+    public void SetMapHeights(float[,] grid)
+    {
+        for (int row = 0; row < _meshedge; ++row)
+        {
+            for (int col = 0; col < _meshedge; ++col)
+            {
+                map[row, col].y = grid[row, col];
+            }
+        }
+    }
 }

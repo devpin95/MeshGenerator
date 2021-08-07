@@ -214,11 +214,16 @@ public class MeshManager : MonoBehaviour
         
         _startTime = Time.realtimeSinceStartup;
         
-        GaussianBlur.Blur(_heightMap, data, _data.remapMin, _data.remapMax, checkpointNotification);
+        var blurredgrid = GaussianBlur.Blur(_heightMap, data, _data.remapMin, _data.remapMax, checkpointNotification);
         
         _endTime = Time.realtimeSinceStartup;
         _deltaTime = _startTime - _endTime;
         _metaData.generationTimeMS = _deltaTime / 1000;
+        
+        checkpointNotification.Raise("Updating height map...");
+        yield return new WaitForSeconds(1);
+        
+        _heightMap.SetMapHeights(blurredgrid);
         
         checkpointNotification.Raise("Updating meshes...");
         yield return new WaitForSeconds(1);
