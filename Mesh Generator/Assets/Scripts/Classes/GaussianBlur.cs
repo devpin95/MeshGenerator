@@ -147,7 +147,7 @@ public static class GaussianBlur
                 
                 // blend with black
                 else if ( metaData.Mode == Enums.GaussianBlurBorderModes.BlendBlack ) 
-                    sum += kernel[kcenter + k] * NearBlack;
+                    sum += weight * NearBlack;
                 
                 // mirror the values to the side of the kernel off the edge of the grid
                 // look at the left side of the kernel

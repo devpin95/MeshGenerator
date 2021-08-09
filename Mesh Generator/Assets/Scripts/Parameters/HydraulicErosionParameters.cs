@@ -7,7 +7,6 @@ namespace Parameters
 {
     public class HydraulicErosionParameters
     {
-        public static float flatThreshold = 0.00001f;
         // variables -------------------------------------------------------------------------------------------------------
         private int _dropCount = 80;
         private float _dt = 1.2f;

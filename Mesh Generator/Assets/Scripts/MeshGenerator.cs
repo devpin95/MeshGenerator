@@ -22,6 +22,7 @@ public class MeshGenerator : MonoBehaviour
     private Mesh _mesh;
     private Vector3[] _vertices;
     private int[] _triangles;
+    private Color[] _colors;
 
     public HeightMapList maps;
     // public CEvent_String checkpointNotification;
@@ -55,6 +56,7 @@ public class MeshGenerator : MonoBehaviour
     {
         CreateVerts();
         CreateTris();
+        CreateColors();
     }
 
     private void UpdateMesh()
@@ -63,6 +65,7 @@ public class MeshGenerator : MonoBehaviour
 
         _mesh.vertices = _vertices;
         _mesh.triangles = _triangles;
+        _mesh.colors = _colors;
 
         _mesh.RecalculateNormals();
     }
@@ -72,6 +75,7 @@ public class MeshGenerator : MonoBehaviour
         // I guess our _mesh isnt the same anymore so just go get it from the mesh filter
         MeshFilter meshfilter = GetComponent<MeshFilter>();
         meshfilter.mesh.vertices = _vertices;
+        meshfilter.mesh.colors = _colors;
         meshfilter.mesh.RecalculateNormals();
     }
     
@@ -174,6 +178,17 @@ public class MeshGenerator : MonoBehaviour
         
         // Debug.Log("Mesh has " + trilist.Count / 3 + " triangles");
         _triangles = trilist.ToArray();
+    }
+
+    private void CreateColors()
+    {
+        _colors = new Color[_vertices.Length];
+
+        for (int i = 0; i < _colors.Length; ++i)
+        {
+            float remapped = Putils.Remap(_vertices[i].y, _data.remapMin, _data.remapMax, 0, 1);
+            _colors[i] = Color.Lerp(Color.black, Color.white, remapped);
+        }
     }
 
     public void RegenerateMesh(MeshGenerationData data)
@@ -444,6 +459,8 @@ public class MeshGenerator : MonoBehaviour
         }
 
         _vertices = Putils.Flatten2DArray(vertgrid, Constants.meshVerts, Constants.meshVerts);
+        
+        CreateColors();
 
         UpdateDirtyMesh();
     }

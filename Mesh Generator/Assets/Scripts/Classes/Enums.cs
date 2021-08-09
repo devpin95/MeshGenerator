@@ -28,8 +28,8 @@ public class Enums
 
     public enum GaussianBlurBorderModes
     {
-        BlendBlack,
         BlendWhite,
+        BlendBlack,
         Mirror,
         Nearest
     }

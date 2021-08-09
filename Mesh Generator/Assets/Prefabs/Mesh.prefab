@@ -60,7 +60,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 1ed189af6eeef8046b71031bcd949ac4, type: 2}
+  - {fileID: 2100000, guid: 53fed6b641eb31a4f9928ac667c1408c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -94,6 +94,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c1ef199b7906dbf4094b424fd4ad99a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  xMeshOffset: 0
+  zMeshOffset: 0
+  row: 0
+  column: 0
   maps: {fileID: 11400000, guid: f8449d89a9244a94dba1d3aceae8c777, type: 2}
-  checkpointNotification: {fileID: 0}
-  meshDataNotification: {fileID: 0}

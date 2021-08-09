@@ -5,6 +5,8 @@ using UnityEngine;
 
 public static class Putils
 {
+    public static float flatNormalThreshold = 0.00001f;
+    
     public static float Remap (float from, float fromMin, float fromMax, float toMin,  float toMax) {
         var fromAbs  =  from - fromMin;
         var fromMaxAbs = fromMax - fromMin;      
@@ -26,8 +28,8 @@ public static class Putils
     
     public static bool normIsUp(Vector3 norm)
     {
-        return norm.y >= 1 - HydraulicErosionParameters.flatThreshold && 
-               norm.y <= 1 + HydraulicErosionParameters.flatThreshold;
+        return norm.y >= 1 - flatNormalThreshold && 
+               norm.y <= 1 + flatNormalThreshold;
     }
     
     public static T[,] FlatArrayToTwoDArray<T>(T[] flat, int width, int height)
