@@ -16,8 +16,9 @@ public class UIController : MonoBehaviour
     public GameObject meshGenerationMenuGroup;
     public GameObject simulationMenuGroup;
     public GameObject gaussianBlurGroup;
-    
-    [Header("Main Action Buttons")]
+
+    [Header("Main Action Buttons")] 
+    public GameObject actionButtonsContainer;
     public Button generateButton;
     public Button runSimulationButton;
     public Button blurMapButton;
@@ -594,14 +595,16 @@ public class UIController : MonoBehaviour
             mainUIContainer.SetActive(true);
             generationStatsContainer.SetActive(true);
             debugContainer.SetActive(true);
-            generateButton.gameObject.SetActive(true);
+            actionButtonsContainer.SetActive(true);
+            // generateButton.gameObject.SetActive(true);
         }
         else
         {
             mainUIContainer.SetActive(false);
             generationStatsContainer.SetActive(false);
             debugContainer.SetActive(false);
-            generateButton.gameObject.SetActive(false);
+            actionButtonsContainer.SetActive(false);
+            // generateButton.gameObject.SetActive(false);
         }
     }
 

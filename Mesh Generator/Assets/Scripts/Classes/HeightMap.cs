@@ -498,14 +498,29 @@ public class HeightMap
         return map[x, y].y;
     }
 
-    public void SetMapHeights(float[,] grid)
+    public void SetMapHeights(float[,] grid, float remapmin, float remapmax)
     {
         for (int row = 0; row < _meshedge; ++row)
         {
             for (int col = 0; col < _meshedge; ++col)
             {
-                map[row, col].y = grid[row, col];
+                map[row, col].y = Putils.Remap(grid[row, col], 0, 1, remapmin, remapmax);
             }
         }
+    }
+
+    public float[,] GetHeightMap()
+    {
+        float[,] hmap = new float[_meshedge, _meshedge];
+
+        for (int row = 0; row < _meshedge; ++row)
+        {
+            for (int col = 0; col < _meshedge; ++col)
+            {
+                hmap[row, col] = map[row, col].y;
+            }
+        }
+
+        return hmap;
     }
 }

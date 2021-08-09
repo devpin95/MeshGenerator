@@ -8,6 +8,8 @@ public static class Putils
     public static float flatNormalThreshold = 0.00001f;
     
     public static float Remap (float from, float fromMin, float fromMax, float toMin,  float toMax) {
+        // if ( from > fromMax || from < fromMin ) Debug.LogWarning("Value is outside initial range");
+        
         var fromAbs  =  from - fromMin;
         var fromMaxAbs = fromMax - fromMin;      
        

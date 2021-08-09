@@ -7,19 +7,44 @@ public static class GaussianBlur
 {
     private const float NearBlack = 0.0000001f;
     public static float E = 2.718281828459045f;
-    public static float[,] Blur(HeightMap map, BlurMetaData metaData, float min, float max, CEvent_String checkpoint)
+    public static float[,] Blur(float[,] map, int dim, BlurMetaData metaData, float min, float max, CEvent_String checkpoint)
     {
-        int dim = map.WidthAndHeight();
         float[,] tempgrid = new float[dim, dim];
         float[] kernel = FlatKernel(metaData.KernelSize);
-
+        
         // first pass
         // vertical kernel
         for (int row = 0; row < dim; ++row)
         {
             for (int col = 0; col < dim; ++col)
             {
-                tempgrid[row, col] = Convolve(map, row, col, kernel, metaData, min, max);
+                tempgrid[row, col] = ConvolveVertical(map, dim, row, col, kernel, metaData, min, max);;
+            }
+        }
+        
+        float minr = float.MaxValue;
+        float maxr = float.MinValue;
+        
+        // second pass
+        for (int row = 0; row < dim; ++row)
+        {
+            for (int col = 0; col < dim; ++col)
+            {
+                float val = tempgrid[row, col] + ConvolveHorizonal(tempgrid, dim, row, col, kernel, metaData, min, max);
+
+                if (val < minr) minr = val;
+                if (val > maxr) maxr = val;
+
+                tempgrid[row, col] = val;
+            }
+        }
+        
+        // now go back and remap all of the values
+        for (int row = 0; row < dim; ++row)
+        {
+            for (int col = 0; col < dim; ++col)
+            {
+                tempgrid[row, col] = Putils.Remap(tempgrid[row, col], minr, maxr, 0, 1);
             }
         }
 
@@ -68,21 +93,18 @@ public static class GaussianBlur
         return coeff;
     }
 
-    public static float Convolve(HeightMap map, int row, int col, float[] kernel, BlurMetaData metaData, float min, float max)
+    public static float ConvolveVertical(float[,] map, int dim, int row, int col, float[] kernel, BlurMetaData metaData, float min, float max)
     {
-        int dim = map.WidthAndHeight(); // the side of the map
         int kcenter = (metaData.KernelSize - 1) / 2; // the number of elements on either side of the center
         
         float height = SampleAndRemap(map, row, col, min, max);
 
         float sum = height * kernel[kcenter];
-        float weight = 0;
-        
+
         for (int k = 1; k < kcenter + 1; ++k)
         {
             // look down k rows
-            weight = kernel[kcenter - k];
-            
+            float weight = kernel[kcenter - k];
             if (row - k >= 0) sum += weight * SampleAndRemap(map, row - k, col, min, max);
             else
             {
@@ -96,8 +118,11 @@ public static class GaussianBlur
                 
                 // mirror the values to the side of the kernel off the edge of the grid
                 // look at the top half of the kernel
-                else if ( metaData.Mode == Enums.GaussianBlurBorderModes.Mirror && row + k < dim ) 
-                    sum += weight * SampleAndRemap(map, row + k, col, min, max);
+                else if (metaData.Mode == Enums.GaussianBlurBorderModes.Mirror)
+                {
+                    if (row + k < dim)
+                        sum += weight * SampleAndRemap(map, row + k, col, min, max);
+                }
                 
                 // pad the kernel with the edge values
                 else if ( metaData.Mode == Enums.GaussianBlurBorderModes.Nearest )
@@ -119,12 +144,15 @@ public static class GaussianBlur
                 
                 // blend with black
                 else if ( metaData.Mode == Enums.GaussianBlurBorderModes.BlendBlack ) 
-                    sum += kernel[kcenter + k] * NearBlack;
+                    sum += weight * NearBlack;
                 
                 // mirror the values to the side of the kernel off the edge of the grid
                 // look at the bottom half of the kernel
-                else if (metaData.Mode == Enums.GaussianBlurBorderModes.Mirror && row - k >= 0) 
-                    sum += weight * SampleAndRemap(map, row + k, col, min, max);
+                else if (metaData.Mode == Enums.GaussianBlurBorderModes.Mirror)
+                {
+                    if ( row - k >= 0 )
+                        sum += weight * SampleAndRemap(map, row - k, col, min, max);
+                }
                 
                 // pad the kernel with the edge values
                 else if (metaData.Mode == Enums.GaussianBlurBorderModes.Nearest)
@@ -135,10 +163,26 @@ public static class GaussianBlur
                     sum += weight * SampleAndRemap(map, row + knearest, col, min, max);
                 }
             }
-            
+        }
+
+        // sum = Mathf.Clamp01(sum);
+        return sum;
+    }
+    
+    public static float ConvolveHorizonal(float[,] map, int dim, int row, int col, float[] kernel, BlurMetaData metaData, float min, float max)
+    {
+        int kcenter = (metaData.KernelSize - 1) / 2; // the number of elements on either side of the center
+        
+        float height = SampleAndRemap(map, row, col, min, max);
+
+        float sum = height * kernel[kcenter];
+        float weight;
+        
+        for (int k = 1; k < kcenter + 1; ++k)
+        {
             // look right k cols 
             weight = kernel[kcenter + k];
-            if (col + k < dim) sum += weight * map.SampleMapAtXY(row, col + k);
+            if (col + k < dim) sum += weight * SampleAndRemap(map, row, col + k, min, max);
             else
             {
                 // blend with white
@@ -151,9 +195,12 @@ public static class GaussianBlur
                 
                 // mirror the values to the side of the kernel off the edge of the grid
                 // look at the left side of the kernel
-                else if (metaData.Mode == Enums.GaussianBlurBorderModes.Mirror && kcenter - k > 0) 
-                    sum += weight * SampleAndRemap(map, row, col - k, min, max);
-                
+                else if (metaData.Mode == Enums.GaussianBlurBorderModes.Mirror)
+                {
+                    if ( col - k >= 0 )
+                        sum += weight * SampleAndRemap(map, row, col - k, min, max);
+                }
+
                 // pad the kernel with the edge values
                 else if (metaData.Mode == Enums.GaussianBlurBorderModes.Nearest)
                 {
@@ -161,9 +208,14 @@ public static class GaussianBlur
                     while (kcenter + knearest >= dim) --knearest;
                     sum += weight * SampleAndRemap(map, row, col + knearest, min, max);
                 }
+                else if (metaData.Mode == Enums.GaussianBlurBorderModes.Ignore)
+                {
+                    sum += 0;
+                }
             }
             
             // look left k cols
+            weight = kernel[kcenter - k];
             if (col - k >= 0) sum += weight * SampleAndRemap(map, row, col - k, min, max);
             else
             {
@@ -177,24 +229,32 @@ public static class GaussianBlur
                 
                 // mirror the values to the side of the kernel off the edge of the grid
                 // look at the top half of the kernel
-                else if (metaData.Mode == Enums.GaussianBlurBorderModes.Mirror && row + k < dim)
-                    sum += weight * SampleAndRemap(map, row, col + k, min, max);
-                
+                else if (metaData.Mode == Enums.GaussianBlurBorderModes.Mirror)
+                {
+                    if ( col + k < dim )
+                        sum += weight * SampleAndRemap(map, row, col + k, min, max);
+                }
+
                 // pad the kernel with the edge values
                 else if ( metaData.Mode == Enums.GaussianBlurBorderModes.Nearest )
                 {
                     int knearest = k;
-                    while (row - knearest < 0) ++knearest;
+                    while (col - knearest < 0) ++knearest;
                     sum += weight * SampleAndRemap(map, row, col - knearest, min, max);
+                }
+                else if (metaData.Mode == Enums.GaussianBlurBorderModes.Ignore)
+                {
+                    sum += 0;
                 }
             }
         }
 
+        // sum = Mathf.Clamp01(sum);
         return sum;
     }
 
-    private static float SampleAndRemap(HeightMap map, int row, int col, float min, float max)
+    private static float SampleAndRemap(float[,] map, int row, int col, float min, float max)
     {
-        return Putils.Remap(map.SampleMapAtXY(row, col), min, max, 0, 1);
+        return Putils.Remap(map[row, col], min, max, 0, 1);
     }
 }

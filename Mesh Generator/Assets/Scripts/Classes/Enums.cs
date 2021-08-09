@@ -28,6 +28,7 @@ public class Enums
 
     public enum GaussianBlurBorderModes
     {
+        Ignore,
         BlendWhite,
         BlendBlack,
         Mirror,
@@ -79,6 +80,7 @@ public class Enums
     public static Dictionary<GaussianBlurBorderModes, string> GaussianBlurBorderModeNames =
         new Dictionary<GaussianBlurBorderModes, string>()
         {
+            {GaussianBlurBorderModes.Ignore, "Ignore"},
             {GaussianBlurBorderModes.BlendWhite, "Blend White"},
             {GaussianBlurBorderModes.BlendBlack, "Blend Black"},
             {GaussianBlurBorderModes.Mirror, "Mirror"},
