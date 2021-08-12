@@ -36,7 +36,7 @@ public static class HydraulicErosion
         {
             if (drops % 2000 == 0)
             {
-                checkpointNotification.Raise("Simulating drop " + drops + " of " + parameters.DropCount);
+                checkpointNotification.Raise("Simulating drop " + drops.ToString("n0") + " of " + parameters.DropCount.ToString("n0"));
                 yield return null;
             }
 

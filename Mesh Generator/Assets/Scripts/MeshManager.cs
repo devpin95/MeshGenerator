@@ -6,6 +6,7 @@ using UnityEngine;
 
 public class MeshManager : MonoBehaviour
 {
+    public GameObject previousMeshContainer;
     public int meshCount = 1; // meshCount^2 is the number of meshes that will be generated
     public GameObject meshPrefab;
     public CEvent_Vector3 updateCameraEvent;
@@ -30,7 +31,9 @@ public class MeshManager : MonoBehaviour
     private float _endTime;
     private float _deltaTime;
     private MeshMetaData _metaData = new MeshMetaData();
+    
     private HeightMap _heightMap = new HeightMap();
+    private HeightMap _previousHeightMap = null;
 
     // Start is called before the first frame update
     void Start()
@@ -191,9 +194,13 @@ public class MeshManager : MonoBehaviour
         {
             Destroy(_meshes[i].gameObject);
         }
+
+        MoveMeshToPrevious(true);
         
         _meshes = new List<GameObject>();
         _generators = new List<MeshGenerator>();
+        
+        // store the current mesh as the previous mesh
 
         StartCoroutine(StartMeshGeneration());
 
@@ -209,9 +216,11 @@ public class MeshManager : MonoBehaviour
 
     IEnumerator RunBlur(BlurMetaData data)
     {
-        checkpointNotification.Raise("Applying blur with " + data.KernelSize + " kernel size and mode " + data.Mode + "...");
-        yield return new WaitForSeconds(0.2f);
+        checkpointNotification.Raise("Saving current mesh...");
+        MoveMeshToPrevious(true);
         
+        checkpointNotification.Raise("Applying blur with " + data.KernelSize + " kernel size and mode " + data.Mode + "...");
+
         _startTime = Time.realtimeSinceStartup;
         
         var blurredgrid = GaussianBlur.Blur(_heightMap.GetHeightMap(), _heightMap.WidthAndHeight(), data, _data.remapMin, _data.remapMax, checkpointNotification);
@@ -252,6 +261,9 @@ public class MeshManager : MonoBehaviour
 
     IEnumerator Simulation(ErosionMetaData data)
     {
+        checkpointNotification.Raise("Saving current mesh...");
+        MoveMeshToPrevious(true);
+        
         _startTime = Time.realtimeSinceStartup;
         yield return HydraulicErosion.Simulate(_heightMap, data.HydraulicErosionParameters, checkpointNotification);
         _endTime = Time.realtimeSinceStartup;
@@ -269,5 +281,51 @@ public class MeshManager : MonoBehaviour
         checkpointNotification.Raise("Updating metadata...");
         yield return new WaitForSeconds(.2f);
         meshDataNotification.Raise(_metaData);
+    }
+
+    // public void SwitchMap()
+    // {
+    //     if (_previousHeightMap == null) return;
+    //     HeightMap temp = _heightMap;
+    //     _heightMap = _previousHeightMap;
+    //     _previousHeightMap = temp;
+    // }
+
+    private void MoveMeshToPrevious(bool copy = false)
+    {
+        if (previousMeshContainer.transform.childCount > 0)
+        {
+            int childcount = previousMeshContainer.transform.childCount;
+            for (int i = childcount - 1; i >= 0; --i)
+            {
+                DestroyImmediate(previousMeshContainer.transform.GetChild(i).gameObject);
+            }
+        }
+        
+        foreach (var mesh in _meshes)
+        {
+            if (copy)
+            {
+                Debug.Log("Copying mesh...");
+
+                var nmesh = Instantiate(mesh, mesh.transform.position, mesh.transform.rotation);
+                nmesh.transform.SetParent(previousMeshContainer.transform);
+
+                Mesh omeshFilter = mesh.GetComponent<MeshFilter>().mesh;
+                Mesh nmeshfilter = nmesh.GetComponent<MeshFilter>().mesh;
+                
+                nmeshfilter = new Mesh();
+                nmeshfilter.vertices = omeshFilter.vertices;
+                nmeshfilter.triangles = omeshFilter.triangles;
+                nmeshfilter.colors = omeshFilter.colors;
+                nmeshfilter.RecalculateNormals();
+            }
+            else
+            {
+                // the mesh will be regenerated so just move this one
+                Debug.Log("Moving mesh...");
+                mesh.transform.SetParent(previousMeshContainer.transform);
+            }
+        }
     }
 }

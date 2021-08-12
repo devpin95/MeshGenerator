@@ -109,7 +109,21 @@ public class UIController : MonoBehaviour
     [Header("Objects")] 
     public HeightMapList maps;
 
+    [Header("Previous Mesh")] 
+    public CanvasGroup toggleMeshCanvasGroup;
+    public GameObject previousMeshContainer;
+    public GameObject currentMeshContainer;
+    public Button toggleMeshButton;
+    private Image toggleMeshButtonImage;
+    public bool _previousMeshOn = false;
+    public Sprite currentMeshSprite;
+    public Sprite previousMeshSprite;
+    private bool _previousMeshAvailable = false;
+    private Sprite _currentMapPreview = null;
+    private Sprite _previousMapPreview = null;
+
     private float inactiveGroupAlpha = 0.3f;
+    private bool _firstMesh = true;
 
     // Start is called before the first frame update
     void Start()
@@ -132,6 +146,11 @@ public class UIController : MonoBehaviour
         hydraulicErosionEvaporationSlider.onValueChanged.AddListener(arg0 => hydraulicErosionEvaporationSliderValue.text = (arg0/999f).ToString("n3"));
         
         errorMessage.text = "";
+
+        toggleMeshButtonImage = toggleMeshButton.GetComponent<Image>();
+        toggleMeshButtonImage.sprite = currentMeshSprite;
+        toggleMeshCanvasGroup.interactable = false;
+        toggleMeshCanvasGroup.alpha = inactiveGroupAlpha;
     }
 
     // Update is called once per frame
@@ -147,6 +166,16 @@ public class UIController : MonoBehaviour
         polyCount.text = "Polygons: " + data.polyCount.ToString("n0");
         genTime.text = data.generationTimeMS.ToString("n2") + "ms";
         previewImage.sprite = data.heightMap;
+        _currentMapPreview = data.heightMap;
+        if (_firstMesh)
+        {
+            _firstMesh = false;
+        }
+        else {
+            _previousMeshAvailable = true;
+            toggleMeshCanvasGroup.interactable = true;
+            toggleMeshCanvasGroup.alpha = 1;
+        }
     }
     
     private void CollectGenerationData()
@@ -195,6 +224,7 @@ public class UIController : MonoBehaviour
 
         errorMessage.text = "";
         generateNewMesh.Raise(data);
+        _previousMapPreview = _currentMapPreview;
     }
 
     private void CollectSimulationData()
@@ -274,6 +304,7 @@ public class UIController : MonoBehaviour
         
         errorMessage.text = "";
         erosionSim.Raise(data);
+        _previousMapPreview = _currentMapPreview;
     }
 
     private void CollectGaussianBlurData()
@@ -310,7 +341,9 @@ public class UIController : MonoBehaviour
         data.Mode = mode;
         
         blurHeightMap.Raise(data);
+        _previousMapPreview = _currentMapPreview;
     }
+    
     private bool ParseDimensions(MeshGenerationData data)
     {
         bool success;
@@ -661,5 +694,27 @@ public class UIController : MonoBehaviour
         }
         dropdown.value = 1;
         dropdown.value = 0;
+    }
+
+    public void TogglePreviousMesh()
+    {
+        if (!_previousMeshAvailable) return;
+        
+        _previousMeshOn = !_previousMeshOn;
+
+        if (_previousMeshOn)
+        {
+            previousMeshContainer.SetActive(true);
+            currentMeshContainer.SetActive(false);
+            toggleMeshButtonImage.sprite = previousMeshSprite;
+            previewImage.sprite = _previousMapPreview;
+        }
+        else
+        {
+            previousMeshContainer.SetActive(false);
+            currentMeshContainer.SetActive(true);
+            toggleMeshButtonImage.sprite = currentMeshSprite;
+            previewImage.sprite = _currentMapPreview;
+        }
     }
 }
