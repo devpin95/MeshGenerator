@@ -105,6 +105,7 @@ public class UIController : MonoBehaviour
     public CEvent_MeshGenerationData generateNewMesh;
     public CEvent_ErosionMetaData erosionSim;
     public CEvent_BlurMetaData blurHeightMap;
+    public CEvent switchMap;
 
     [Header("Objects")] 
     public HeightMapList maps;
@@ -167,14 +168,32 @@ public class UIController : MonoBehaviour
         genTime.text = data.generationTimeMS.ToString("n2") + "ms";
         previewImage.sprite = data.heightMap;
         _currentMapPreview = data.heightMap;
-        if (_firstMesh)
+        
+        _previousMeshAvailable = data.previousMeshAvailable;
+        
+        toggleMeshCanvasGroup.interactable = true;
+        toggleMeshCanvasGroup.alpha = 1;
+        
+        SetChildrenActiveStatus(previousMeshContainer, false);
+        SetChildrenActiveStatus(currentMeshContainer, true);
+        
+        //
+        // if (data.previousMeshAvailable)
+        // {
+        //     toggleMeshCanvasGroup.interactable = true;
+        //     toggleMeshCanvasGroup.alpha = 1;
+        // }
+        // else
+        // {
+        //     toggleMeshCanvasGroup.interactable = false;
+        //     toggleMeshCanvasGroup.alpha = inactiveGroupAlpha;
+        // }
+
+        // if we were looking at the previous mesh, set the button back to the current mesh values
+        if (_previousMeshOn)
         {
-            _firstMesh = false;
-        }
-        else {
-            _previousMeshAvailable = true;
-            toggleMeshCanvasGroup.interactable = true;
-            toggleMeshCanvasGroup.alpha = 1;
+            _previousMeshOn = false;
+            toggleMeshButtonImage.sprite = currentMeshSprite;
         }
     }
     
@@ -237,6 +256,8 @@ public class UIController : MonoBehaviour
         int ival;
         bool success = false;
 
+        
+        Debug.Log("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$   " + algo);
         switch (algo)
         {
             case Enums.ErosionAlgorithms.Hydraulic:
@@ -301,8 +322,11 @@ public class UIController : MonoBehaviour
                 errorMessage.text = "Must select a simulation to run...";
                 return;
         }
-        
+        Debug.Log("------------------------------------------------------------------------------");
         errorMessage.text = "";
+
+        SetCurrentContainerActive();
+        
         erosionSim.Raise(data);
         _previousMapPreview = _currentMapPreview;
     }
@@ -339,6 +363,8 @@ public class UIController : MonoBehaviour
 
         Enums.GaussianBlurBorderModes mode = (Enums.GaussianBlurBorderModes) gaussianBlurBorderModeDropdown.value;
         data.Mode = mode;
+        
+        SetCurrentContainerActive();
         
         blurHeightMap.Raise(data);
         _previousMapPreview = _currentMapPreview;
@@ -698,23 +724,52 @@ public class UIController : MonoBehaviour
 
     public void TogglePreviousMesh()
     {
-        if (!_previousMeshAvailable) return;
+        // if (!_previousMeshAvailable) return;
         
         _previousMeshOn = !_previousMeshOn;
+        
+        switchMap.Raise();
 
         if (_previousMeshOn)
         {
-            previousMeshContainer.SetActive(true);
-            currentMeshContainer.SetActive(false);
+            SetChildrenActiveStatus(previousMeshContainer, true);
+            SetChildrenActiveStatus(currentMeshContainer, false);
+            // previousMeshContainer.SetActive(true);
+            // currentMeshContainer.SetActive(false);
             toggleMeshButtonImage.sprite = previousMeshSprite;
             previewImage.sprite = _previousMapPreview;
         }
         else
         {
-            previousMeshContainer.SetActive(false);
-            currentMeshContainer.SetActive(true);
+            SetChildrenActiveStatus(previousMeshContainer, false);
+            SetChildrenActiveStatus(currentMeshContainer, true);
+            // previousMeshContainer.SetActive(false);
+            // currentMeshContainer.SetActive(true);
             toggleMeshButtonImage.sprite = currentMeshSprite;
             previewImage.sprite = _currentMapPreview;
+        }
+    }
+
+    private void SetCurrentContainerActive()
+    {
+        // the container is not active but it needs to be to get the event
+        if (!currentMeshContainer.activeInHierarchy)
+        {
+            // deactivate all it's children so that they dont appear
+            for (int i = 0; i < currentMeshContainer.transform.childCount; ++i)
+            {
+                currentMeshContainer.transform.GetChild(i).gameObject.SetActive(true);
+            }
+        }
+    }
+
+    private void SetChildrenActiveStatus(GameObject parent, bool status)
+    {
+        parent.SetActive(true);
+        
+        for (int i = 0; i < parent.transform.childCount; ++i)
+        {
+            parent.transform.GetChild(i).gameObject.SetActive(status);
         }
     }
 }

@@ -8,4 +8,5 @@ public class MeshMetaData
     public int polyCount = 0;
     public float generationTimeMS = 0f;
     public Sprite heightMap;
+    public bool previousMeshAvailable = false;
 }

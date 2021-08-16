@@ -32,15 +32,17 @@ public class MeshManager : MonoBehaviour
     private float _deltaTime;
     private MeshMetaData _metaData = new MeshMetaData();
     
-    private HeightMap _heightMap = new HeightMap();
+    private HeightMap _activeHeightMap = new HeightMap();
     private HeightMap _previousHeightMap = null;
+    private bool _usePreviousMap = false;
 
     // Start is called before the first frame update
     void Start()
     {
         // meshOffest = spacing * 255f;
+        _metaData.previousMeshAvailable = false;
         StartCoroutine(StartMeshGeneration());
-        _heightMap.globalParams = globalParameters;
+        _activeHeightMap.globalParams = globalParameters;
     }
 
     // Update is called once per frame
@@ -102,6 +104,8 @@ public class MeshManager : MonoBehaviour
         _metaData.generationTimeMS = _deltaTime * 1000 - (totalDelay * 1000);
 
         meshDataNotification.Raise(_metaData);
+        
+        _usePreviousMap = false;
 
         yield return null;
     }
@@ -152,7 +156,7 @@ public class MeshManager : MonoBehaviour
 
     private Sprite GenerateHeightMap()
     {
-        _heightMap.InitMap(meshCount);
+        _activeHeightMap.InitMap(meshCount);
         
         for (int y = 0; y < meshCount; ++y)
         {
@@ -162,11 +166,11 @@ public class MeshManager : MonoBehaviour
                 var meshgrid = Putils.FlatArrayToTwoDArray(
                     _generators[x + y * meshCount].GetComponent<MeshFilter>().mesh.vertices, Constants.meshVerts,
                     Constants.meshVerts);
-                _heightMap.SetChunk(meshgrid, x, y);
+                _activeHeightMap.SetChunk(meshgrid, x, y);
             }
         }
 
-        return _heightMap.GenerateHeightMapPreview(_data.remapMin, _data.remapMax);
+        return _activeHeightMap.GenerateHeightMapPreview(_data.remapMin, _data.remapMax);
     }
 
     private void ApplyHeightMapToMesh()
@@ -175,18 +179,13 @@ public class MeshManager : MonoBehaviour
         {
             for (int x = 0; x < meshCount; ++x)
             {
-                _generators[x + y * meshCount].UpdateVerts(_heightMap, x, y);
+                _generators[x + y * meshCount].UpdateVerts(_activeHeightMap, x, y);
             }
         }
     }
     
     public void RegenerateMesh(MeshGenerationData data)
     {
-        Debug.Log(data.ToString());
-        
-        // bool needToShowVisualVerts = _visualVerts.Count > 0;
-        // ShowVisualVertices(false);
-
         _data = data;
         meshCount = _data.dimension;
 
@@ -196,34 +195,39 @@ public class MeshManager : MonoBehaviour
         }
 
         MoveMeshToPrevious(true);
+        _metaData.previousMeshAvailable = true;
+        SavePreviousMap();
         
         _meshes = new List<GameObject>();
         _generators = new List<MeshGenerator>();
         
-        // store the current mesh as the previous mesh
-
         StartCoroutine(StartMeshGeneration());
-
-        // StartCoroutine(GenerateMesh());
-
-        // if ( needToShowVisualVerts /*&& _vertices.Length < visualVerticeThreshold*/ ) ShowVisualVertices(true);
+        
     }
 
     public void Blur(BlurMetaData data)
     {
+        _metaData.previousMeshAvailable = true;
+        if (_usePreviousMap) SwitchMap();
+        SavePreviousMap();
+        
         StartCoroutine(RunBlur(data));
     }
 
     IEnumerator RunBlur(BlurMetaData data)
     {
-        checkpointNotification.Raise("Saving current mesh...");
-        MoveMeshToPrevious(true);
-        
+        if (!_usePreviousMap)
+        {
+            checkpointNotification.Raise("Saving current mesh...");
+            yield return new WaitForSeconds(.1f);
+            MoveMeshToPrevious(true);
+        }
+
         checkpointNotification.Raise("Applying blur with " + data.KernelSize + " kernel size and mode " + data.Mode + "...");
 
         _startTime = Time.realtimeSinceStartup;
         
-        var blurredgrid = GaussianBlur.Blur(_heightMap.GetHeightMap(), _heightMap.WidthAndHeight(), data, _data.remapMin, _data.remapMax, checkpointNotification);
+        var blurredgrid = GaussianBlur.Blur(_activeHeightMap.GetHeightMap(), _activeHeightMap.WidthAndHeight(), data, _data.remapMin, _data.remapMax, checkpointNotification);
         
         _endTime = Time.realtimeSinceStartup;
         _deltaTime = _startTime - _endTime;
@@ -232,7 +236,7 @@ public class MeshManager : MonoBehaviour
         checkpointNotification.Raise("Updating height map...");
         yield return new WaitForSeconds(1);
         
-        _heightMap.SetMapHeights(blurredgrid, _data.remapMin, _data.remapMax);
+        _activeHeightMap.SetMapHeights(blurredgrid, _data.remapMin, _data.remapMax);
         
         checkpointNotification.Raise("Updating meshes...");
         yield return new WaitForSeconds(1);
@@ -240,32 +244,42 @@ public class MeshManager : MonoBehaviour
         
         checkpointNotification.Raise("Generating height map preview...");
         yield return new WaitForSeconds(.2f);
-        _metaData.heightMap = _heightMap.GenerateHeightMapPreview(_data.remapMin, _data.remapMax);
+        _metaData.heightMap = _activeHeightMap.GenerateHeightMapPreview(_data.remapMin, _data.remapMax);
         
         checkpointNotification.Raise("Updating metadata...");
         yield return new WaitForSeconds(.2f);
         meshDataNotification.Raise(_metaData);
+        
+        _usePreviousMap = false;
     }
 
-    public void RunSimulation(ErosionMetaData data)
+    public void Simulate(ErosionMetaData data)
     {
+        _metaData.previousMeshAvailable = true;
+        if (_usePreviousMap) SwitchMap();
+        SavePreviousMap();
+        
         switch (data.algorithm)
         {
             case Enums.ErosionAlgorithms.Hydraulic:
-                StartCoroutine(Simulation(data));
+                StartCoroutine(RunSimulation(data));
                 break;
             default:
                 break;
         }
     }
 
-    IEnumerator Simulation(ErosionMetaData data)
+    IEnumerator RunSimulation(ErosionMetaData data)
     {
-        checkpointNotification.Raise("Saving current mesh...");
-        MoveMeshToPrevious(true);
+        if (!_usePreviousMap)
+        {
+            checkpointNotification.Raise("Saving current mesh...");
+            yield return new WaitForSeconds(.1f);
+            MoveMeshToPrevious(true);
+        }
         
         _startTime = Time.realtimeSinceStartup;
-        yield return HydraulicErosion.Simulate(_heightMap, data.HydraulicErosionParameters, checkpointNotification);
+        yield return HydraulicErosion.Simulate(_activeHeightMap, data.HydraulicErosionParameters, checkpointNotification);
         _endTime = Time.realtimeSinceStartup;
         _deltaTime = _startTime - _endTime;
         _metaData.generationTimeMS = _deltaTime / 1000;
@@ -276,20 +290,31 @@ public class MeshManager : MonoBehaviour
         
         checkpointNotification.Raise("Generating height map preview...");
         yield return new WaitForSeconds(.2f);
-        _metaData.heightMap = _heightMap.GenerateHeightMapPreview(_data.remapMin, _data.remapMax);
+        _metaData.heightMap = _activeHeightMap.GenerateHeightMapPreview(_data.remapMin, _data.remapMax);
         
         checkpointNotification.Raise("Updating metadata...");
         yield return new WaitForSeconds(.2f);
         meshDataNotification.Raise(_metaData);
+        
+        _usePreviousMap = false;
     }
 
-    // public void SwitchMap()
-    // {
-    //     if (_previousHeightMap == null) return;
-    //     HeightMap temp = _heightMap;
-    //     _heightMap = _previousHeightMap;
-    //     _previousHeightMap = temp;
-    // }
+    private void SwitchMap()
+    {
+        _activeHeightMap = _previousHeightMap;
+        _metaData.previousMeshAvailable = false;
+    }
+
+    private void SavePreviousMap()
+    {
+        _previousHeightMap = _activeHeightMap;
+    }
+
+    public void SetActiveMap()
+    {
+        _usePreviousMap = !_usePreviousMap;
+        Debug.Log("Use previous map: " + _usePreviousMap);
+    }
 
     private void MoveMeshToPrevious(bool copy = false)
     {
