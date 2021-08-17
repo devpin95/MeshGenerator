@@ -9,6 +9,7 @@ public class Enums
         Plane,
         SimpleNoise,
         PerlinNoise,
+        PerlinOctaves,
         ImageMap
     }
 
@@ -40,6 +41,7 @@ public class Enums
         {HeightMapTypes.Plane, "Plane"},
         {HeightMapTypes.SimpleNoise, "Simple Noise"},
         {HeightMapTypes.PerlinNoise, "Perlin Noise"},
+        {HeightMapTypes.PerlinOctaves, "Octaves (Perlin)"},
         {HeightMapTypes.ImageMap, "Image Map"}
     };
     
@@ -48,6 +50,7 @@ public class Enums
         {"Plane", HeightMapTypes.Plane},
         {"Simple Noise", HeightMapTypes.SimpleNoise},
         {"Perlin Noise", HeightMapTypes.PerlinNoise},
+        {"Octaves (Perlin)", HeightMapTypes.PerlinOctaves},
         {"Image Map", HeightMapTypes.ImageMap}
     };
 

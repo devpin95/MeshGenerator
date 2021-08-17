@@ -68,6 +68,7 @@ public class UIController : MonoBehaviour
     public GameObject imageMapOptions;
     public GameObject planeOptions;
     public GameObject perlinNoiseOptions;
+    public GameObject octavePerlinOptions;
     public GameObject simpleNoiseOptions;
     public GameObject remapOptions;
     private GameObject _activeOptionMenu;
@@ -487,30 +488,21 @@ public class UIController : MonoBehaviour
         Enums.HeightMapTypes mapType = (Enums.HeightMapTypes) maptype;
         switch (mapType)
         {
-            case Enums.HeightMapTypes.Plane: 
-                if ( _activeOptionMenu ) _activeOptionMenu.SetActive(false);
-                planeOptions.SetActive(true);
-                _activeOptionMenu = planeOptions;
-                remapOptions.SetActive(false);
+            case Enums.HeightMapTypes.Plane: ShowNoisePanel(planeOptions, false);
                 break;
-            case Enums.HeightMapTypes.ImageMap:
-                if ( _activeOptionMenu ) _activeOptionMenu.SetActive(false);
-                imageMapOptions.SetActive(true);
-                _activeOptionMenu = imageMapOptions;
-                remapOptions.SetActive(false);
+            
+            case Enums.HeightMapTypes.ImageMap: ShowNoisePanel(imageMapOptions, false);
                 break;
-            case Enums.HeightMapTypes.PerlinNoise: 
-                if ( _activeOptionMenu ) _activeOptionMenu.SetActive(false);
-                perlinNoiseOptions.SetActive(true);
-                _activeOptionMenu = perlinNoiseOptions;
-                remapOptions.SetActive(true);
+            
+            case Enums.HeightMapTypes.PerlinNoise: ShowNoisePanel(perlinNoiseOptions, true);
                 break;
-            case Enums.HeightMapTypes.SimpleNoise: 
-                if ( _activeOptionMenu ) _activeOptionMenu.SetActive(false);
-                simpleNoiseOptions.SetActive(true);
-                _activeOptionMenu = simpleNoiseOptions;
-                remapOptions.SetActive(true);
+            
+            case Enums.HeightMapTypes.PerlinOctaves: ShowNoisePanel(perlinNoiseOptions, true);
                 break;
+            
+            case Enums.HeightMapTypes.SimpleNoise: ShowNoisePanel(simpleNoiseOptions, true);
+                break;
+            
             default: Debug.Log("How did you get here?");
                 break;
         }
@@ -771,5 +763,13 @@ public class UIController : MonoBehaviour
         {
             parent.transform.GetChild(i).gameObject.SetActive(status);
         }
+    }
+
+    private void ShowNoisePanel(GameObject panel, bool showRemapOptions)
+    {
+        if ( _activeOptionMenu ) _activeOptionMenu.SetActive(false);
+        panel.SetActive(true);
+        _activeOptionMenu = panel;
+        remapOptions.SetActive(showRemapOptions);
     }
 }
