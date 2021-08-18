@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Parameters;
 using UnityEngine;
 
@@ -79,5 +80,17 @@ public static class Putils
         Vector3 n1 = b - a;
         Vector3 n2 = c - a;
         return Vector3.Cross(n1, n2).normalized;
+    }
+
+    public static void RemapVectorHeightList(List<Vector3> list, float min, float max, float tomin, float tomax)
+    {
+
+        for (int i = 0; i < list.Count; ++i)
+        {
+            Vector3 v = list[i]; 
+            float h = Remap(list[i].y, min, max, 0f, 1f);
+            v.y = h;
+            list[i] = v;
+        }
     }
 }

@@ -200,6 +200,20 @@ public class MeshManager : MonoBehaviour
         
         _meshes = new List<GameObject>();
         _generators = new List<MeshGenerator>();
+
+        if (data.mapType == Enums.HeightMapTypes.PerlinOctaves)
+        {
+            data.needsRemap = true;
+            float sum = 0;
+
+            for (int i = 0; i < _data.octaveNoise.amplitudes.Length; ++i)
+            {
+                sum += _data.octaveNoise.amplitudes[i];
+            }
+
+            data.octaveNoise.max = sum;
+        }
+        else data.needsRemap = false;
         
         StartCoroutine(StartMeshGeneration());
         

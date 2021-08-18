@@ -518,6 +518,7 @@ public class HeightMap
             for (int col = 0; col < _meshedge; ++col)
             {
                 hmap[row, col] = map[row, col].y;
+                // hmap[row, col] = Putils.Remap(map[row, col].y, min, max, 0, 1);
             }
         }
 

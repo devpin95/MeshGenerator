@@ -11,6 +11,16 @@ public static class GaussianBlur
     {
         float[,] tempgrid = new float[dim, dim];
         float[] kernel = FlatKernel(metaData.KernelSize);
+
+        float normal = 0;
+
+        for (int i = 0; i < kernel.Length; ++i)
+        {
+            normal += kernel[i];
+        }
+        
+        float minr = float.MaxValue;
+        float maxr = float.MinValue;
         
         // first pass
         // vertical kernel
@@ -18,12 +28,27 @@ public static class GaussianBlur
         {
             for (int col = 0; col < dim; ++col)
             {
-                tempgrid[row, col] = ConvolveVertical(map, dim, row, col, kernel, metaData, min, max);;
+                float val = ConvolveVertical(map, dim, row, col, kernel, metaData, min, max);
+                
+                if (val < minr) minr = val;
+                if (val > maxr) maxr = val;
+
+                tempgrid[row, col] = val;
             }
         }
         
-        float minr = float.MaxValue;
-        float maxr = float.MinValue;
+        // now go back and remap all of the values
+        for (int row = 0; row < dim; ++row)
+        {
+            for (int col = 0; col < dim; ++col)
+            {
+                // tempgrid[row, col] = Putils.Remap(tempgrid[row, col], minr, maxr, 0, 1);
+                tempgrid[row, col] /= normal;
+            }
+        }
+        
+        minr = float.MaxValue;
+        maxr = float.MinValue;
         
         // second pass
         for (int row = 0; row < dim; ++row)
@@ -44,7 +69,8 @@ public static class GaussianBlur
         {
             for (int col = 0; col < dim; ++col)
             {
-                tempgrid[row, col] = Putils.Remap(tempgrid[row, col], minr, maxr, 0, 1);
+                // tempgrid[row, col] = Putils.Remap(tempgrid[row, col], minr, maxr, 0, 1);
+                tempgrid[row, col] /= normal;
             }
         }
 

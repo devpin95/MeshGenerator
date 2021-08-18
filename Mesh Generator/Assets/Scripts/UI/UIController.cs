@@ -95,6 +95,31 @@ public class UIController : MonoBehaviour
     public TMP_InputField gaussianBlurStandardDevField;
     public TMP_Dropdown gaussianBlurBorderModeDropdown;
 
+    [Header("Perlin Octaves Input")]
+    public TMP_InputField octaveSampleMinField;
+    public TMP_InputField octaveSampleMaxField;
+    
+    public Toggle octave1Toggle;
+    public TMP_InputField octave1FreqField;
+    public TMP_InputField octave1AmpField;
+    [Space(11)]
+    public Toggle octave2Toggle;
+    public TMP_InputField octave2FreqField;
+    public TMP_InputField octave2AmpField;
+    [Space(11)]
+    public Toggle octave3Toggle;
+    public TMP_InputField octave3FreqField;
+    public TMP_InputField octave3AmpField;
+    [Space(11)]
+    public Toggle octave4Toggle;
+    public TMP_InputField octave4FreqField;
+    public TMP_InputField octave4AmpField;
+    [Space(11)]
+    public Toggle octave5Toggle;
+    public TMP_InputField octave5FreqField;
+    public TMP_InputField octave5AmpField;
+    
+    
     [Header("Overlay")] 
     public GameObject overlay;
     public TextMeshProUGUI overlayText;
@@ -240,7 +265,172 @@ public class UIController : MonoBehaviour
             data.simpleNoise.sampleMax = float.Parse(simpleNoiseMaxField.text);
             
             if (!ParseRemap(data)) return;
-        };
+        }
+        else if ( data.mapType == Enums.HeightMapTypes.PerlinOctaves )
+        {
+            List<float> freqs = new List<float>();
+            List<float> amps = new List<float>();
+            float fval;
+            bool success;
+            int octaveCount = 0;
+
+            success = float.TryParse(octaveSampleMinField.text, out fval);
+            if (!success)
+            {
+                Debug.Log("Sample range min must be a real");
+                errorMessage.text = "Sample range min must be a real";
+                return;    
+            }
+            data.octaveNoise.sampleMin = fval;
+            
+            success = float.TryParse(octaveSampleMaxField.text, out fval);
+            if (!success)
+            {
+                Debug.Log("Sample range max must be a real");
+                errorMessage.text = "Sample range max must be a real";
+                return;    
+            }
+            data.octaveNoise.sampleMax = fval;
+
+            if (data.octaveNoise.sampleMax <= data.octaveNoise.sampleMin)
+            {
+                Debug.Log("Sample max must be greater than sample min");
+                errorMessage.text = "Sample max must be greater than sample min";
+                return;
+            }
+
+            // octave 1 --------------------------------------------------------------------------------------------
+            if (octave1Toggle.isOn)
+            {
+                ++octaveCount;
+                
+                success = float.TryParse(octave1FreqField.text, out fval);
+                if (!success || fval < 0)
+                {
+                    Debug.Log("Octave 1 frequency must be a non-negative real");
+                    errorMessage.text = "Octave 1 frequency must be a non-negative real";
+                    return;
+                }
+                freqs.Add(fval);
+                
+                success = float.TryParse(octave1AmpField.text, out fval);
+                if (!success || fval < 0)
+                {
+                    Debug.Log("Octave 1 amplitude must be a non-negative real");
+                    errorMessage.text = "Octave 1 amplitude must be a non-negative real";
+                    return;
+                }
+                amps.Add(fval);
+            }
+            
+            // octave 2 --------------------------------------------------------------------------------------------
+            if (octave2Toggle.isOn)
+            {
+                ++octaveCount;
+                
+                success = float.TryParse(octave2FreqField.text, out fval);
+                if (!success || fval < 0)
+                {
+                    Debug.Log("Octave 2 frequency must be a non-negative real");
+                    errorMessage.text = "Octave 2 frequency must be a non-negative real";
+                    return;
+                }
+                freqs.Add(fval);
+                
+                success = float.TryParse(octave2AmpField.text, out fval);
+                if (!success || fval < 0)
+                {
+                    Debug.Log("Octave 2 amplitude must be a non-negative real");
+                    errorMessage.text = "Octave 2 amplitude must be a non-negative real";
+                    return;
+                }
+                amps.Add(fval);
+            }
+            
+            // octave 3 --------------------------------------------------------------------------------------------
+            if (octave3Toggle.isOn)
+            {
+                ++octaveCount;
+                
+                success = float.TryParse(octave3FreqField.text, out fval);
+                if (!success || fval < 0)
+                {
+                    Debug.Log("Octave 3 frequency must be a non-negative real");
+                    errorMessage.text = "Octave 3 frequency must be a non-negative real";
+                    return;
+                }
+                freqs.Add(fval);
+                
+                success = float.TryParse(octave3AmpField.text, out fval);
+                if (!success || fval < 0)
+                {
+                    Debug.Log("Octave 3 amplitude must be a non-negative real");
+                    errorMessage.text = "Octave 3 amplitude must be a non-negative real";
+                    return;
+                }
+                amps.Add(fval);
+            }
+            
+            // octave 4 --------------------------------------------------------------------------------------------
+            if (octave4Toggle.isOn)
+            {
+                ++octaveCount;
+                
+                success = float.TryParse(octave4FreqField.text, out fval);
+                if (!success || fval < 0)
+                {
+                    Debug.Log("Octave 4 frequency must be a non-negative real");
+                    errorMessage.text = "Octave 4 frequency must be a non-negative real";
+                    return;
+                }
+                freqs.Add(fval);
+                
+                success = float.TryParse(octave4AmpField.text, out fval);
+                if (!success || fval < 0)
+                {
+                    Debug.Log("Octave 4 amplitude must be a non-negative real");
+                    errorMessage.text = "Octave 4 amplitude must be a non-negative real";
+                    return;
+                }
+                amps.Add(fval);
+            }
+            
+            // octave 5 --------------------------------------------------------------------------------------------
+            if (octave5Toggle.isOn)
+            {
+                ++octaveCount;
+                
+                success = float.TryParse(octave5FreqField.text, out fval);
+                if (!success || fval < 0)
+                {
+                    Debug.Log("Octave 5 frequency must be a non-negative real");
+                    errorMessage.text = "Octave 5 frequency must be a non-negative real";
+                    return;
+                }
+                freqs.Add(fval);
+                
+                success = float.TryParse(octave5AmpField.text, out fval);
+                if (!success || fval < 0)
+                {
+                    Debug.Log("Octave 5 amplitude must be a non-negative real");
+                    errorMessage.text = "Octave 5 amplitude must be a non-negative real";
+                    return;
+                }
+                amps.Add(fval);
+            }
+            
+            if (octaveCount <= 1)
+            {
+                Debug.Log("Octave noise must have at least 2 active octaves");
+                errorMessage.text = "Octave noise must have at least 2 active octaves";
+                return;
+            }
+            
+            if (!ParseRemap(data)) return;
+
+            data.octaveNoise.frequencies = freqs.ToArray();
+            data.octaveNoise.amplitudes = amps.ToArray();
+        }
 
         errorMessage.text = "";
         generateNewMesh.Raise(data);
@@ -497,7 +687,7 @@ public class UIController : MonoBehaviour
             case Enums.HeightMapTypes.PerlinNoise: ShowNoisePanel(perlinNoiseOptions, true);
                 break;
             
-            case Enums.HeightMapTypes.PerlinOctaves: ShowNoisePanel(perlinNoiseOptions, true);
+            case Enums.HeightMapTypes.PerlinOctaves: ShowNoisePanel(octavePerlinOptions, true);
                 break;
             
             case Enums.HeightMapTypes.SimpleNoise: ShowNoisePanel(simpleNoiseOptions, true);

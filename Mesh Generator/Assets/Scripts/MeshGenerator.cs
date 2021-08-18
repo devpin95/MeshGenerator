@@ -88,6 +88,8 @@ public class MeshGenerator : MonoBehaviour
     private void CreateVerts()
     {
         List<Vector3> vertlist = new List<Vector3>();
+        float maxy = float.MinValue;
+        float miny = float.MaxValue;
         
         // Debug.Log("Generating mesh starting at (" + xMeshOffset + ", " + zMeshOffset + ") up to (" + (xMeshOffset + Constants.meshSquares) + ", " + (zMeshOffset + Constants.meshSquares) + ") using " + _data.mapType);
         
@@ -104,47 +106,50 @@ public class MeshGenerator : MonoBehaviour
                 int realx = x + xMeshOffset;
                 int realz = z + zMeshOffset;
                 
-                // if (row > 0 && column > 0)
-                // {
-                //     realx = x + 1;
-                //     realz = z + 1;
-                // }
-                // else if (row == 0 && column > 0)
-                // {
-                //     realx = x + 1;
-                // }
-                // else if (row > 0 && column == 0)
-                // {
-                //     realz = z + 1;
-                // }
-                
                 switch (_data.mapType)
                 {
                     case Enums.HeightMapTypes.PerlinNoise:
                         y = SamplePerlinNoise(realx, realz);
                         break;
+                    
                     case Enums.HeightMapTypes.ImageMap:
                         foreach (var map in maps.mapList)
                         {
                             y += SampleHeightMapImage(realx, realz, map);
                         }
                         break;
+                    
+                    case Enums.HeightMapTypes.PerlinOctaves:
+                        y = SampleOctavePerlinNoise(realx, realz);
+                        break;
+                    
                     case Enums.HeightMapTypes.Plane:
                         break;
+                    
                     case Enums.HeightMapTypes.SimpleNoise:
                         y = SampleSimpleNoise(realx, realz);
                         break;
+                    
                     default:
                         newvert.y = 0;
                         break;
                 }
 
-                if (_data.invert) y = 1 - y;
+                if (_data.invert && _data.mapType != Enums.HeightMapTypes.PerlinOctaves) y = 1 - y;
+
+                if (y < miny) miny = y;
+                if (y > maxy) maxy = y;
+                
                 newvert.y = y;
                 vertlist.Add(newvert);
             }
         }
 
+        // if (_data.needsRemap)
+        // {
+        //     Putils.RemapVectorHeightList(vertlist, miny, maxy, _data.remapMin, _data.remapMax);
+        // }
+        
         // Debug.Log("Mesh has " + vertlist.Count + " vertices" );
         _vertices = vertlist.ToArray();
     }
@@ -266,6 +271,26 @@ public class MeshGenerator : MonoBehaviour
         float rmsample = Putils.Remap(sample, 0, 1, _data.remapMin, _data.remapMax);
 
         return rmsample;
+    }
+
+    public float SampleOctavePerlinNoise(int x, int z)
+    {
+        float y = 0;
+
+        float xSamplePoint = Putils.Remap(x, 0, _data.dimension, _data.octaveNoise.sampleMin, _data.octaveNoise.sampleMax);
+        float zSamplePoint = Putils.Remap(z, 0, _data.dimension, _data.octaveNoise.sampleMin, _data.octaveNoise.sampleMax);
+
+        for (int i = 0; i < _data.octaveNoise.frequencies.Length; ++i)
+        {
+            float perlin = _data.octaveNoise.amplitudes[i] * Mathf.PerlinNoise(_data.octaveNoise.frequencies[i] * xSamplePoint, _data.octaveNoise.frequencies[i] * zSamplePoint);
+
+            y += perlin;
+        }
+
+        y /= _data.octaveNoise.max;
+
+        return Putils.Remap(y, 0, 1, _data.remapMin, _data.remapMax);
+        return y;
     }
 
     public float SampleSimpleNoise(int x, int z)

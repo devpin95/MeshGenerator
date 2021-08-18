@@ -11,12 +11,15 @@ public class MeshGenerationData
     public float remapMax = 1;
 
     public bool invert = false;
+    public bool needsRemap = false;
     
     // perlin noise values
     public PerlinMetaData perlin = new PerlinMetaData();
 
     // simple noise values
     public SimpleNoiseMetaData simpleNoise = new SimpleNoiseMetaData();
+
+    public PerlinOctaveMetaData octaveNoise = new PerlinOctaveMetaData();
     
 
     public override string ToString()
