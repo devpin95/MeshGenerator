@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 public static class GaussianBlur
 {
@@ -37,15 +38,20 @@ public static class GaussianBlur
             }
         }
         
+        Debug.Log("(Vertical pass) MAX = " + maxr + " MIN = " + minr);
+        
+        // !!!!! Dont normalize between steps because it'll mess up the next step
+        // just double normalize after the horizontal step
+        
         // now go back and remap all of the values
-        for (int row = 0; row < dim; ++row)
-        {
-            for (int col = 0; col < dim; ++col)
-            {
-                // tempgrid[row, col] = Putils.Remap(tempgrid[row, col], minr, maxr, 0, 1);
-                tempgrid[row, col] /= normal;
-            }
-        }
+        // for (int row = 0; row < dim; ++row)
+        // {
+        //     for (int col = 0; col < dim; ++col)
+        //     {
+        //         // tempgrid[row, col] = Putils.Remap(tempgrid[row, col], minr, maxr, 0, 1);
+        //         tempgrid[row, col] /= normal;
+        //     }
+        // }
         
         minr = float.MaxValue;
         maxr = float.MinValue;
@@ -64,13 +70,17 @@ public static class GaussianBlur
             }
         }
         
+        Debug.Log("(Horizontal pass) MAX = " + maxr + " MIN = " + minr);
+        
         // now go back and remap all of the values
         for (int row = 0; row < dim; ++row)
         {
             for (int col = 0; col < dim; ++col)
             {
-                // tempgrid[row, col] = Putils.Remap(tempgrid[row, col], minr, maxr, 0, 1);
-                tempgrid[row, col] /= normal;
+                tempgrid[row, col] = Putils.Remap(tempgrid[row, col], 0, normal * 2, 0, 1);
+                
+                // this is the second pass so we need to normalize for 2 kernels worth of weights
+                // tempgrid[row, col] /= normal * 2;
             }
         }
 
@@ -79,24 +89,52 @@ public static class GaussianBlur
 
     public static float[] FlatKernel(int ksize)
     {
-        float[] kernel = new float[ksize];
-        int center = (ksize - 1) / 2;
+        int kcenter = (ksize - 1) / 2;
+        float[,] kernel2d = new float[ksize, ksize];
+        float[] kernel1d = new float[ksize];
         float sum = 0;
 
-        for ( int i = 0; i < ((ksize - 1) / 2) + 1; ++i )
+        for (int i = 0; i < ksize; ++i)
         {
-            float co = Guassian2D(center, center + i, ksize);
-            kernel[center + i] = co;
-            kernel[center - i] = co;
-            sum += co;
+            float rowsum = 0;
+            for (int j = 0; j < ksize; ++j)
+            {
+                int x = j - kcenter;
+                int y = i - kcenter;
+                float gaussian = Guassian2D(x, y, ksize);
+                sum += gaussian;
+                rowsum += gaussian;
+                kernel2d[i, j] = gaussian;
+            }
+
+            kernel1d[i] = rowsum;
         }
 
         for (int i = 0; i < ksize; ++i)
         {
-            kernel[i] /= sum;
+            kernel1d[i] /= sum;
         }
-
-        return kernel;
+        
+        return kernel1d;
+        
+        // float[] kernel = new float[ksize];
+        // int center = (ksize - 1) / 2;
+        // float sum = 0;
+        //
+        // for ( int i = 0; i < ((ksize - 1) / 2) + 1; ++i )
+        // {
+        //     float co = Guassian2D(center, center + i, ksize);
+        //     kernel[center + i] = co;
+        //     kernel[center - i] = co;
+        //     sum += co;
+        // }
+        //
+        // for (int i = 0; i < ksize; ++i)
+        // {
+        //     kernel[i] /= sum;
+        // }
+        //
+        // return kernel;
     }
     
     public static float CalculateGaussSigma(int ksize)

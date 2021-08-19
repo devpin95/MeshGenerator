@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Enums
 {
+    // Height Map Types ------------------------------------------------------------------------------------------------
     public enum HeightMapTypes
     {
         Plane,
@@ -12,30 +13,7 @@ public class Enums
         PerlinOctaves,
         ImageMap
     }
-
-    public enum SmoothingAlgorithms
-    {
-        None,
-        GaussianBlur,
-        Smoothstep,
-        PerlinSmoothstep,
-        Cosine
-    }
-
-    public enum ErosionAlgorithms
-    {
-        Hydraulic
-    }
-
-    public enum GaussianBlurBorderModes
-    {
-        Ignore,
-        BlendWhite,
-        BlendBlack,
-        Mirror,
-        Nearest
-    }
-
+    
     public static Dictionary<HeightMapTypes, string> HeightMapTypeNames = new Dictionary<HeightMapTypes, string>()
     {
         {HeightMapTypes.Plane, "Plane"},
@@ -45,15 +23,18 @@ public class Enums
         {HeightMapTypes.ImageMap, "Image Map"}
     };
     
-    public static Dictionary<string, HeightMapTypes> HeightMapNameTypes = new Dictionary<string, HeightMapTypes>()
-    {
-        {"Plane", HeightMapTypes.Plane},
-        {"Simple Noise", HeightMapTypes.SimpleNoise},
-        {"Perlin Noise", HeightMapTypes.PerlinNoise},
-        {"Octaves (Perlin)", HeightMapTypes.PerlinOctaves},
-        {"Image Map", HeightMapTypes.ImageMap}
-    };
+    // -----------------------------------------------------------------------------------------------------------------
 
+    // Smoothing Algorithms --------------------------------------------------------------------------------------------
+    public enum SmoothingAlgorithms
+    {
+        None,
+        GaussianBlur,
+        Smoothstep,
+        PerlinSmoothstep,
+        Cosine
+    }
+    
     public static Dictionary<SmoothingAlgorithms, string> SmoothingAlgorithmNames =
         new Dictionary<SmoothingAlgorithms, string>()
         {
@@ -63,22 +44,32 @@ public class Enums
             {SmoothingAlgorithms.PerlinSmoothstep, "Perlin Smoothstep"},
             {SmoothingAlgorithms.Cosine, "Cosine"}
         };
+    
+    // -----------------------------------------------------------------------------------------------------------------
 
-    public static Dictionary<string, SmoothingAlgorithms> SmoothingAlgorithmTypes =
-        new Dictionary<string, SmoothingAlgorithms>()
-        {
-            {"None", SmoothingAlgorithms.None},
-            {"Gaussian Blur", SmoothingAlgorithms.GaussianBlur},
-            {"Smoothstep", SmoothingAlgorithms.Smoothstep},
-            {"Perlin Smoothstep", SmoothingAlgorithms.PerlinSmoothstep},
-            {"Cosine", SmoothingAlgorithms.Cosine}
-        };
-
+    // Erosion Algorithms ----------------------------------------------------------------------------------------------
+    public enum ErosionAlgorithms
+    {
+        Hydraulic
+    }
+    
     public static Dictionary<ErosionAlgorithms, string> ErosionSimulationNames =
         new Dictionary<ErosionAlgorithms, string>()
         {
             {ErosionAlgorithms.Hydraulic, "Hydraulic Erosion"}
         };
+    
+    // -----------------------------------------------------------------------------------------------------------------
+    
+    // Gaussian Border Modes -------------------------------------------------------------------------------------------
+    public enum GaussianBlurBorderModes
+    {
+        Ignore,
+        BlendWhite,
+        BlendBlack,
+        Mirror,
+        Nearest
+    }
     
     public static Dictionary<GaussianBlurBorderModes, string> GaussianBlurBorderModeNames =
         new Dictionary<GaussianBlurBorderModes, string>()
@@ -89,4 +80,20 @@ public class Enums
             {GaussianBlurBorderModes.Mirror, "Mirror"},
             {GaussianBlurBorderModes.Nearest, "Nearest"}
         };
+    
+    // -----------------------------------------------------------------------------------------------------------------
+
+    // Operations ------------------------------------------------------------------------------------------------------
+    public enum OperationTypes
+    {
+        Stretch,
+        GaussianBlur
+    }
+    
+    public static Dictionary<OperationTypes, string> OperationTypeNames = new Dictionary<OperationTypes, string>()
+    {
+        {OperationTypes.Stretch, "Stretch Heights"},
+        {OperationTypes.GaussianBlur, "Gaussian Blur"}
+    };
+    // -----------------------------------------------------------------------------------------------------------------
 }

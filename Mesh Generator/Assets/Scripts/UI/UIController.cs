@@ -15,7 +15,7 @@ public class UIController : MonoBehaviour
     public Image mainMenuBg;
     public GameObject meshGenerationMenuGroup;
     public GameObject simulationMenuGroup;
-    public GameObject gaussianBlurGroup;
+    [FormerlySerializedAs("gaussianBlurGroup")] public GameObject operationGroup;
 
     [Header("Main Action Buttons")] 
     public GameObject actionButtonsContainer;
@@ -126,6 +126,12 @@ public class UIController : MonoBehaviour
     
     [Header("Simulations Menu")]
     public TMP_Dropdown simulationsTypeDropdown;
+
+    [Header("Operations Menu")] 
+    public TMP_Dropdown operationsTypeDropdown;
+    public GameObject gaussianBlurGroup;
+    public GameObject stretchGroup;
+    public GameObject _activeOperationsMenu;
     
     [Header("Events")] 
     public CEvent_MeshGenerationData generateNewMesh;
@@ -167,6 +173,8 @@ public class UIController : MonoBehaviour
 
         InitializeDropdown(simulationsTypeDropdown, Enums.ErosionSimulationNames);
         InitializeDropdown(gaussianBlurBorderModeDropdown, Enums.GaussianBlurBorderModeNames);
+        
+        InitializeDropdown(operationsTypeDropdown, Enums.OperationTypeNames);
         
         hydraulicErosionFrictionSlider.onValueChanged.AddListener(arg0 => hydraulicErosionFrictionSliderValue.text = (arg0/100f).ToString("n2"));
         hydraulicErosionDepositionSlider.onValueChanged.AddListener(arg0 => hydraulicErosionDepositionSliderValue.text = (arg0/999f).ToString("n3"));
@@ -852,7 +860,7 @@ public class UIController : MonoBehaviour
     public void OpacitySliderChange(float val)
     {
         float a = Putils.Remap(val, 0, 255, 0, 1);
-        mainMenuBg.color = new Color(1f, 1f, 1f, a);
+        mainMenuBg.color = new Color(.8f, .8f, .8f, a);
     }
     
     public void MenuSelectionDropdownChange(int menu)
@@ -862,7 +870,7 @@ public class UIController : MonoBehaviour
             // menus 
             meshGenerationMenuGroup.SetActive(true);
             simulationMenuGroup.SetActive(false);
-            gaussianBlurGroup.SetActive(false);
+            operationGroup.SetActive(false);
             
             // action buttons
             generateButton.gameObject.SetActive(true);
@@ -874,7 +882,7 @@ public class UIController : MonoBehaviour
             // menus
             meshGenerationMenuGroup.SetActive(false);
             simulationMenuGroup.SetActive(true);
-            gaussianBlurGroup.SetActive(false);
+            operationGroup.SetActive(false);
             
             // action buttons
             generateButton.gameObject.SetActive(false);
@@ -885,7 +893,7 @@ public class UIController : MonoBehaviour
         {
             simulationMenuGroup.SetActive(false);
             meshGenerationMenuGroup.SetActive(false);
-            gaussianBlurGroup.SetActive(true);
+            operationGroup.SetActive(true);
             
             // action buttons
             generateButton.gameObject.SetActive(false);
@@ -961,5 +969,26 @@ public class UIController : MonoBehaviour
         panel.SetActive(true);
         _activeOptionMenu = panel;
         remapOptions.SetActive(showRemapOptions);
+    }
+
+    private void ShowOperationPanel(GameObject panel)
+    {
+        if ( _activeOperationsMenu ) _activeOperationsMenu.SetActive(false);
+        panel.SetActive(true);
+        _activeOperationsMenu = panel;
+    }
+
+    public void OperationTypeChange(int val)
+    {
+        Enums.OperationTypes op = (Enums.OperationTypes) val;
+        switch (op)
+        {
+            case Enums.OperationTypes.Stretch:
+                ShowOperationPanel(stretchGroup);
+                break;
+            case Enums.OperationTypes.GaussianBlur:
+                ShowOperationPanel(gaussianBlurGroup);
+                break;
+        }
     }
 }
