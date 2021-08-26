@@ -95,6 +95,11 @@ public class UIController : MonoBehaviour
     public TMP_InputField gaussianBlurStandardDevField;
     public TMP_Dropdown gaussianBlurBorderModeDropdown;
 
+    [Header("Stretch Inputs")] 
+    public Toggle stretchRemapToggle;
+    public TMP_InputField stretchRemapMin;
+    public TMP_InputField stretchRemapMax;
+
     [Header("Perlin Octaves Input")]
     public TMP_InputField octaveSampleMinField;
     public TMP_InputField octaveSampleMaxField;
@@ -137,6 +142,7 @@ public class UIController : MonoBehaviour
     public CEvent_MeshGenerationData generateNewMesh;
     public CEvent_ErosionMetaData erosionSim;
     public CEvent_BlurMetaData blurHeightMap;
+    public CEvent_OperationMetaData mapOperation;
     public CEvent switchMap;
 
     [Header("Objects")] 
@@ -155,6 +161,15 @@ public class UIController : MonoBehaviour
     private Sprite _currentMapPreview = null;
     private Sprite _previousMapPreview = null;
 
+    [Header("Mesh Range Line")] 
+    public RectTransform rangeLineContainer;
+    public RectTransform rangeLineMinContainer;
+    public TextMeshProUGUI rangeLineMinValue;
+    public RectTransform rangeLineMaxContainer;
+    public TextMeshProUGUI rangeLineMaxValue;
+    public TextMeshProUGUI rangeLineMaxRange;
+    public TextMeshProUGUI rangeLineMinRange;
+
     private float inactiveGroupAlpha = 0.3f;
     private bool _firstMesh = true;
 
@@ -165,6 +180,7 @@ public class UIController : MonoBehaviour
         runSimulationButton.onClick.AddListener(CollectSimulationData);
         blurMapButton.onClick.AddListener(CollectGaussianBlurData);
 
+        heightMapTypeField.onValueChanged.AddListener(HeightMapTypeChange);
         InitializeDropdown(heightMapTypeField, Enums.HeightMapTypeNames);
         heightMapTypeFieldReady = true;
 
@@ -211,24 +227,14 @@ public class UIController : MonoBehaviour
         SetChildrenActiveStatus(previousMeshContainer, false);
         SetChildrenActiveStatus(currentMeshContainer, true);
         
-        //
-        // if (data.previousMeshAvailable)
-        // {
-        //     toggleMeshCanvasGroup.interactable = true;
-        //     toggleMeshCanvasGroup.alpha = 1;
-        // }
-        // else
-        // {
-        //     toggleMeshCanvasGroup.interactable = false;
-        //     toggleMeshCanvasGroup.alpha = inactiveGroupAlpha;
-        // }
-
         // if we were looking at the previous mesh, set the button back to the current mesh values
         if (_previousMeshOn)
         {
             _previousMeshOn = false;
             toggleMeshButtonImage.sprite = currentMeshSprite;
         }
+
+        UpdateRangeLine(data.mapRangeMax, data.mapRangeMin, data.mapMaxVal, data.mapMinVal);
     }
     
     private void CollectGenerationData()
@@ -532,40 +538,101 @@ public class UIController : MonoBehaviour
 
     private void CollectGaussianBlurData()
     {
-        BlurMetaData data = new BlurMetaData();
-        
+        OperationMetaData operation = new OperationMetaData();
+
+        Enums.OperationTypes optype = (Enums.OperationTypes) operationsTypeDropdown.value;
+        operation.OperationType = optype;
+
+        int oint;
+        float ofloat;
         bool success;
-        int kernelSize = 1;
-        success = int.TryParse(gaussianBlurKernelField.text, out kernelSize);
 
-        if (!success || kernelSize <= 0 || kernelSize % 2 == 0)
+        switch (optype)
         {
-            Debug.Log("Kernel size must be a positive, odd integer");
-            errorMessage.text = "Kernel size must be a positive, odd integer";
-            return;
+            // Gaussian blur -------------------------------------------------------------------------------------------
+            case Enums.OperationTypes.GaussianBlur:
+                BlurMetaData bdata = new BlurMetaData();
+                
+                success = int.TryParse(gaussianBlurKernelField.text, out oint);
+
+                if (!success || oint <= 0 || oint % 2 == 0)
+                {
+                    Debug.Log("Kernel size must be a positive, odd integer");
+                    errorMessage.text = "Kernel size must be a positive, odd integer";
+                    return;
+                }
+                bdata.KernelSize = oint;
+                
+                success = float.TryParse(gaussianBlurStandardDevField.text, out ofloat);
+
+                if (!success || ofloat <= 0)
+                {
+                    Debug.Log("Standard deviation must be positive real");
+                    errorMessage.text = "Standard deviation must be position real";
+                    return;
+                }
+                bdata.StandardDeviation = ofloat;
+                
+                Enums.GaussianBlurBorderModes mode = (Enums.GaussianBlurBorderModes) gaussianBlurBorderModeDropdown.value;
+                bdata.Mode = mode;
+
+                operation.blurData = bdata;
+                
+                break;
+            
+            // Stretch -------------------------------------------------------------------------------------------------
+            case Enums.OperationTypes.Stretch:
+                StretchMetaData sdata = new StretchMetaData();
+
+                if (stretchRemapToggle.isOn)
+                {
+                    Debug.Log("STRETCH REMAP");
+                    sdata.Remap = true;
+                    
+                    success = float.TryParse(stretchRemapMin.text, out ofloat);
+                    if (!success)
+                    {
+                        Debug.Log("Remap min must be a real");
+                        errorMessage.text = "Remap min must be a real";
+                        return;
+                    }
+                    sdata.RemapMin = ofloat;
+                    
+                    success = float.TryParse(stretchRemapMax.text, out ofloat);
+                    if (!success)
+                    {
+                        Debug.Log("Remap max must be a real");
+                        errorMessage.text = "Remap max must be a real";
+                        return;
+                    }
+                    sdata.RemapMax = ofloat;
+
+                    if (sdata.RemapMax <= sdata.RemapMin)
+                    {
+                        Debug.Log("Remap max must be less than remap min");
+                        errorMessage.text = "Remap max must be less than remap min";
+                        return;
+                    }
+                }
+                else
+                {
+                    Debug.Log("DONT STRETCH REMAP");
+                }
+
+                operation.stretchData = sdata;
+
+                break;
+            
+            default:
+                Debug.Log("Operation not supported");
+                errorMessage.text = "Operation not supported";
+                return;
         }
-
-        data.KernelSize = kernelSize;
         
-        float stdev = 1;
-        success = float.TryParse(gaussianBlurStandardDevField.text, out stdev);
-
-        if (!success || stdev <= 0)
-        {
-            Debug.Log("Standard deviation must be positive real");
-            errorMessage.text = "Standard deviation must be position real";
-            return;
-        }
-
-        data.StandardDeviation = stdev;
-        
-
-        Enums.GaussianBlurBorderModes mode = (Enums.GaussianBlurBorderModes) gaussianBlurBorderModeDropdown.value;
-        data.Mode = mode;
         
         SetCurrentContainerActive();
         
-        blurHeightMap.Raise(data);
+        mapOperation.Raise(operation);
         _previousMapPreview = _currentMapPreview;
     }
     
@@ -990,5 +1057,33 @@ public class UIController : MonoBehaviour
                 ShowOperationPanel(gaussianBlurGroup);
                 break;
         }
+    }
+
+    public void EnlargePreview()
+    {
+        previewImage.rectTransform.localScale = new Vector3(4, 4, 4);
+    }
+
+    public void ShrinkPreview()
+    {
+        previewImage.rectTransform.localScale = new Vector3(1, 1, 1);
+    }
+
+    private void UpdateRangeLine(float max, float min, float upper, float lower)
+    {
+        rangeLineMaxRange.text = max.ToString("n2");
+        rangeLineMinRange.text = min.ToString("n2");
+
+        rangeLineMaxValue.text = upper.ToString("n2");
+        rangeLineMinValue.text = lower.ToString("n2");
+
+        float containerHeight = rangeLineContainer.rect.height;
+        float lowerpos = Putils.Remap(lower, min, max, 0, containerHeight);
+        lowerpos -= containerHeight / 2f;
+        rangeLineMinContainer.anchoredPosition = new Vector2(0, lowerpos);
+
+        float upperpos = Putils.Remap(upper, min, max, 0, containerHeight);
+        upperpos -= containerHeight / 2f;
+        rangeLineMaxContainer.anchoredPosition = new Vector2(0, upperpos);
     }
 }

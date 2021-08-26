@@ -91,9 +91,6 @@ public class MeshGenerator : MonoBehaviour
         float maxy = float.MinValue;
         float miny = float.MaxValue;
         
-        // Debug.Log("Generating mesh starting at (" + xMeshOffset + ", " + zMeshOffset + ") up to (" + (xMeshOffset + Constants.meshSquares) + ", " + (zMeshOffset + Constants.meshSquares) + ") using " + _data.mapType);
-        
-        // checkpointNotification.Raise("Generating " + (_data.dimension + 1) + "x" + (_data.dimension + 1) + " grid (" + (_data.dimension + 1 * _data.dimension + 1) + " verts)...");
         // create vertices
         for (int z = 0; z < Constants.meshVerts; ++z)
         {
@@ -144,13 +141,7 @@ public class MeshGenerator : MonoBehaviour
                 vertlist.Add(newvert);
             }
         }
-
-        // if (_data.needsRemap)
-        // {
-        //     Putils.RemapVectorHeightList(vertlist, miny, maxy, _data.remapMin, _data.remapMax);
-        // }
         
-        // Debug.Log("Mesh has " + vertlist.Count + " vertices" );
         _vertices = vertlist.ToArray();
     }
 
@@ -448,18 +439,16 @@ public class MeshGenerator : MonoBehaviour
 
     public void UpdateVerts(HeightMap map, int coloffset, int rowoffset)
     {
-        int skippedx = 0;
-
         var vertgrid = Putils.FlatArrayToTwoDArray(_vertices, Constants.meshVerts, Constants.meshVerts);
         
-        for (int row = 0; row < Constants.meshVerts; ++row)
+        for (int mrow = 0; mrow < Constants.meshVerts; ++mrow)
         {
-            for (int col = 0; col < Constants.meshVerts; ++col)
+            for (int mcol = 0; mcol < Constants.meshVerts; ++mcol)
             {
                 // bool skip = false;
                 // int index = x + y * Constants.meshSquares;
 
-                vertgrid[row, col].y = map.SampleMapAtXYOffset(row, rowoffset, col, coloffset);
+                vertgrid[mrow, mcol].y = map.SampleMapAtXYOffset(mrow, rowoffset, mcol, coloffset);
                 
                 // if (x == Constants.meshSquares - 1)
                 // {

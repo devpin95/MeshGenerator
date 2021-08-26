@@ -2,10 +2,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Parameters;
+using UnityEditorInternal;
 using UnityEngine;
 
 public class MeshManager : MonoBehaviour
 {
+    public GameObject limitPrefab;
+    
     public GameObject previousMeshContainer;
     public int meshCount = 1; // meshCount^2 is the number of meshes that will be generated
     public GameObject meshPrefab;
@@ -43,6 +46,8 @@ public class MeshManager : MonoBehaviour
         _metaData.previousMeshAvailable = false;
         StartCoroutine(StartMeshGeneration());
         _activeHeightMap.globalParams = globalParameters;
+        _activeHeightMap.mapRangeMin = _data.remapMin;
+        _activeHeightMap.mapRangeMax = _data.remapMax;
     }
 
     // Update is called once per frame
@@ -84,13 +89,12 @@ public class MeshManager : MonoBehaviour
                 ++count;
             }
         }
-        
-        // GenerateMesh();
-        
+
+
         checkpointNotification.Raise("Generating height map...");
         // yield return new WaitForSeconds(1);
         _metaData.heightMap = GenerateHeightMap();
-        
+
         checkpointNotification.Raise("Updating metadata...");
         // yield return new WaitForSeconds(1);
         
@@ -100,8 +104,13 @@ public class MeshManager : MonoBehaviour
         int gridarea = meshCount * meshCount;
         int vertcount = gridarea * Constants.meshSquares;
         _metaData.vertexCount = vertcount;
-        _metaData.polyCount = 5;
+        _metaData.polyCount = Constants.meshSquares * 2 * 254 * meshCount;
         _metaData.generationTimeMS = _deltaTime * 1000 - (totalDelay * 1000);
+        
+        _metaData.mapMinVal = _activeHeightMap.mapMinVal;
+        _metaData.mapMaxVal = _activeHeightMap.mapMaxVal;
+        _metaData.mapRangeMin = _activeHeightMap.mapRangeMin;
+        _metaData.mapRangeMax = _activeHeightMap.mapRangeMax;
 
         meshDataNotification.Raise(_metaData);
         
@@ -157,6 +166,7 @@ public class MeshManager : MonoBehaviour
     private Sprite GenerateHeightMap()
     {
         _activeHeightMap.InitMap(meshCount);
+        _activeHeightMap.InitMinMax();
         
         for (int y = 0; y < meshCount; ++y)
         {
@@ -214,19 +224,23 @@ public class MeshManager : MonoBehaviour
             data.octaveNoise.max = sum;
         }
         else data.needsRemap = false;
+
+        _activeHeightMap.InitMinMax();
+        _activeHeightMap.mapRangeMin = data.remapMin;
+        _activeHeightMap.mapRangeMax = data.remapMax;
         
         StartCoroutine(StartMeshGeneration());
         
     }
 
-    public void Blur(BlurMetaData data)
-    {
-        _metaData.previousMeshAvailable = true;
-        if (_usePreviousMap) SwitchMap();
-        SavePreviousMap();
-        
-        StartCoroutine(RunBlur(data));
-    }
+    // public void Blur(BlurMetaData data)
+    // {
+    //     _metaData.previousMeshAvailable = true;
+    //     if (_usePreviousMap) SwitchMap();
+    //     SavePreviousMap();
+    //     
+    //     StartCoroutine(RunBlur(data));
+    // }
 
     IEnumerator RunBlur(BlurMetaData data)
     {
@@ -262,9 +276,121 @@ public class MeshManager : MonoBehaviour
         
         checkpointNotification.Raise("Updating metadata...");
         yield return new WaitForSeconds(.2f);
+        
+        _metaData.mapMinVal = _activeHeightMap.mapMinVal;
+        _metaData.mapMaxVal = _activeHeightMap.mapMaxVal;
+        _metaData.mapRangeMin = _activeHeightMap.mapRangeMin;
+        _metaData.mapRangeMax = _activeHeightMap.mapRangeMax;
+        
         meshDataNotification.Raise(_metaData);
         
         _usePreviousMap = false;
+    }
+
+    IEnumerator StretchMap(StretchMetaData data)
+    {
+        if (!_usePreviousMap)
+        {
+            checkpointNotification.Raise("Saving current mesh...");
+            yield return new WaitForSeconds(.1f);
+            MoveMeshToPrevious(true);
+        }
+
+        bool workDone = false;
+        
+        checkpointNotification.Raise("Checking map limits...");
+        yield return new WaitForSeconds(.1f);
+
+        // create a tuple for the map, map min val, and map max val
+        // then set the map to the height map
+        (float[,], float, float) newmap;
+        newmap.Item1 = _activeHeightMap.GetHeightMap();
+
+        // check if the min/max values of the map are already close enough to the target map range
+        if (!Putils.ValueWithinRange(_activeHeightMap.mapMinVal, _activeHeightMap.mapRangeMin, 0.000001f) &&
+            !Putils.ValueWithinRange(_activeHeightMap.mapMaxVal, _activeHeightMap.mapRangeMax, 0.000001f))
+        {
+            checkpointNotification.Raise("Stretching height map...");
+            yield return new WaitForSeconds(.1f);
+
+            _startTime = Time.realtimeSinceStartup;
+
+            // do the stretch
+            newmap = MapStretch.Stretch(newmap.Item1, _activeHeightMap.WidthAndHeight(), _activeHeightMap.mapMinVal, _activeHeightMap.mapMaxVal);
+            
+            // set the height map's new min and max stored in Item2 and Item3
+            _activeHeightMap.mapMinVal = newmap.Item2;
+            _activeHeightMap.mapMaxVal = newmap.Item3;
+
+            workDone = true;
+        }
+        else
+        {
+            // show a message that we are not going to stretch the map
+            checkpointNotification.Raise("Map already stretched...");
+            yield return new WaitForSeconds(.1f);
+        }
+        
+        // check if we need to remap the height values
+        if (data.Remap)
+        {
+            checkpointNotification.Raise("Remap?... Yes");
+            yield return new WaitForSeconds(.1f);
+            
+            Debug.Log("Remaping to " + data.RemapMin + ", " + data.RemapMax);
+            checkpointNotification.Raise("Remapping height map...");
+            yield return new WaitForSeconds(.2f);
+            
+            // reset the height map
+            _data.remapMin = data.RemapMin;
+            _data.remapMax = data.RemapMax;
+            _activeHeightMap.mapRangeMin = data.RemapMin;
+            _activeHeightMap.mapRangeMax = data.RemapMax;
+
+            newmap.Item1 = MapStretch.RemapHeights(newmap.Item1, _activeHeightMap.WidthAndHeight(), _activeHeightMap.mapMinVal, _activeHeightMap.mapMaxVal, data.RemapMin, data.RemapMax);
+            workDone = true;
+        }
+        else
+        {
+            checkpointNotification.Raise("Remap?... No");
+            yield return new WaitForSeconds(.1f);
+        }
+
+        _endTime = Time.realtimeSinceStartup;
+        _deltaTime = _startTime - _endTime;
+        _metaData.generationTimeMS = _deltaTime / 1000;
+
+        // only update the height map if we actually did something to it
+        if (workDone)
+        {
+            checkpointNotification.Raise("No work done...");
+            yield return new WaitForSeconds(.1f);
+            
+            checkpointNotification.Raise("Updating height map...");
+            yield return new WaitForSeconds(.1f);
+            _activeHeightMap.SetMapHeights(newmap.Item1, _data.remapMin, _data.remapMax);
+        
+            checkpointNotification.Raise("Updating meshes...");
+            yield return new WaitForSeconds(.1f);
+            ApplyHeightMapToMesh();
+        
+            checkpointNotification.Raise("Generating height map preview...");
+            yield return new WaitForSeconds(.1f);
+            _metaData.heightMap = _activeHeightMap.GenerateHeightMapPreview(_data.remapMin, _data.remapMax);
+        }
+        
+        
+        checkpointNotification.Raise("Updating metadata...");
+        yield return new WaitForSeconds(.1f);
+
+        _metaData.mapMinVal = _activeHeightMap.mapMinVal;
+        _metaData.mapMaxVal = _activeHeightMap.mapMaxVal;
+        _metaData.mapRangeMin = _activeHeightMap.mapRangeMin;
+        _metaData.mapRangeMax = _activeHeightMap.mapRangeMax;
+        _metaData.generationTimeMS = _deltaTime * 1000;
+        
+        meshDataNotification.Raise(_metaData);
+
     }
 
     public void Simulate(ErosionMetaData data)
@@ -310,7 +436,34 @@ public class MeshManager : MonoBehaviour
         yield return new WaitForSeconds(.2f);
         meshDataNotification.Raise(_metaData);
         
+        _metaData.mapMinVal = _activeHeightMap.mapMinVal;
+        _metaData.mapMaxVal = _activeHeightMap.mapMaxVal;
+        _metaData.mapRangeMin = _activeHeightMap.mapRangeMin;
+        _metaData.mapRangeMax = _activeHeightMap.mapRangeMax;
+        _metaData.generationTimeMS = _deltaTime * 1000;
+        
         _usePreviousMap = false;
+    }
+
+    public void Operation(OperationMetaData data)
+    {
+        _metaData.previousMeshAvailable = true;
+        if (_usePreviousMap) SwitchMap();
+        SavePreviousMap();
+
+        switch (data.OperationType)
+        {
+            case Enums.OperationTypes.Stretch:
+                Debug.Log("Running Stretch operation");
+                StartCoroutine(StretchMap(data.stretchData));
+                break;
+            case Enums.OperationTypes.GaussianBlur:
+                StartCoroutine(RunBlur(data.blurData));
+                break;
+            default:
+                Debug.Log("How did you get here?");
+                break;
+        }
     }
 
     private void SwitchMap()
@@ -366,5 +519,16 @@ public class MeshManager : MonoBehaviour
                 mesh.transform.SetParent(previousMeshContainer.transform);
             }
         }
+    }
+
+    private void OnDrawGizmos()
+    {
+        Vector3 upper = new Vector3(0, _data.remapMax, 0);
+        Vector3 lower = new Vector3(0, _data.remapMin, 0);
+        
+        Gizmos.color = Color.red;
+        Gizmos.DrawSphere(upper, 1);
+        Gizmos.color = Color.blue;
+        Gizmos.DrawSphere(lower, 1);
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Net;
+using TMPro.EditorUtilities;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -33,6 +34,9 @@ public class CameraController : MonoBehaviour
  
     public float distanceMin = .5f;
     public float distanceMax = 15f;
+
+    private bool _clicked = false;
+    private bool _freedrag = false;
  
     private Rigidbody _rigidbody;
 
@@ -56,9 +60,19 @@ public class CameraController : MonoBehaviour
         _actions.CameraControl.Click.performed += (ctx =>
         {
             if (EventSystem.current.IsPointerOverGameObject()) orbitable = false;
-            else orbitable = true;
+            else
+            {
+                orbitable = true;
+                Cursor.visible = false;
+                Cursor.lockState = CursorLockMode.Locked;
+            }
         });
-        _actions.CameraControl.Click.canceled += (ctx => orbitable = false);
+        _actions.CameraControl.Click.canceled += (ctx =>
+        {
+            orbitable = false;
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+        });
         _actions.CameraControl.DragOrbit.performed += MouseDrag;
 
         _mouseScrollY = 0;
@@ -189,8 +203,8 @@ public class CameraController : MonoBehaviour
 
     public void MouseDrag(InputAction.CallbackContext context)
     {
-        if (EventSystem.current.IsPointerOverGameObject()) return;
-        else if (!orbitable) return;
+        // if (EventSystem.current.IsPointerOverGameObject()) return;
+        if (!orbitable) return;
         
         mouseAxisDelta = context.ReadValue<Vector2>();
     }

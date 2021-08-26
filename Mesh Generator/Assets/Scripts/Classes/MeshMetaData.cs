@@ -9,4 +9,9 @@ public class MeshMetaData
     public float generationTimeMS = 0f;
     public Sprite heightMap;
     public bool previousMeshAvailable = false;
+
+    public float mapRangeMin = 0;
+    public float mapRangeMax = 1;
+    public float mapMinVal = 0;
+    public float mapMaxVal = 1;
 }

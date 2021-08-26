@@ -93,4 +93,9 @@ public static class Putils
             list[i] = v;
         }
     }
+
+    public static bool ValueWithinRange(float val, float limit, float threshold)
+    {
+        return val >= limit - threshold && val <= limit + threshold;
+    }
 }

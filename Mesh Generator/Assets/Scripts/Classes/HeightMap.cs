@@ -31,6 +31,12 @@ public class HeightMap
     // }
 
     public int meshCount = 1;
+    
+    public float mapMaxVal = float.MinValue;
+    public float mapMinVal = float.MaxValue;
+    public float mapRangeMin = 0;
+    public float mapRangeMax = 1;
+    
     private Vector3[,] map;
 
     public GlobalParameters globalParams;
@@ -53,9 +59,15 @@ public class HeightMap
         map = new Vector3[_meshedge, _meshedge];
     }
 
+    public void InitMinMax()
+    {
+        mapMinVal = float.MaxValue;
+        mapMaxVal = float.MinValue;
+    }
+
     public void SetChunk(Vector3[,] verts, int coloffset, int rowoffset)
     {
-
+        // get the global starting/ending x/y for this chunk
         int startingx = (coloffset * Constants.meshVerts) - coloffset;
         int endingx = startingx + Constants.meshVerts;
         int startingy = (rowoffset * Constants.meshVerts) - rowoffset;
@@ -65,10 +77,16 @@ public class HeightMap
         {
             for (int globalx = startingx; globalx < endingx; ++globalx)
             {
+                // get the local x/y inside the chunk
                 int localx = globalx - startingx;
                 int localy = globaly - startingy;
 
+                // set the global value
                 map[globaly, globalx] = verts[localy, localx];
+
+                // check global map min/max
+                if (verts[localy, localx].y < mapMinVal) mapMinVal = verts[localy, localx].y;
+                if (verts[localy, localx].y > mapMaxVal) mapMaxVal = verts[localy, localx].y;
             }
         }        
         
@@ -198,20 +216,6 @@ public class HeightMap
         // return Putils.Tex2dToSprite(tex);
     }
     
-    // public float Remap (float from, float fromMin, float fromMax, float toMin,  float toMax) {
-    //     var fromAbs  =  from - fromMin;
-    //     var fromMaxAbs = fromMax - fromMin;      
-    //    
-    //     var normal = fromAbs / fromMaxAbs;
-    //
-    //     var toMaxAbs = toMax - toMin;
-    //     var toAbs = toMaxAbs * normal;
-    //
-    //     var to = toAbs + toMin;
-    //    
-    //     return to;
-    // }
-
     private Vector3 CalculateNormal(float a, float b, float c)
     {
         Vector3 p1 = Vector3.zero;
@@ -326,7 +330,7 @@ public class HeightMap
     {
         Vector3 normal = Vector3.zero;
 
-        // direct neightbors
+        // direct neighbors
         if (r + 1 < _meshedge) normal += Vector3.Normalize(new Vector3(map[r, c].y - map[r + 1, c].y, 1f, 0)) * NeighborWeight;
         if (r - 1 >= 0) normal += Vector3.Normalize(new Vector3(map[r - 1, c].y - map[r, c].y, 1f, 0)) * NeighborWeight;
         if ( c + 1 < _meshedge ) normal += Vector3.Normalize(new Vector3(0, 1f, map[r, c].y - map[r, c + 1].y)) * NeighborWeight;
@@ -500,11 +504,17 @@ public class HeightMap
 
     public void SetMapHeights(float[,] grid, float remapmin, float remapmax)
     {
+        mapMinVal = float.MaxValue;
+        mapMaxVal = float.MinValue;
+        
         for (int row = 0; row < _meshedge; ++row)
         {
             for (int col = 0; col < _meshedge; ++col)
             {
                 map[row, col].y = Putils.Remap(grid[row, col], 0, 1, remapmin, remapmax);
+
+                if (map[row, col].y < mapMinVal) mapMinVal = map[row, col].y;
+                if (map[row, col].y > mapMaxVal) mapMaxVal = map[row, col].y;
             }
         }
     }
