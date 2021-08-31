@@ -171,7 +171,6 @@ public class UIController : MonoBehaviour
     public TextMeshProUGUI rangeLineMinRange;
 
     private float inactiveGroupAlpha = 0.3f;
-    private bool _firstMesh = true;
 
     // Start is called before the first frame update
     void Start()

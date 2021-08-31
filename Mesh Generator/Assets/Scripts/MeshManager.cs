@@ -58,15 +58,13 @@ public class MeshManager : MonoBehaviour
 
     IEnumerator StartMeshGeneration()
     {
-        float totalDelay = 1.5f;
         _startTime = Time.realtimeSinceStartup;
 
         if (_data.mapType == Enums.HeightMapTypes.SimpleNoise)
         {
             checkpointNotification.Raise("Generating " + _data.simpleNoise.latticeDim + "x" + _data.simpleNoise.latticeDim + " lattice with seed " + _data.simpleNoise.seed + "...");
-            yield return new WaitForSeconds(0.25f);
+            yield return new WaitForSeconds(0.1f);
             Lattice.Instance.GenerateLattice(_data.simpleNoise.latticeDim, _data.simpleNoise.seed);
-            totalDelay += .25f;
         }
         
         checkpointNotification.Raise("Creating and initializing " + meshCount + "x" + meshCount + " mesh grid...");
@@ -102,10 +100,10 @@ public class MeshManager : MonoBehaviour
         _deltaTime = _endTime - _startTime;
 
         int gridarea = meshCount * meshCount;
-        int vertcount = gridarea * Constants.meshSquares;
+        int vertcount = gridarea * Constants.meshVerts * Constants.meshVerts;
         _metaData.vertexCount = vertcount;
         _metaData.polyCount = Constants.meshSquares * 2 * 254 * meshCount;
-        _metaData.generationTimeMS = _deltaTime * 1000 - (totalDelay * 1000);
+        _metaData.generationTimeMS = _deltaTime * 1000;
         
         _metaData.mapMinVal = _activeHeightMap.mapMinVal;
         _metaData.mapMaxVal = _activeHeightMap.mapMaxVal;
@@ -257,13 +255,10 @@ public class MeshManager : MonoBehaviour
         
         var blurredgrid = GaussianBlur.Blur(_activeHeightMap.GetHeightMap(), _activeHeightMap.WidthAndHeight(), data, _data.remapMin, _data.remapMax, checkpointNotification);
         
-        _endTime = Time.realtimeSinceStartup;
-        _deltaTime = _startTime - _endTime;
-        _metaData.generationTimeMS = _deltaTime / 1000;
         
         checkpointNotification.Raise("Updating height map...");
-        yield return new WaitForSeconds(1);
-        
+        yield return new WaitForSeconds(.1f);
+
         _activeHeightMap.SetMapHeights(blurredgrid, _data.remapMin, _data.remapMax);
         
         checkpointNotification.Raise("Updating meshes...");
@@ -271,11 +266,15 @@ public class MeshManager : MonoBehaviour
         ApplyHeightMapToMesh();
         
         checkpointNotification.Raise("Generating height map preview...");
-        yield return new WaitForSeconds(.2f);
+        yield return new WaitForSeconds(.1f);
         _metaData.heightMap = _activeHeightMap.GenerateHeightMapPreview(_data.remapMin, _data.remapMax);
         
         checkpointNotification.Raise("Updating metadata...");
-        yield return new WaitForSeconds(.2f);
+        yield return new WaitForSeconds(.1f);
+
+        _endTime = Time.realtimeSinceStartup;
+        _deltaTime = _endTime - _startTime;
+        _metaData.generationTimeMS = _deltaTime * 1000;
         
         _metaData.mapMinVal = _activeHeightMap.mapMinVal;
         _metaData.mapMaxVal = _activeHeightMap.mapMaxVal;
@@ -292,14 +291,16 @@ public class MeshManager : MonoBehaviour
         if (!_usePreviousMap)
         {
             checkpointNotification.Raise("Saving current mesh...");
-            yield return new WaitForSeconds(.1f);
+            yield return new WaitForSeconds(.01f);
             MoveMeshToPrevious(true);
         }
-
+        
+        _startTime = Time.realtimeSinceStartup;
+        
         bool workDone = false;
         
         checkpointNotification.Raise("Checking map limits...");
-        yield return new WaitForSeconds(.1f);
+        yield return new WaitForSeconds(.01f);
 
         // create a tuple for the map, map min val, and map max val
         // then set the map to the height map
@@ -311,7 +312,7 @@ public class MeshManager : MonoBehaviour
             !Putils.ValueWithinRange(_activeHeightMap.mapMaxVal, _activeHeightMap.mapRangeMax, 0.000001f))
         {
             checkpointNotification.Raise("Stretching height map...");
-            yield return new WaitForSeconds(.1f);
+            yield return new WaitForSeconds(.01f);
 
             _startTime = Time.realtimeSinceStartup;
 
@@ -328,19 +329,16 @@ public class MeshManager : MonoBehaviour
         {
             // show a message that we are not going to stretch the map
             checkpointNotification.Raise("Map already stretched...");
-            yield return new WaitForSeconds(.1f);
+            yield return new WaitForSeconds(.01f);
         }
         
         // check if we need to remap the height values
         if (data.Remap)
         {
-            checkpointNotification.Raise("Remap?... Yes");
-            yield return new WaitForSeconds(.1f);
-            
             Debug.Log("Remaping to " + data.RemapMin + ", " + data.RemapMax);
             checkpointNotification.Raise("Remapping height map...");
-            yield return new WaitForSeconds(.2f);
-            
+            yield return new WaitForSeconds(.01f);
+
             // reset the height map
             _data.remapMin = data.RemapMin;
             _data.remapMax = data.RemapMax;
@@ -350,45 +348,39 @@ public class MeshManager : MonoBehaviour
             newmap.Item1 = MapStretch.RemapHeights(newmap.Item1, _activeHeightMap.WidthAndHeight(), _activeHeightMap.mapMinVal, _activeHeightMap.mapMaxVal, data.RemapMin, data.RemapMax);
             workDone = true;
         }
-        else
-        {
-            checkpointNotification.Raise("Remap?... No");
-            yield return new WaitForSeconds(.1f);
-        }
-
-        _endTime = Time.realtimeSinceStartup;
-        _deltaTime = _startTime - _endTime;
-        _metaData.generationTimeMS = _deltaTime / 1000;
 
         // only update the height map if we actually did something to it
         if (workDone)
         {
             checkpointNotification.Raise("No work done...");
-            yield return new WaitForSeconds(.1f);
-            
+            yield return new WaitForSeconds(.01f);
+
             checkpointNotification.Raise("Updating height map...");
-            yield return new WaitForSeconds(.1f);
+            yield return new WaitForSeconds(.01f);
             _activeHeightMap.SetMapHeights(newmap.Item1, _data.remapMin, _data.remapMax);
         
             checkpointNotification.Raise("Updating meshes...");
-            yield return new WaitForSeconds(.1f);
+            yield return new WaitForSeconds(.01f);
             ApplyHeightMapToMesh();
         
             checkpointNotification.Raise("Generating height map preview...");
-            yield return new WaitForSeconds(.1f);
+            yield return new WaitForSeconds(.01f);
             _metaData.heightMap = _activeHeightMap.GenerateHeightMapPreview(_data.remapMin, _data.remapMax);
         }
         
         
         checkpointNotification.Raise("Updating metadata...");
-        yield return new WaitForSeconds(.1f);
+        yield return new WaitForSeconds(.01f);
+
+        _endTime = Time.realtimeSinceStartup;
+        _deltaTime = _endTime - _startTime;
+        _metaData.generationTimeMS = _deltaTime * 1000;
 
         _metaData.mapMinVal = _activeHeightMap.mapMinVal;
         _metaData.mapMaxVal = _activeHeightMap.mapMaxVal;
         _metaData.mapRangeMin = _activeHeightMap.mapRangeMin;
         _metaData.mapRangeMax = _activeHeightMap.mapRangeMax;
-        _metaData.generationTimeMS = _deltaTime * 1000;
-        
+
         meshDataNotification.Raise(_metaData);
 
     }
@@ -420,28 +412,28 @@ public class MeshManager : MonoBehaviour
         
         _startTime = Time.realtimeSinceStartup;
         yield return HydraulicErosion.Simulate(_activeHeightMap, data.HydraulicErosionParameters, checkpointNotification);
-        _endTime = Time.realtimeSinceStartup;
-        _deltaTime = _startTime - _endTime;
-        _metaData.generationTimeMS = _deltaTime / 1000;
 
         checkpointNotification.Raise("Updating meshes...");
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(.1f);
         ApplyHeightMapToMesh();
         
         checkpointNotification.Raise("Generating height map preview...");
-        yield return new WaitForSeconds(.2f);
+        yield return new WaitForSeconds(.1f);
         _metaData.heightMap = _activeHeightMap.GenerateHeightMapPreview(_data.remapMin, _data.remapMax);
         
         checkpointNotification.Raise("Updating metadata...");
-        yield return new WaitForSeconds(.2f);
+        yield return new WaitForSeconds(.1f);
         meshDataNotification.Raise(_metaData);
+        
+        _endTime = Time.realtimeSinceStartup;
+        _deltaTime = _endTime - _startTime;
+        _metaData.generationTimeMS = _deltaTime * 1000;
         
         _metaData.mapMinVal = _activeHeightMap.mapMinVal;
         _metaData.mapMaxVal = _activeHeightMap.mapMaxVal;
         _metaData.mapRangeMin = _activeHeightMap.mapRangeMin;
         _metaData.mapRangeMax = _activeHeightMap.mapRangeMax;
-        _metaData.generationTimeMS = _deltaTime * 1000;
-        
+
         _usePreviousMap = false;
     }
 

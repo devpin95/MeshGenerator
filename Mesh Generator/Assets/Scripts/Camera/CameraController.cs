@@ -1,11 +1,19 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
+using System.Runtime.CompilerServices;
+using System.Windows.Forms;
+using SFB;
 using TMPro.EditorUtilities;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
+using Cursor = UnityEngine.Cursor;
+using Application = UnityEngine.Application;
+using Screen = UnityEngine.Screen;
 
 public class CameraController : MonoBehaviour
 {
@@ -35,6 +43,11 @@ public class CameraController : MonoBehaviour
     public float distanceMin = .5f;
     public float distanceMax = 15f;
 
+    [Header("Screenshot")]
+    public Image screenshotPreview;
+    public CanvasGroup screenshotCG;
+    public CEvent_String errorEvent;
+
     private bool _clicked = false;
     private bool _freedrag = false;
  
@@ -47,6 +60,11 @@ public class CameraController : MonoBehaviour
  
     private bool orbitable;
 
+    private Camera _camera;
+
+    private int _windowWidth;
+    private int _windowHeight;
+
     public enum CameraType
     {
         Perspective,
@@ -56,7 +74,10 @@ public class CameraController : MonoBehaviour
     private void Awake()
     {
         _actions = new Actions();
+        // zoom event
         _actions.CameraControl.Zoom.performed += ZoomCamera;
+        
+        // starting drag event
         _actions.CameraControl.Click.performed += (ctx =>
         {
             if (EventSystem.current.IsPointerOverGameObject()) orbitable = false;
@@ -67,15 +88,23 @@ public class CameraController : MonoBehaviour
                 Cursor.lockState = CursorLockMode.Locked;
             }
         });
+        
+        // stopping drag event
         _actions.CameraControl.Click.canceled += (ctx =>
         {
             orbitable = false;
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
         });
+        
+        // drag performed event
         _actions.CameraControl.DragOrbit.performed += MouseDrag;
 
         _mouseScrollY = 0;
+
+        _windowWidth = Screen.width;
+        _windowHeight = Screen.height;
+        screenshotPreview.rectTransform.sizeDelta = new Vector2(_windowWidth, _windowHeight);
     }
     
     // Start is called before the first frame update
@@ -83,6 +112,7 @@ public class CameraController : MonoBehaviour
     {
         _rigidbody = GetComponent<Rigidbody>();
         if (_rigidbody) _rigidbody.freezeRotation = true;
+        _camera = GetComponent<Camera>();
     }
 
     // Update is called once per frame
@@ -221,5 +251,69 @@ public class CameraController : MonoBehaviour
     public void ReaquireTarget(Vector3 pos)
     {
         _targetPos = pos;
+    }
+
+    public void TakeScreenshot()
+    {
+        Debug.Log("Screenshot (" + _windowWidth + "x" + _windowHeight + ")");
+
+        Rect rect = new Rect(0, 0, _windowWidth, _windowHeight);
+        RenderTexture rt = new RenderTexture(_windowWidth, _windowHeight, 24);
+        Texture2D ss = new Texture2D(_windowWidth, _windowHeight, TextureFormat.RGBA32, false);
+        
+        _camera.targetTexture = rt;
+        _camera.Render();
+        
+        RenderTexture.active = rt;
+        ss.ReadPixels(rect, 0, 0);
+        ss.Apply();
+        byte[] bytes = ss.EncodeToPNG();
+        
+        _camera.targetTexture = null;
+        RenderTexture.active = null;
+
+        Destroy(rt);
+        rt = null;
+        
+        screenshotPreview.gameObject.SetActive(true);
+        screenshotPreview.sprite = Putils.Tex2dToSprite(ss);
+
+        string filename = "MeshCapture" + Putils.DateTimeString();
+        string windowTitle = "Mesh Capture (" + _windowWidth + "x" + _windowHeight + ")";
+        var path = StandaloneFileBrowser.SaveFilePanel(windowTitle, "", filename, "png");
+        if (!string.IsNullOrEmpty(path))
+        {
+            try
+            {
+                File.WriteAllBytes(path, bytes);
+                StartCoroutine(HideScreenshotPreview());
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                errorEvent.Raise("Something went wrong while saving file.");
+                throw;
+            }
+        }
+    }
+
+    IEnumerator HideScreenshotPreview()
+    {
+        
+        while (screenshotCG.alpha < 1)
+        {
+            screenshotCG.alpha += 0.15f;
+            yield return new WaitForSeconds(0.018f);
+        }
+        
+        yield return new WaitForSeconds(4);
+
+        while (screenshotCG.alpha > 0)
+        {
+            screenshotCG.alpha -= 0.15f;
+            yield return new WaitForSeconds(0.018f);
+        }
+        
+        screenshotPreview.gameObject.SetActive(false);
     }
 }

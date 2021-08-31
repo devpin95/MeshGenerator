@@ -98,4 +98,9 @@ public static class Putils
     {
         return val >= limit - threshold && val <= limit + threshold;
     }
+
+    public static string DateTimeString()
+    {
+        return System.DateTime.Now.ToString("ddMMyyyyhhmmss");
+    }
 }

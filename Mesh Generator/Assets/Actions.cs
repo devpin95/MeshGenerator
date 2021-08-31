@@ -67,7 +67,7 @@ public class @Actions : IInputActionCollection, IDisposable
                     ""name"": """",
                     ""id"": ""d5f942b7-a510-46ea-beec-54bf356ccb4e"",
                     ""path"": ""<Mouse>/leftButton"",
-                    ""interactions"": """",
+                    ""interactions"": ""Hold(duration=0.15,pressPoint=0.3)"",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Click"",

@@ -268,8 +268,6 @@ public class MeshNormalGenerator : MonoBehaviour
         var grid = Putils.FlatArrayToTwoDArray(_vertices, Dim, Dim);
         var vertgrid = Putils.FlatArrayToTwoDArray(_vertobjs.ToArray(), Dim, Dim);
 
-        int meshlimit = Dim;
-
         for (int y = 0; y < Dim; ++y)
         {
             for (int x = 0; x < Dim; ++x)
