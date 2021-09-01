@@ -1085,4 +1085,33 @@ public class UIController : MonoBehaviour
         upperpos -= containerHeight / 2f;
         rangeLineMaxContainer.anchoredPosition = new Vector2(0, upperpos);
     }
+
+    public void SaveHeightMapPreview()
+    {
+        Color[] pixels = _currentMapPreview.texture.GetPixels(0, 0, (int)_currentMapPreview.rect.width, (int)_currentMapPreview.rect.height);
+        
+        Texture2D tex = new Texture2D((int)_currentMapPreview.rect.width, (int)_currentMapPreview.rect.height, TextureFormat.RGBA32, false);
+        tex.SetPixels(pixels);
+        tex.Apply();
+
+        var bytes = tex.EncodeToPNG();
+        
+        string filename = "HeightMap" + Putils.DateTimeString();
+        string windowTitle = "Mesh Capture (" + (int)_currentMapPreview.rect.width + "x" + (int)_currentMapPreview.rect.height + ")";
+        var path = StandaloneFileBrowser.SaveFilePanel(windowTitle, "", filename, "png");
+
+        if (!string.IsNullOrEmpty(path))
+        {
+            try
+            {
+                File.WriteAllBytes(path, bytes);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                errorMessage.text = "Something went wrong while saving file.";
+                throw;
+            }
+        }
+    }
 }

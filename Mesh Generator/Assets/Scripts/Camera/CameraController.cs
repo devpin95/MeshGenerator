@@ -299,7 +299,6 @@ public class CameraController : MonoBehaviour
 
     IEnumerator HideScreenshotPreview()
     {
-        
         while (screenshotCG.alpha < 1)
         {
             screenshotCG.alpha += 0.15f;
