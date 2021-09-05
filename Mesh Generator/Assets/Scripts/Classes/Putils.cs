@@ -103,4 +103,21 @@ public static class Putils
     {
         return System.DateTime.Now.ToString("ddMMyyyyhhmmss");
     }
+
+    public static string MsToTimeString(float time)
+    {
+        string stime = "peepee poopoo";
+
+        if (time <= 60000)
+        {
+            stime = time.ToString("n2") + "ms";
+        }
+        else if (time < 60000 * 60)
+        {
+            float minutes = time / (1000f * 60);
+            stime = minutes.ToString("n2") + "min";
+        }
+
+        return stime;
+    }
 }

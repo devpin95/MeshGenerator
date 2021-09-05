@@ -214,7 +214,9 @@ public class UIController : MonoBehaviour
         overlay.SetActive(false);
         vertCount.text = "Vertices: " + data.vertexCount.ToString("n0");
         polyCount.text = "Polygons: " + data.polyCount.ToString("n0");
-        genTime.text = data.generationTimeMS.ToString("n2") + "ms";
+        genTime.text = Putils.MsToTimeString(data.generationTimeMS);
+        // genTime.text = data.generationTimeMS.ToString("n2") + "ms";
+        
         previewImage.sprite = data.heightMap;
         _currentMapPreview = data.heightMap;
         
@@ -840,14 +842,14 @@ public class UIController : MonoBehaviour
     public void ValidateMeshDim(string str)
     {
         const int min = 2;
-        const int max = 255;
+        const int max = 15;
         
         int val;
         bool success = int.TryParse(str, out val);
 
         if (success)
         {
-            if (val < 1 && val >= 0)
+            if (val >= 0 && val < min)
             {
                 dimensionField.text = min.ToString();
             } else if (val < 0)

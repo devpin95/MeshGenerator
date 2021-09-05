@@ -253,7 +253,7 @@ public class MeshManager : MonoBehaviour
 
         _startTime = Time.realtimeSinceStartup;
         
-        var blurredgrid = GaussianBlur.Blur(_activeHeightMap.GetHeightMap(), _activeHeightMap.WidthAndHeight(), data, _data.remapMin, _data.remapMax, checkpointNotification);
+        var blurredgrid = GaussianBlur.Blur(_activeHeightMap.GetHeightMap(), _activeHeightMap.WidthAndHeight(), data, _activeHeightMap.mapRangeMin, _activeHeightMap.mapRangeMax, checkpointNotification);
         
         
         checkpointNotification.Raise("Updating height map...");
@@ -423,8 +423,7 @@ public class MeshManager : MonoBehaviour
         
         checkpointNotification.Raise("Updating metadata...");
         yield return new WaitForSeconds(.1f);
-        meshDataNotification.Raise(_metaData);
-        
+
         _endTime = Time.realtimeSinceStartup;
         _deltaTime = _endTime - _startTime;
         _metaData.generationTimeMS = _deltaTime * 1000;
@@ -435,6 +434,8 @@ public class MeshManager : MonoBehaviour
         _metaData.mapRangeMax = _activeHeightMap.mapRangeMax;
 
         _usePreviousMap = false;
+        
+        meshDataNotification.Raise(_metaData);
     }
 
     public void Operation(OperationMetaData data)
@@ -490,7 +491,7 @@ public class MeshManager : MonoBehaviour
         {
             if (copy)
             {
-                Debug.Log("Copying mesh...");
+                // Debug.Log("Copying mesh...");
 
                 var nmesh = Instantiate(mesh, mesh.transform.position, mesh.transform.rotation);
                 nmesh.transform.SetParent(previousMeshContainer.transform);

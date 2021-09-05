@@ -20,8 +20,9 @@ public static class GaussianBlur
             normal += kernel[i];
         }
         
-        float minr = float.MaxValue;
-        float maxr = float.MinValue;
+        // keep track of the min/max as we convolve each col
+        float mincon = float.MaxValue;
+        float maxcon = float.MinValue;
         
         // first pass
         // vertical kernel
@@ -30,57 +31,51 @@ public static class GaussianBlur
             for (int col = 0; col < dim; ++col)
             {
                 float val = ConvolveVertical(map, dim, row, col, kernel, metaData, min, max);
+                float vnormalized = val / normal;
                 
-                if (val < minr) minr = val;
-                if (val > maxr) maxr = val;
+                if (vnormalized < mincon) mincon = vnormalized;
+                if (vnormalized > maxcon) maxcon = vnormalized;
 
-                tempgrid[row, col] = val;
+                tempgrid[row, col] = vnormalized;
             }
         }
         
-        Debug.Log("(Vertical pass) MAX = " + maxr + " MIN = " + minr);
-        
-        // !!!!! Dont normalize between steps because it'll mess up the next step
-        // just double normalize after the horizontal step
-        
-        // now go back and remap all of the values
-        // for (int row = 0; row < dim; ++row)
-        // {
-        //     for (int col = 0; col < dim; ++col)
-        //     {
-        //         // tempgrid[row, col] = Putils.Remap(tempgrid[row, col], minr, maxr, 0, 1);
-        //         tempgrid[row, col] /= normal;
-        //     }
-        // }
-        
-        minr = float.MaxValue;
-        maxr = float.MinValue;
-        
+        Debug.Log("(Vertical pass) MAX = " + maxcon + " MIN = " + mincon);
+
         // second pass
         for (int row = 0; row < dim; ++row)
         {
             for (int col = 0; col < dim; ++col)
             {
-                float val = tempgrid[row, col] + ConvolveHorizonal(tempgrid, dim, row, col, kernel, metaData, min, max);
+                // we dont need to add the element back to the convolved value
+                // float val = tempgrid[row, col] + ConvolveHorizonal(tempgrid, dim, row, col, kernel, metaData, min, max);
+                
+                float val = ConvolveHorizonal(tempgrid, dim, row, col, kernel, metaData, mincon, maxcon);
+                
+                float vnormalized = val / normal;
 
-                if (val < minr) minr = val;
-                if (val > maxr) maxr = val;
+                if (vnormalized < mincon) mincon = vnormalized;
+                if (vnormalized > maxcon) maxcon = vnormalized;
 
-                tempgrid[row, col] = val;
+                tempgrid[row, col] = vnormalized;
+                // tempgrid[row, col] = Putils.Remap(tempgrid[row, col], 0, normal, 0, 1);
             }
         }
         
-        Debug.Log("(Horizontal pass) MAX = " + maxr + " MIN = " + minr);
+        Debug.Log("(Horizontal pass) MAX = " + maxcon + " MIN = " + mincon);
+        
+        Debug.Log("(MIN) " + 
+                  mincon + "->" + Putils.Remap(mincon, mincon, maxcon, 0, 1) +
+                  "(MAX) " +
+                  maxcon + "->" + Putils.Remap(maxcon, mincon, maxcon, 0, 1)
+                  );
         
         // now go back and remap all of the values
         for (int row = 0; row < dim; ++row)
         {
             for (int col = 0; col < dim; ++col)
             {
-                tempgrid[row, col] = Putils.Remap(tempgrid[row, col], 0, normal * 2, 0, 1);
-                
-                // this is the second pass so we need to normalize for 2 kernels worth of weights
-                // tempgrid[row, col] /= normal * 2;
+                tempgrid[row, col] = Putils.Remap(tempgrid[row, col], mincon, maxcon, 0, 1);
             }
         }
 
