@@ -6,6 +6,8 @@ using Parameters;
 using SFB;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
@@ -170,7 +172,25 @@ public class UIController : MonoBehaviour
     public TextMeshProUGUI rangeLineMaxRange;
     public TextMeshProUGUI rangeLineMinRange;
 
+    [Header("Context menu")] 
+    public GameObject contextMenuContainer;
+    
+
     private float inactiveGroupAlpha = 0.3f;
+
+    private Actions _actions;
+
+    private void Awake()
+    {
+        _actions = new Actions();
+
+        _actions.UIControl.RightClick.Enable();
+        _actions.UIControl.LeftClick.Enable();
+        _actions.UIControl.MousePosition.Enable();
+
+        _actions.UIControl.RightClick.performed += ShowContextMenu;
+        _actions.UIControl.LeftClick.performed += HideContextMenu;
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -1115,5 +1135,38 @@ public class UIController : MonoBehaviour
                 throw;
             }
         }
+    }
+
+    public void ShowContextMenu(InputAction.CallbackContext ctx)
+    {
+        Debug.Log(ctx);
+        Vector2 pos = _actions.UIControl.MousePosition.ReadValue<Vector2>();
+        
+        contextMenuContainer.SetActive(true);
+        contextMenuContainer.transform.position = new Vector3(pos.x, pos.y, 0);
+    }
+
+    public void HideContextMenu(InputAction.CallbackContext ctx)
+    {
+        PointerEventData pointerData = new PointerEventData(EventSystem.current)
+        {
+            pointerId = -1,
+            position = _actions.UIControl.MousePosition.ReadValue<Vector2>()
+        };
+
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(pointerData, results);
+
+        foreach (var result in results)
+        {
+            if (result.gameObject.transform.CompareTag("Context Button")) return;
+        }
+
+        contextMenuContainer.SetActive(false);
+    }
+
+    public void ContextMenuCloseApplication()
+    {
+        Application.Quit();
     }
 }

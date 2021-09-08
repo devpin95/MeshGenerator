@@ -27,7 +27,7 @@ public class @Actions : IInputActionCollection, IDisposable
                     ""interactions"": """"
                 },
                 {
-                    ""name"": ""Click"",
+                    ""name"": ""LeftClick"",
                     ""type"": ""Button"",
                     ""id"": ""872c94bc-d216-4d8f-a194-c501de13a00f"",
                     ""expectedControlType"": ""Button"",
@@ -70,7 +70,7 @@ public class @Actions : IInputActionCollection, IDisposable
                     ""interactions"": ""Hold(duration=0.15,pressPoint=0.3)"",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Click"",
+                    ""action"": ""LeftClick"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -97,6 +97,71 @@ public class @Actions : IInputActionCollection, IDisposable
                     ""isPartOfComposite"": false
                 }
             ]
+        },
+        {
+            ""name"": ""UI Control"",
+            ""id"": ""f2385287-00a7-4a60-a6de-9210456d74b1"",
+            ""actions"": [
+                {
+                    ""name"": ""Right Click"",
+                    ""type"": ""Button"",
+                    ""id"": ""a8142185-cc85-43a6-85a1-399958109a92"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
+                },
+                {
+                    ""name"": ""Left Click"",
+                    ""type"": ""Button"",
+                    ""id"": ""a735a1d9-047e-41e6-95e3-0a9669a05140"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
+                },
+                {
+                    ""name"": ""Mouse Position"",
+                    ""type"": ""Value"",
+                    ""id"": ""5ec6cd29-7bb5-4318-b5c9-eed5d1dd7c9e"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """"
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""36bd3c7c-69c0-4244-837d-86c37dcb88f1"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Right Click"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""1ae5c57e-ff5f-45c4-b291-1b2d694b5f2b"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Left Click"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""4c2d51cf-86e0-435a-a6f9-8de7a5bbe5b3"",
+                    ""path"": ""<Mouse>/position"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Mouse Position"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": []
@@ -104,9 +169,14 @@ public class @Actions : IInputActionCollection, IDisposable
         // Camera Control
         m_CameraControl = asset.FindActionMap("Camera Control", throwIfNotFound: true);
         m_CameraControl_Zoom = m_CameraControl.FindAction("Zoom", throwIfNotFound: true);
-        m_CameraControl_Click = m_CameraControl.FindAction("Click", throwIfNotFound: true);
+        m_CameraControl_LeftClick = m_CameraControl.FindAction("LeftClick", throwIfNotFound: true);
         m_CameraControl_DragOrbit = m_CameraControl.FindAction("Drag Orbit", throwIfNotFound: true);
         m_CameraControl_TrackMouse = m_CameraControl.FindAction("Track Mouse", throwIfNotFound: true);
+        // UI Control
+        m_UIControl = asset.FindActionMap("UI Control", throwIfNotFound: true);
+        m_UIControl_RightClick = m_UIControl.FindAction("Right Click", throwIfNotFound: true);
+        m_UIControl_LeftClick = m_UIControl.FindAction("Left Click", throwIfNotFound: true);
+        m_UIControl_MousePosition = m_UIControl.FindAction("Mouse Position", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -157,7 +227,7 @@ public class @Actions : IInputActionCollection, IDisposable
     private readonly InputActionMap m_CameraControl;
     private ICameraControlActions m_CameraControlActionsCallbackInterface;
     private readonly InputAction m_CameraControl_Zoom;
-    private readonly InputAction m_CameraControl_Click;
+    private readonly InputAction m_CameraControl_LeftClick;
     private readonly InputAction m_CameraControl_DragOrbit;
     private readonly InputAction m_CameraControl_TrackMouse;
     public struct CameraControlActions
@@ -165,7 +235,7 @@ public class @Actions : IInputActionCollection, IDisposable
         private @Actions m_Wrapper;
         public CameraControlActions(@Actions wrapper) { m_Wrapper = wrapper; }
         public InputAction @Zoom => m_Wrapper.m_CameraControl_Zoom;
-        public InputAction @Click => m_Wrapper.m_CameraControl_Click;
+        public InputAction @LeftClick => m_Wrapper.m_CameraControl_LeftClick;
         public InputAction @DragOrbit => m_Wrapper.m_CameraControl_DragOrbit;
         public InputAction @TrackMouse => m_Wrapper.m_CameraControl_TrackMouse;
         public InputActionMap Get() { return m_Wrapper.m_CameraControl; }
@@ -180,9 +250,9 @@ public class @Actions : IInputActionCollection, IDisposable
                 @Zoom.started -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnZoom;
                 @Zoom.performed -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnZoom;
                 @Zoom.canceled -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnZoom;
-                @Click.started -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnClick;
-                @Click.performed -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnClick;
-                @Click.canceled -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnClick;
+                @LeftClick.started -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnLeftClick;
+                @LeftClick.performed -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnLeftClick;
+                @LeftClick.canceled -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnLeftClick;
                 @DragOrbit.started -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnDragOrbit;
                 @DragOrbit.performed -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnDragOrbit;
                 @DragOrbit.canceled -= m_Wrapper.m_CameraControlActionsCallbackInterface.OnDragOrbit;
@@ -196,9 +266,9 @@ public class @Actions : IInputActionCollection, IDisposable
                 @Zoom.started += instance.OnZoom;
                 @Zoom.performed += instance.OnZoom;
                 @Zoom.canceled += instance.OnZoom;
-                @Click.started += instance.OnClick;
-                @Click.performed += instance.OnClick;
-                @Click.canceled += instance.OnClick;
+                @LeftClick.started += instance.OnLeftClick;
+                @LeftClick.performed += instance.OnLeftClick;
+                @LeftClick.canceled += instance.OnLeftClick;
                 @DragOrbit.started += instance.OnDragOrbit;
                 @DragOrbit.performed += instance.OnDragOrbit;
                 @DragOrbit.canceled += instance.OnDragOrbit;
@@ -209,11 +279,66 @@ public class @Actions : IInputActionCollection, IDisposable
         }
     }
     public CameraControlActions @CameraControl => new CameraControlActions(this);
+
+    // UI Control
+    private readonly InputActionMap m_UIControl;
+    private IUIControlActions m_UIControlActionsCallbackInterface;
+    private readonly InputAction m_UIControl_RightClick;
+    private readonly InputAction m_UIControl_LeftClick;
+    private readonly InputAction m_UIControl_MousePosition;
+    public struct UIControlActions
+    {
+        private @Actions m_Wrapper;
+        public UIControlActions(@Actions wrapper) { m_Wrapper = wrapper; }
+        public InputAction @RightClick => m_Wrapper.m_UIControl_RightClick;
+        public InputAction @LeftClick => m_Wrapper.m_UIControl_LeftClick;
+        public InputAction @MousePosition => m_Wrapper.m_UIControl_MousePosition;
+        public InputActionMap Get() { return m_Wrapper.m_UIControl; }
+        public void Enable() { Get().Enable(); }
+        public void Disable() { Get().Disable(); }
+        public bool enabled => Get().enabled;
+        public static implicit operator InputActionMap(UIControlActions set) { return set.Get(); }
+        public void SetCallbacks(IUIControlActions instance)
+        {
+            if (m_Wrapper.m_UIControlActionsCallbackInterface != null)
+            {
+                @RightClick.started -= m_Wrapper.m_UIControlActionsCallbackInterface.OnRightClick;
+                @RightClick.performed -= m_Wrapper.m_UIControlActionsCallbackInterface.OnRightClick;
+                @RightClick.canceled -= m_Wrapper.m_UIControlActionsCallbackInterface.OnRightClick;
+                @LeftClick.started -= m_Wrapper.m_UIControlActionsCallbackInterface.OnLeftClick;
+                @LeftClick.performed -= m_Wrapper.m_UIControlActionsCallbackInterface.OnLeftClick;
+                @LeftClick.canceled -= m_Wrapper.m_UIControlActionsCallbackInterface.OnLeftClick;
+                @MousePosition.started -= m_Wrapper.m_UIControlActionsCallbackInterface.OnMousePosition;
+                @MousePosition.performed -= m_Wrapper.m_UIControlActionsCallbackInterface.OnMousePosition;
+                @MousePosition.canceled -= m_Wrapper.m_UIControlActionsCallbackInterface.OnMousePosition;
+            }
+            m_Wrapper.m_UIControlActionsCallbackInterface = instance;
+            if (instance != null)
+            {
+                @RightClick.started += instance.OnRightClick;
+                @RightClick.performed += instance.OnRightClick;
+                @RightClick.canceled += instance.OnRightClick;
+                @LeftClick.started += instance.OnLeftClick;
+                @LeftClick.performed += instance.OnLeftClick;
+                @LeftClick.canceled += instance.OnLeftClick;
+                @MousePosition.started += instance.OnMousePosition;
+                @MousePosition.performed += instance.OnMousePosition;
+                @MousePosition.canceled += instance.OnMousePosition;
+            }
+        }
+    }
+    public UIControlActions @UIControl => new UIControlActions(this);
     public interface ICameraControlActions
     {
         void OnZoom(InputAction.CallbackContext context);
-        void OnClick(InputAction.CallbackContext context);
+        void OnLeftClick(InputAction.CallbackContext context);
         void OnDragOrbit(InputAction.CallbackContext context);
         void OnTrackMouse(InputAction.CallbackContext context);
+    }
+    public interface IUIControlActions
+    {
+        void OnRightClick(InputAction.CallbackContext context);
+        void OnLeftClick(InputAction.CallbackContext context);
+        void OnMousePosition(InputAction.CallbackContext context);
     }
 }

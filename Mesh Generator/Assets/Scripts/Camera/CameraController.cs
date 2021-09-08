@@ -1,18 +1,12 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.IO;
-using System.Net;
-using System.Runtime.CompilerServices;
-using System.Windows.Forms;
 using SFB;
-using TMPro.EditorUtilities;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using Cursor = UnityEngine.Cursor;
-using Application = UnityEngine.Application;
 using Screen = UnityEngine.Screen;
 
 public class CameraController : MonoBehaviour
@@ -78,7 +72,7 @@ public class CameraController : MonoBehaviour
         _actions.CameraControl.Zoom.performed += ZoomCamera;
         
         // starting drag event
-        _actions.CameraControl.Click.performed += (ctx =>
+        _actions.CameraControl.LeftClick.performed += (ctx =>
         {
             if (EventSystem.current.IsPointerOverGameObject()) orbitable = false;
             else
@@ -90,7 +84,7 @@ public class CameraController : MonoBehaviour
         });
         
         // stopping drag event
-        _actions.CameraControl.Click.canceled += (ctx =>
+        _actions.CameraControl.LeftClick.canceled += (ctx =>
         {
             orbitable = false;
             Cursor.visible = true;
@@ -182,14 +176,14 @@ public class CameraController : MonoBehaviour
     private void OnEnable()
     {
         _actions.CameraControl.Zoom.Enable();
-        _actions.CameraControl.Click.Enable();
+        _actions.CameraControl.LeftClick.Enable();
         _actions.CameraControl.DragOrbit.Enable();
     }
 
     private void OnDisable()
     {
         _actions.CameraControl.Zoom.Disable();
-        _actions.CameraControl.Click.Disable();
+        _actions.CameraControl.LeftClick.Disable();
         _actions.CameraControl.DragOrbit.Disable();
     }
     

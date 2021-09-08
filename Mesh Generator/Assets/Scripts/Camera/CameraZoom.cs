@@ -24,7 +24,7 @@ public class CameraZoom : MonoBehaviour
     {
         _actions = new Actions();
         _actions.CameraControl.Zoom.performed += ZoomCamera;
-        _actions.CameraControl.Click.performed += Click;
+        _actions.CameraControl.LeftClick.performed += Click;
 
         _mouseScrollY = 0;
     }
@@ -96,13 +96,13 @@ public class CameraZoom : MonoBehaviour
     private void OnEnable()
     {
         _actions.CameraControl.Zoom.Enable();
-        _actions.CameraControl.Click.Enable();
+        _actions.CameraControl.LeftClick.Enable();
     }
 
     private void OnDisable()
     {
         _actions.CameraControl.Zoom.Disable();
-        _actions.CameraControl.Click.Disable();
+        _actions.CameraControl.LeftClick.Disable();
     }
 
     private void OnDrawGizmos()
