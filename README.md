@@ -122,53 +122,34 @@ The simple noise algorithm is an implementation of the 2D noise function describ
 
 In essence, a 2D noise function generates a grid of random numbers called a lattice. The functions takes in an x and y coordinate to the grid. Any value outside the grid wraps back around. For example, for a 5x5 lattice, given the coordinate (5, 1) will return the value at position (0, 1), noting that (0, 0) is the origin of the grid. Intuitively, for a grid of any size, we are duplicate the grid to the left, right, up, and down to create a plane of values that we can sample from at any point. Though our implementation will only be take samples from x >= 0 and y >= 0, the function also allows for negative coordinates.
 
-Full SimpleNoise function implemented in [MeshGenerator.cs](https://github.com/devpin95/MeshGenerator/blob/120d7edc387fe4fb33c22f5ae9e7c4b7a79e0bac/Mesh%20Generator/Assets/Scripts/MeshGenerator.cs):
+Because we are working with a 2D sampling grid, we need to do some math when our sample point lands between vertices (say we want to sample the point *(0.5, 0.25)*). We can do this with [bilinear interpolation](https://en.wikipedia.org/wiki/Bilinear_interpolation).
 
-    public float SampleSimpleNoise(int x, int z)
-    {
-        float remappedx = Putils.Remap(x, 0, _data.dimension, _data.simpleNoise.sampleMin, _data.simpleNoise.sampleMax);
-        remappedx += _data.simpleNoise.frequency;
-        float remappedz = Putils.Remap(z, 0, _data.dimension, _data.simpleNoise.sampleMin, _data.simpleNoise.sampleMax);
-        remappedz += _data.simpleNoise.frequency;
+Here is the code snippet implementing bilinear interpolation
 
-        // Debug.Log(x + ", " + z);
-        //https://en.wikipedia.org/wiki/Bilinear_interpolation
-        
-        // bring the values back to the origin block [0, latticeDim]
-        float modX = remappedx % _data.simpleNoise.latticeDim;
-        float modY = remappedz % _data.simpleNoise.latticeDim;
+    float Q11 = Lattice.Instance.SampleLattice(xmin, ymin); // bottom left point
+    float Q12 = Lattice.Instance.SampleLattice(xmin, yrounded); // top left point
+    float Q21 = Lattice.Instance.SampleLattice(xrounded, ymin); // bottom right point
+    float Q22 = Lattice.Instance.SampleLattice(xrounded, yrounded); // top right point
+    
+    // linear interpolation in the x direction
+    float R1 = (xmax - modX) * Q11 + (modX - xmin) * Q21; // x on the line between Q11 and Q21, y = ymin
+    float R2 = (xmax - modX) * Q12 + (modX - xmin) * Q22; // x on the line between Q12 and Q22, y = ymax
+    
+    // linear interpolation in the y direction (between R1 and R2)
+    float p = (ymax - modY) * R1 + (modY - ymin) * R2;
 
-        int xmin = (int) modX;
-        int xmax = xmin + 1;
-        int ymin = (int) modY;
-        int ymax = ymin + 1;
+where *xrounded* and *yrounded* are the values were wrapped back around the lattice after going off the edge.
 
-        // if we go off the edge of the lattice, we need to loop back around from the bottom
-        int yrounded = ymax;
-        int xrounded = xmax;
+An extra step we can take to improve our simple noise function is to apply smoothing to our results. Because our lattice is a random grid of values between 0 and 1, the resulting height map will look blocky, with straight lines between points. Adding a smoothing function to the value returned from the simple noise function allows us to map to a function that has a smoother transition between 0 and 1.
 
-        if (ymax >= _data.simpleNoise.latticeDim) yrounded = 0;
-        if (xmax >= _data.simpleNoise.latticeDim) xrounded = 0;
-        
-        float Q11 = Lattice.Instance.SampleLattice(xmin, ymin); // bottom left point
-        float Q12 = Lattice.Instance.SampleLattice(xmin, yrounded); // top left point
-        float Q21 = Lattice.Instance.SampleLattice(xrounded, ymin); // bottom right point
-        float Q22 = Lattice.Instance.SampleLattice(xrounded, yrounded); // top right point
-        
-        // linear interpolation in the x direction
-        float R1 = (xmax - modX) * Q11 + (modX - xmin) * Q21; // x on the line between Q11 and Q21, y = ymin
-        float R2 = (xmax - modX) * Q12 + (modX - xmin) * Q22; // x on the line between Q12 and Q22, y = ymax
-        
-        // linear interpolation in the y direction (between R1 and R2)
-        float p = (ymax - modY) * R1 + (modY - ymin) * R2;
+Here are a list of smoothing function implemented in this demo:
 
-        var smooth = Smoothing.Algorithms[_data.simpleNoise.smoothing];
-        float psmooth = smooth(p);
-
-        float remapp = Putils.Remap(psmooth, 0, 1, _data.remapMin, _data.remapMax);
-        
-        return remapp * _data.simpleNoise.scale;
-    }
+| Name | Function |
+| --- | --- |
+|Linear|<img src="http://dpiner.com/projects/MeshGenerator/images/SmoothingLinear.jpg" height="10">|
+|Cosine|<img src="http://dpiner.com/projects/MeshGenerator/images/SmoothingCosine.jpg" height="25">|
+|Smoothstep|<img src="http://dpiner.com/projects/MeshGenerator/images/SmoothingSmoothstep.jpg" height="15">|
+|Perlin Smoothstep|<img src="http://dpiner.com/projects/MeshGenerator/images/SmoothingPerlinSmoothstep.jpg" height="15">|
 
 <br/>
 
