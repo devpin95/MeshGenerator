@@ -122,11 +122,59 @@ The simple noise algorithm is an implementation of the 2D noise function describ
 
 In essence, a 2D noise function generates a grid of random numbers called a lattice. The functions takes in an x and y coordinate to the grid. Any value outside the grid wraps back around. For example, for a 5x5 lattice, given the coordinate (5, 1) will return the value at position (0, 1), noting that (0, 0) is the origin of the grid. Intuitively, for a grid of any size, we are duplicate the grid to the left, right, up, and down to create a plane of values that we can sample from at any point. Though our implementation will only be take samples from x >= 0 and y >= 0, the function also allows for negative coordinates.
 
+Full SimpleNoise function implemented in [MeshGenerator.cs](Mesh Generator/Assets/Scripts/MeshGenerator.cs):
+
+    public float SampleSimpleNoise(int x, int z)
+    {
+        float remappedx = Putils.Remap(x, 0, _data.dimension, _data.simpleNoise.sampleMin, _data.simpleNoise.sampleMax);
+        remappedx += _data.simpleNoise.frequency;
+        float remappedz = Putils.Remap(z, 0, _data.dimension, _data.simpleNoise.sampleMin, _data.simpleNoise.sampleMax);
+        remappedz += _data.simpleNoise.frequency;
+
+        // Debug.Log(x + ", " + z);
+        //https://en.wikipedia.org/wiki/Bilinear_interpolation
+        
+        // bring the values back to the origin block [0, latticeDim]
+        float modX = remappedx % _data.simpleNoise.latticeDim;
+        float modY = remappedz % _data.simpleNoise.latticeDim;
+
+        int xmin = (int) modX;
+        int xmax = xmin + 1;
+        int ymin = (int) modY;
+        int ymax = ymin + 1;
+
+        // if we go off the edge of the lattice, we need to loop back around from the bottom
+        int yrounded = ymax;
+        int xrounded = xmax;
+
+        if (ymax >= _data.simpleNoise.latticeDim) yrounded = 0;
+        if (xmax >= _data.simpleNoise.latticeDim) xrounded = 0;
+        
+        float Q11 = Lattice.Instance.SampleLattice(xmin, ymin); // bottom left point
+        float Q12 = Lattice.Instance.SampleLattice(xmin, yrounded); // top left point
+        float Q21 = Lattice.Instance.SampleLattice(xrounded, ymin); // bottom right point
+        float Q22 = Lattice.Instance.SampleLattice(xrounded, yrounded); // top right point
+        
+        // linear interpolation in the x direction
+        float R1 = (xmax - modX) * Q11 + (modX - xmin) * Q21; // x on the line between Q11 and Q21, y = ymin
+        float R2 = (xmax - modX) * Q12 + (modX - xmin) * Q22; // x on the line between Q12 and Q22, y = ymax
+        
+        // linear interpolation in the y direction (between R1 and R2)
+        float p = (ymax - modY) * R1 + (modY - ymin) * R2;
+
+        var smooth = Smoothing.Algorithms[_data.simpleNoise.smoothing];
+        float psmooth = smooth(p);
+
+        float remapp = Putils.Remap(psmooth, 0, 1, _data.remapMin, _data.remapMax);
+        
+        return remapp * _data.simpleNoise.scale;
+    }
+
 Applying simple noise to a mesh provides mediocre results, though not surprisingly. Only after applying blur can we get a decent looking terrain.
 
 |<img src="http://dpiner.com/projects/MeshGenerator/images/SimpleNoiseMesh.png" width="500">| <img src="http://dpiner.com/projects/MeshGenerator/images/SimpleNoiseMeshBlur.png" width="500"> |
 | ------------------------------------------------------------ | ----- |
-| *A simple noise height map applied to a mesh* | *Same height map after Gaussian blur operation* |
+| *A simple noise height map applied to a mesh* | *Same height map after default Gaussian blur operation* |
 
 <br/>
 
