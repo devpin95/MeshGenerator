@@ -2,7 +2,7 @@
 
 For this project, I explored the algorithms and techniques for generating terrain meshes, from simple noise to erosion and image manipulation. Below, you can find a guide on how to navigate the interactable terrain generator UI, along with examples and explanations of the algorithms used to generate a mesh.
 
-<img src="http://dpiner.com/projects/MeshGenerator/images/Demo1.png" width="500">
+<img src="http://dpiner.com/projects/MeshGenerator/images/Demo1.png" width="1000">
 
 ## Table of Contents
 - [Installation](#installation)
