@@ -122,7 +122,7 @@ The simple noise algorithm is an implementation of the 2D noise function describ
 
 In essence, a 2D noise function generates a grid of random numbers called a lattice. The functions takes in an x and y coordinate to the grid. Any value outside the grid wraps back around. For example, for a 5x5 lattice, given the coordinate (5, 1) will return the value at position (0, 1), noting that (0, 0) is the origin of the grid. Intuitively, for a grid of any size, we are duplicate the grid to the left, right, up, and down to create a plane of values that we can sample from at any point. Though our implementation will only be take samples from x >= 0 and y >= 0, the function also allows for negative coordinates.
 
-Full SimpleNoise function implemented in [MeshGenerator.cs](Mesh Generator/Assets/Scripts/MeshGenerator.cs):
+Full SimpleNoise function implemented in [MeshGenerator.cs](https://github.com/devpin95/MeshGenerator/blob/120d7edc387fe4fb33c22f5ae9e7c4b7a79e0bac/Mesh%20Generator/Assets/Scripts/MeshGenerator.cs):
 
     public float SampleSimpleNoise(int x, int z)
     {
