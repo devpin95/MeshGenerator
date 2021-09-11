@@ -146,10 +146,10 @@ Here are a list of smoothing function implemented in this demo:
 
 | Name | Function |
 | --- | --- |
-|Linear|<img src="http://dpiner.com/projects/MeshGenerator/images/SmoothingLinear.jpg" height="10">|
-|Cosine|<img src="http://dpiner.com/projects/MeshGenerator/images/SmoothingCosine.jpg" height="25">|
-|Smoothstep|<img src="http://dpiner.com/projects/MeshGenerator/images/SmoothingSmoothstep.jpg" height="15">|
-|Perlin Smoothstep|<img src="http://dpiner.com/projects/MeshGenerator/images/SmoothingPerlinSmoothstep.jpg" height="15">|
+|Linear|x|
+|Cosine|(1 - cos(πx)) * 0.5|
+|Smoothstep|3x<sup>2</sup> - 2x<sup>3</sup>|
+|Perlin Smoothstep|6x<sup>5</sup> -15x<sup>4</sup> + 10x<sup>3</sup>|
 
 <br/>
 
