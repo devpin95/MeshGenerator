@@ -103,7 +103,7 @@ An important part of applying noise to our generated mesh is determining the ran
 
     Remap(x, 0, dim, min, max)
 
-where *x* is our mesh vertice index, *dim* is the width/height of the mesh, *min* is the lower bound of our sample range, and *max* is the upper band of our sample range.
+where *x* is our mesh vertice index, *dim* is the width/height of the mesh, *min* is the lower bound of our sample range, and *max* is the upper bound of our sample range.
 
 For example, if we are looking at the x coordinate 15 with a mesh dimension of 255, and we want to sample our noise function in [0, 5], we can call
 
@@ -142,7 +142,7 @@ where *xrounded* and *yrounded* are the values were wrapped back around the latt
 
 An extra step we can take to improve our simple noise function is to apply smoothing to our results. Because our lattice is a random grid of values between 0 and 1, the resulting height map will look blocky, with straight lines between points. Adding a smoothing function to the value returned from the simple noise function allows us to map to a function that has a smoother transition between 0 and 1.
 
-Here are a list of smoothing function implemented in this demo:
+Here are a list of smoothing function implemented in this demo and a graph comparing each output in Figure 1:
 
 | Name | Function |
 | --- | --- |
@@ -150,6 +150,12 @@ Here are a list of smoothing function implemented in this demo:
 |Cosine|(1 - cos(πx)) * 0.5|
 |Smoothstep|3x<sup>2</sup> - 2x<sup>3</sup>|
 |Perlin Smoothstep|6x<sup>5</sup> -15x<sup>4</sup> + 10x<sup>3</sup>|
+
+<br/>
+
+|<img src="http://dpiner.com/projects/MeshGenerator/images/SmoothingFunctions.png" width="500">|
+|---|
+|*<b>Figure 1</b> - Output of the cosine, smoothstep, Perlin smoothstep, and linear functions on [0,1]*|
 
 <br/>
 
