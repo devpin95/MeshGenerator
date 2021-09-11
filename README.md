@@ -2,6 +2,8 @@
 
 For this project, I explored the algorithms and techniques for generating terrain meshes, from simple noise to erosion and image manipulation. Below, you can find a guide on how to navigate the interactable terrain generator UI, along with examples and explanations of the algorithms used to generate a mesh.
 
+<img src="http://dpiner.com/projects/MeshGenerator/images/Demo1.png" width="500">
+
 ## Table of Contents
 - [Installation](#installation)
 - [Usage](#guide)
@@ -142,14 +144,14 @@ where *xrounded* and *yrounded* are the values were wrapped back around the latt
 
 An extra step we can take to improve our simple noise function is to apply smoothing to our results. Because our lattice is a random grid of values between 0 and 1, the resulting height map will look blocky, with straight lines between points. Adding a smoothing function to the value returned from the simple noise function allows us to map to a function that has a smoother transition between 0 and 1.
 
-Here are a list of smoothing function implemented in this demo and a graph comparing each output in Figure 1:
+Here are a list of [smoothing function](https://github.com/devpin95/MeshGenerator/blob/231d62b59cb02b196a669abe96e7f5d1732ed750/Mesh%20Generator/Assets/Scripts/Classes/Smoothing.cs) implemented in this demo and a graph comparing each output in Figure 1:
 
 | Name | Function |
 | --- | --- |
 |Linear|x|
-|Cosine|(1 - cos(πx)) * 0.5|
-|Smoothstep|3x<sup>2</sup> - 2x<sup>3</sup>|
-|Perlin Smoothstep|6x<sup>5</sup> -15x<sup>4</sup> + 10x<sup>3</sup>|
+|[Cosine](https://www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1/creating-simple-1D-noise)|(1 - cos(πx)) * 0.5|
+|[Smoothstep](https://en.wikipedia.org/wiki/Smoothstep)|3x<sup>2</sup> - 2x<sup>3</sup>|
+|[Perlin Smoothstep](https://www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/perlin-noise-part-2/improved-perlin-noise)|6x<sup>5</sup> -15x<sup>4</sup> + 10x<sup>3</sup>|
 
 <br/>
 
