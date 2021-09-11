@@ -6,15 +6,15 @@ For this project, I explored the algorithms and techniques for generating terrai
 - [Installation](#installation)
 - [Usage](#guide)
 - [Features](#features)
-    - [Generating a Mesh](#generation a mesh)
-    - [Important Functions](#important functions)
+    - [Generating a Mesh](#generation-a-mesh)
+    - [Important Functions](#important-functions)
         - [Remapping](#remapping)
-    - [Noise Functions](#noise functions)
+    - [Noise Functions](#noise-functions)
         - [Sampling](#sampling)
-        - [Simple Noise](#simple noise)
-        - [Perlin Noise](#perlin noise)
-        - [Octave Noise](#octave noise)
-        - [Image Maps](#image maps)
+        - [Simple Noise](#simple-noise)
+        - [Perlin Noise](#perlin-noise)
+        - [Octave Noise](#octave-noise)
+        - [Image Maps](#image-maps)
     - Simulations
     - Operations
 - [Design](#design)
@@ -169,6 +169,8 @@ Full SimpleNoise function implemented in [MeshGenerator.cs](https://github.com/d
         
         return remapp * _data.simpleNoise.scale;
     }
+
+<br/>
 
 Applying simple noise to a mesh provides mediocre results, though not surprisingly. Only after applying blur can we get a decent looking terrain.
 
