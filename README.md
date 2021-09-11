@@ -48,21 +48,70 @@ Intuitively, we can show the implementation as using the proportion of our initi
 
 ![Remapping by proportions](WriteupMaterials/Remap.png)
 
+First, we get the distance from the current value to the minimum value in our current range (*fromAbs*), then the total length of our range (*fromLen*).
+
+    var fromAbs  =  from - fromMin;
+    var fromLen = fromMax - fromMin;      
+       
+Then we can find our normal (*prop*), or the proportion of the total length our value is at.
+
+    var prop = fromAbs / fromLen;
+ 
+We can do the same for our target range, find the total length (*toLen*), then find the proportion of the new range we need to make up to get the new value (*toAbs*).
+
+    var toLen = toMax - toMin;
+    var toAbs = toLen * prop;
+ 
+But, *toAbs* is just a distance; we need to add the minimum value of our target range to get our new value (*to*).
+
+    var to = toAbs + toMin;
+
+Now, we have remapped our value from the starting range to the target range.
+
+Here is the remap function in full:
+
+    public static float Remap (float from, float fromMin, float fromMax, float toMin,  float toMax) 
+    {
+        var fromAbs  =  from - fromMin;
+        var fromLen = fromMax - fromMin;      
+       
+        var prop = fromAbs / fromLen;
+ 
+        var toLen = toMax - toMin;
+        var toAbs = toLen * prop;
+ 
+        var to = toAbs + toMin;
+       
+        return to;
+    }
+
+
+
 ### Noise Functions
 The goal of noise functions is to generate sequences that have no repeating sections (at least as far as a human can tell). This is important for terrain generation because any repeating patterns become exceedingly obvious, especially when viewing from a distance. Further, we can use noise functions and image manipulation to initially generate realistic terrains before we apply more expensive erosion algorithms. Below are the noise functions implemented in the interactable demo.
 
 #### Sampling
 An important part of applying noise to our generated mesh is determining the range at which we want to sample our functions. Because we have a mesh of discrete vertices, we need to break up our sample range into equal parts. We can do this by simply remapping the coordinate of interest to the sample range. That is, we know the current dimensions of our mesh, what coordinate we're looking at, and the range we want to sample our function at.
 
-| ![Simple Noise Height Map](WriteupMaterials/SimpleNoise.png) |
-
-| :--: |
-
-| ABCDEFG |
 
 #### Simple Noise
 The simple noise algorithm is an implementation of the 2D noise function described by [Scratchapixel](https://www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1/creating-simple-2D-noise). 
 
+| ![Simple Noise Height Map](WriteupMaterials/SimpleNoise.png) |
+| ------------------------------------------------------------ |
+| *Height map generated using a simple noise function.*        |
+
 In essence, a 2D noise function generates a grid of random numbers called a lattice. The functions takes in an x and y coordinate to the grid. Any value outside the grid wraps back around. For example, for a 5x5 lattice, given the coordinate (5, 1) will return the value at position (0, 1), noting that (0, 0) is the origin of the grid. Intuitively, for a grid of any size, we are duplicate the grid to the left, right, up, and down to create a plane of values that we can sample from at any point. Though our implementation will only be take samples from x >= 0 and y >= 0, the function also allows for negative coordinates.
+
+#### Perlin Noise
+
+| ![Simple Noise Height Map](WriteupMaterials/PerlinNoise.png) |
+| ------------------------------------------------------------ |
+| *Height map generated using a perlin noise function.*        |
+
+| ![Simple Noise Height Map](WriteupMaterials/PerlinNoiseDomainWarp1.png) | ![Simple Noise Height Map](WriteupMaterials/PerlinNoiseDomainWarp2.png) |
+| ------------------------------------------------------------ | ---------------- |
+| *Perlin noise.*        | *Perlin noise with domain warp* |
+|*Both functions sampled in [0, 2]*|
 
 ## Design
