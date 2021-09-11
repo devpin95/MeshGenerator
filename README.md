@@ -46,7 +46,7 @@ and we want to map *from* to the value *y*, such that
 
 Intuitively, we can show the implementation as using the proportion of our initial range to find the the value.
 
-![Remapping by proportions](WriteupMaterials/Remap.png)
+<img src="http://dpiner.com/projects/MeshGenerator/images/Remap.png" width="255">
 
 First, we get the distance from the current value to the minimum value in our current range (*fromAbs*), then the total length of our range (*fromLen*).
 
@@ -97,7 +97,7 @@ An important part of applying noise to our generated mesh is determining the ran
 #### Simple Noise
 The simple noise algorithm is an implementation of the 2D noise function described by [Scratchapixel](https://www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1/creating-simple-2D-noise). 
 
-| ![Simple Noise Height Map](WriteupMaterials/SimpleNoise.png) |
+|<img src="http://dpiner.com/projects/MeshGenerator/images/SimpleNoise.png" width="255">|
 | ------------------------------------------------------------ |
 | *Height map generated using a simple noise function.*        |
 
@@ -105,13 +105,13 @@ In essence, a 2D noise function generates a grid of random numbers called a latt
 
 #### Perlin Noise
 
-| ![Simple Noise Height Map](WriteupMaterials/PerlinNoise.png) |
+|<img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoise.png" width="255">|
 | ------------------------------------------------------------ |
 | *Height map generated using a perlin noise function.*        |
 
-| ![Simple Noise Height Map](WriteupMaterials/PerlinNoiseDomainWarp1.png) | ![Simple Noise Height Map](WriteupMaterials/PerlinNoiseDomainWarp2.png) |
+| <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseDomainWarp1.png" width="255"> | <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseDomainWarp2.png" width="255"> |
 | ------------------------------------------------------------ | ---------------- |
 | *Perlin noise.*        | *Perlin noise with domain warp* |
-|*Both functions sampled in [0, 2]*|
+| *Both functions sampled in [0, 2]* |
 
 ## Design
