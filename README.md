@@ -4,6 +4,8 @@ For this project, I explored the algorithms and techniques for generating terrai
 
 <img src="http://dpiner.com/projects/MeshGenerator/images/Demo1.png" width="1000">
 
+<br/>
+
 ## Table of Contents
 - [Installation](#installation)
 - [Usage](#guide)
@@ -142,7 +144,13 @@ Here is the code snippet implementing bilinear interpolation
 
 where *xrounded* and *yrounded* are the values were wrapped back around the lattice after going off the edge.
 
+<br/>
+
+##### Smoothing
+
 An extra step we can take to improve our simple noise function is to apply smoothing to our results. Because our lattice is a random grid of values between 0 and 1, the resulting height map will look blocky, with straight lines between points. Adding a smoothing function to the value returned from the simple noise function allows us to map to a function that has a smoother transition between 0 and 1.
+
+<img src="http://dpiner.com/projects/MeshGenerator/images/SmoothingFuncAnim.gif" width="1000">
 
 Here are a list of [smoothing function](https://github.com/devpin95/MeshGenerator/blob/231d62b59cb02b196a669abe96e7f5d1732ed750/Mesh%20Generator/Assets/Scripts/Classes/Smoothing.cs) implemented in this demo and a graph comparing each output in Figure 1:
 
