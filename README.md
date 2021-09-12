@@ -40,6 +40,7 @@ TODO
 ---
 
 ### Important Functions
+---
 #### Remapping
 One of the most used functions in this demo is the Remap function. This function is very helpful when we have one range of values that we want to translate to another range of values. For example, given a value between 0 and 1, we can translate that value to another value in the range 0 to 100. Trivially, we can just multiply the value by 100. But what if we want the value to be in the range 0 to 105? We can use the value and it's relationship to it's range to get the new value.
 
@@ -103,11 +104,10 @@ Here is the remap function in full:
 
 <br/>
 
----
 
 ### Noise Functions
 
--------------------------------------------------------
+---
 
 The goal of noise functions is to generate sequences that have no repeating sections (at least as far as a human can tell). This is important for terrain generation because any repeating patterns become exceedingly obvious, especially when viewing from a distance. Further, we can use noise functions and image manipulation to initially generate realistic terrains before we apply more expensive erosion algorithms. Below are the noise functions implemented in the interactable demo.
 
@@ -129,6 +129,7 @@ to get our sample coordinate that we pass into the noise function. Further, beca
 <br/>
 
 #### Simple Noise
+---
 The simple noise algorithm is an implementation of the 2D noise function described by [Scratchapixel](https://www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1/creating-simple-2D-noise). 
 
 |<img src="http://dpiner.com/projects/MeshGenerator/images/SimpleNoise.png" width="255">|
@@ -190,6 +191,8 @@ Applying simple noise to a mesh provides mediocre results, though not surprising
 
 #### Perlin Noise
 
+---
+
 |<img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoise.png" width="255">|
 | ------------------------------------------------------------ |
 | *Height map generated using a perlin noise function.*        |
@@ -202,3 +205,4 @@ Applying simple noise to a mesh provides mediocre results, though not surprising
 ---
 
 ## Design
+
