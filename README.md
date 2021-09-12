@@ -132,9 +132,9 @@ to get our sample coordinate that we pass into the noise function. Further, beca
 ---
 The simple noise algorithm is an implementation of the 2D noise function described by [Scratchapixel](https://www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1/creating-simple-2D-noise). 
 
-|<img src="http://dpiner.com/projects/MeshGenerator/images/SimpleNoise.png" width="255">|
-| ------------------------------------------------------------ |
-| *Height map generated using a simple noise function.*        |
+|<img src="http://dpiner.com/projects/MeshGenerator/images/SimpleNoise.png" width="255">|<img src="http://dpiner.com/projects/MeshGenerator/images/SimpleNoiseMesh.png" width="500">|
+| ------------------------------------------------------------ |--------- |
+| *Height map generated using a simple noise function.*        |*Map applied to mesh*|
 
 In essence, a 2D noise function generates a grid of random numbers called a lattice. The functions takes in an x and y coordinate to the grid. Any value outside the grid wraps back around. For example, for a 5x5 lattice, given the coordinate (5, 1) will return the value at position (0, 1), noting that (0, 0) is the origin of the grid. Intuitively, for a grid of any size, we are duplicate the grid to the left, right, up, and down to create a plane of values that we can sample from at any point. Though our implementation will only be take samples from x >= 0 and y >= 0, the function also allows for negative coordinates.
 
@@ -179,13 +179,15 @@ Here are a list of [smoothing function](https://github.com/devpin95/MeshGenerato
 |---|
 |*<b>Figure 1</b> - Output of the cosine, smoothstep, Perlin smoothstep, and linear functions on [0,1]*|
 
-<br/>
+[comment]: <> (<br/>)
 
-Applying simple noise to a mesh provides mediocre results, though not surprisingly. Only after applying blur can we get a decent looking terrain.
+[comment]: <> (Applying simple noise to a mesh provides mediocre results, though not surprisingly. Only after applying blur can we get a decent looking terrain.)
 
-|<img src="http://dpiner.com/projects/MeshGenerator/images/SimpleNoiseMesh.png" width="500">| <img src="http://dpiner.com/projects/MeshGenerator/images/SimpleNoiseMeshBlur.png" width="500"> |
-| ------------------------------------------------------------ | ----- |
-| *A simple noise height map applied to a mesh* | *Same height map after default Gaussian blur operation* |
+[comment]: <> (|<img src="http://dpiner.com/projects/MeshGenerator/images/SimpleNoiseMesh.png" width="500">| <img src="http://dpiner.com/projects/MeshGenerator/images/SimpleNoiseMeshBlur.png" width="500"> |)
+
+[comment]: <> (| ------------------------------------------------------------ | ----- |)
+
+[comment]: <> (| *A simple noise height map applied to a mesh* | *Same height map after default Gaussian blur operation* |)
 
 <br/>
 
