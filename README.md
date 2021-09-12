@@ -195,9 +195,11 @@ Here are a list of [smoothing function](https://github.com/devpin95/MeshGenerato
 
 ---
 
-|<img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoise.png" width="255">|
-| ------------------------------------------------------------ |
-| *Height map generated using a perlin noise function.*        |
+Perlin noise is a standard, widely-used noise function often used for terrain generation. In this demo, I used the Unity pre-packaged [Perlin function](https://docs.unity3d.com/ScriptReference/Mathf.PerlinNoise.html), but added some features to extend it's output.
+
+|<img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoise.png" width="255">|<img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseMesh.png" width="500">|
+| ---- | ---- |
+| *Height map generated using a perlin noise function.*        |*Map applied to a mesh*|
 
 | <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseDomainWarp1.png" width="255"> | <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseDomainWarp2.png" width="255"> |
 | ------------------------------------------------------------ | ---------------- |
