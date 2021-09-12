@@ -97,8 +97,16 @@ Here is the remap function in full:
 
 <br/>
 
+5 dashes
+
 -----
+
+4 dashes
+
 ----
+
+3 dashes
+
 ---
 
 ### Noise Functions
