@@ -35,8 +35,7 @@ For this project, I explored the algorithms and techniques for generating terrai
 This section is dedicated to showing the algorithms used to generate terrain meshes. All of these algorithms are well known, so I will not being going too far in depth, but I will show the nuances that were needed to implement them for this project.
 
 ### Generating a Mesh
-
----
+TODO
 
 ### Important Functions
 #### Remapping
@@ -106,7 +105,6 @@ Here is the remap function in full:
 
 ### Noise Functions
 
----
 
 The goal of noise functions is to generate sequences that have no repeating sections (at least as far as a human can tell). This is important for terrain generation because any repeating patterns become exceedingly obvious, especially when viewing from a distance. Further, we can use noise functions and image manipulation to initially generate realistic terrains before we apply more expensive erosion algorithms. Below are the noise functions implemented in the interactable demo.
 
@@ -197,5 +195,7 @@ Applying simple noise to a mesh provides mediocre results, though not surprising
 | ------------------------------------------------------------ | ---------------- |
 | *Perlin noise.*        | *Perlin noise with domain warp* |
 | *Both functions sampled in [0, 2]* |
+
+---
 
 ## Design
