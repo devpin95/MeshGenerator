@@ -25,8 +25,6 @@ For this project, I explored the algorithms and techniques for generating terrai
 
 ## Installation
 
----
-
 - TODO create build and make installer
 - TODO create WebGL build
 - Maybe a docker container?
@@ -34,10 +32,11 @@ For this project, I explored the algorithms and techniques for generating terrai
 
 ## Features
 
----
 This section is dedicated to showing the algorithms used to generate terrain meshes. All of these algorithms are well known, so I will not being going too far in depth, but I will show the nuances that were needed to implement them for this project.
 
 ### Generating a Mesh
+
+---
 
 ### Important Functions
 #### Remapping
