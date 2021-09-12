@@ -37,6 +37,8 @@ This section is dedicated to showing the algorithms used to generate terrain mes
 ### Generating a Mesh
 TODO
 
+---
+
 ### Important Functions
 #### Remapping
 One of the most used functions in this demo is the Remap function. This function is very helpful when we have one range of values that we want to translate to another range of values. For example, given a value between 0 and 1, we can translate that value to another value in the range 0 to 100. Trivially, we can just multiply the value by 100. But what if we want the value to be in the range 0 to 105? We can use the value and it's relationship to it's range to get the new value.
