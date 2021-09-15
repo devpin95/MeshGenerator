@@ -358,7 +358,7 @@ The summation of each octave produces a much more interesting mesh than the vani
 
 Image maps can be used to apply a pre-made height map to the mesh. Any image and be used as an image map, including color pictures, where the greyscale value of each pixel is used instead of it's RGB value. Images are sampled in a similar way to noise functions, the dimension of the mesh is remapped to the dimension of the image and samples are taken at integer values. Applying an image that is smaller than the mesh will result in sample points being reused and will result in a blocky mesh. The Gaussian Blur operation can be used to smooth the resulting mesh for better results.
 
-|<img src="http://dpiner.com/projects/MeshGenerator/images/map5.png" width="255"> <br/> *Pre-made height map*|<img src="http://dpiner.com/projects/MeshGenerator/images/ImageMapMesh.png" width="255"> <br/> *Height map applied to 5x5 mesh*|
+|<img src="http://dpiner.com/projects/MeshGenerator/images/map5.png" width="255"> <br/> *Pre-made height map*|<img src="http://dpiner.com/projects/MeshGenerator/images/ImageMapMesh.png" width="500"> <br/> *Height map applied to 5x5 mesh*|
 |-----|-----|
 
 ---
