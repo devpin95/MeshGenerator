@@ -35,7 +35,14 @@ For this project, I explored the algorithms and techniques for generating terrai
 This section is dedicated to showing the algorithms used to generate terrain meshes. All of these algorithms are well known, so I will not being going too far in depth, but I will show the nuances that were needed to implement them for this project.
 
 ### Generating a Mesh
-TODO
+Arguably one of the most important problems to solve with terrain generation is how to generate a mesh at all. Fortunately, Unity provides object components that make rendering meshes easy, leaving us with only the work of telling it where each vertex is and which vertices are connected to one another.
+
+Every mesh object in Unity has a list of vertices and a list of polygons (in this case, triangles). Both lists are flattened 2D arrays. The vertex list is a list of [3D Vectors](https://docs.unity3d.com/ScriptReference/Vector3.html) where each element represents a vertices location in 3D space. The triangles list is a list of integers where every three elements are the index of vertices in the vertex list that make up a single triangle.
+
+The order of triangle group determines the direction of the triangle normal, which then determines which side of the triangle is visible to the camera (this is to cull traingles that are facing away, or on the other side of an object, that don't need to be rendered). This table below has the order of vertices that will ensure the triangle is rendered when the camera is above the triangle. Because we limit the range of the camera in the demo, we can assume the camera will (almost) always be above the flat mesh and will be visible.
+
+|<img src="http://dpiner.com/projects/MeshGenerator/images/Triangle.png" width="255"> <br/> *Triangle with vertices*| <1, 2, 3> <br/> <2, 3, 1> <br/> <3, 1, 2> <br/><br/> *Vertice order where triangle normal will face up (towards the camera)* |
+|-----|-----|
 
 ---
 
@@ -225,11 +232,15 @@ My first implementation used a variable called the *hurst exponent*, which was u
 
     ...
 
-    Vector2 q = new Vector2( fbm( pos + new Vector2(0.0f,0.0f), _data.perlin.hurst ),
-        fbm( pos + new Vector2(5.2f,1.3f), _data.perlin.hurst ) );
+    Vector2 q = new Vector2( 
+        fbm( pos + new Vector2(0.0f,0.0f), _data.perlin.hurst ), // x
+        fbm( pos + new Vector2(5.2f,1.3f), _data.perlin.hurst )  // y
+    );
     
-    Vector2 r = new Vector2( fbm( pos + 4.0f * q + new Vector2(1.7f,9.2f), _data.perlin.hurst ),
-        fbm( pos + 4.0f * q + new Vector2(8.3f,2.8f), _data.perlin.hurst ) );
+    Vector2 r = new Vector2( 
+        fbm( pos + 4.0f * q + new Vector2(1.7f, 9.2f), _data.perlin.hurst ), // x
+        fbm( pos + 4.0f * q + new Vector2(8.3f, 2.8f), _data.perlin.hurst ) // y
+    );
     
     sample = fbm( pos + 4.0f * r, _data.perlin.hurst );
 
@@ -258,19 +269,23 @@ My first implementation used a variable called the *hurst exponent*, which was u
 
 Moving to the new implementation removed the hurst exponent and found the *q* and *r* values independently from each other, then used separately to find the final sample value.
 
-    Vector2 pos = new Vector2(xSamplePoint, zSamplePoint);
+    Vector2 pos = new Vector2( xSamplePoint, zSamplePoint );
             
     Vector2 q = new Vector2(
-        FmbBeta(pos, 60, _data.perlin.octaves),
-        FmbBeta(new Vector2(pos.x + 5.2f, pos.y + 1.3f), 60, _data.perlin.octaves)
+        FmbBeta( pos, 60, _data.perlin.octaves ),       // x point
+        FmbBeta(                                        // y point
+            new Vector2( pos.x + 5.2f, pos.y + 1.3f ),  // shifted sample point
+            60,                                         // scale
+            _data.perlin.octaves                        // num octave
+        )
     );
     
-    float qp = FmbBeta(new Vector2(
-        pos.x + _data.perlin.domainFactorX * q[0], 
-        pos.y + _data.perlin.domainFactorY * q[1]), 
-        60, 
-        _data.perlin.octaves
+    Vector2 warpedPos = new Vector2(
+        pos.x + _data.perlin.domainFactorX * q[0],      // x point + x warp
+        pos.y + _data.perlin.domainFactorY * q[1]),     // y point + y warp
     );
+
+    float qp = FmbBeta( warpedPos, 60, _data.perlin.octaves );
 
 <br/>
 
