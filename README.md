@@ -195,7 +195,7 @@ Here are a list of [smoothing function](https://github.com/devpin95/MeshGenerato
 
 Perlin noise is a standard, widely-used noise function often used for terrain generation. In this demo, I used the Unity pre-packaged [Perlin function](https://docs.unity3d.com/ScriptReference/Mathf.PerlinNoise.html), but added some features to extend it's output.
 
-|<img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoise.png" width="255"> *Height map generated using a perlin noise function*|<img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseMesh.png" width="500"> *Map applied to a mesh*|
+|<img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoise.png" width="255"> <br/> *Height map generated using a perlin noise function*|<img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseMesh.png" width="500"> *Map applied to a mesh*|
 | ---- | ---- |
 
 
@@ -203,7 +203,7 @@ Perlin noise is a standard, widely-used noise function often used for terrain ge
 
 Domain warping is an advanced noise function that uses noise and various coefficients as input back into a noise function. Domain warping produces more interesting output from a noise function and can be used to create certain types of land formations. You can read more from someone a lot smarted than me here: [https://www.iquilezles.org/www/articles/warp/warp.htm](https://www.iquilezles.org/www/articles/warp/warp.htm)
 
-My first implementation (by [IQ](https://www.iquilezles.org/index.html)) of domain warp produced weird results, with may more white that I wanted but still created an interesting pattern. When applying it to a mesh, the noise in the height map was too high and left shard edges on peaks. 
+My first implementation (by [IQ](https://www.iquilezles.org/index.html)) of domain warp produced weird results, with may more white that I wanted but still created an interesting pattern. When applying it to a mesh, artifacts in the height map was too high and left shard edges on peaks. 
 
 You can see the output below:
 
@@ -216,7 +216,102 @@ After looking around, I found a different [implementation](http://jsfiddle.net/f
 | <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseDomainWarp3.png" width="255"> <br/> *Perlin Noise [0, 100]* | <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseDomainWarp4.png" width="255"> <br/> *Perlin noise with domain warp [0, 100]* |
 | ------------------------------------------------------------ | ---------------- |
 
+My first implementation used a variable called the *hurst exponent*, which was used as an exponent to a variable value inside the loop of the fbm function. The hurst exponent in my implementation proved to be too sensitive and produced wildly different values on the interval [0, 1].
 
+    ...
+
+    Vector2 q = new Vector2( fbm( pos + new Vector2(0.0f,0.0f), _data.perlin.hurst ),
+        fbm( pos + new Vector2(5.2f,1.3f), _data.perlin.hurst ) );
+    
+    Vector2 r = new Vector2( fbm( pos + 4.0f * q + new Vector2(1.7f,9.2f), _data.perlin.hurst ),
+        fbm( pos + 4.0f * q + new Vector2(8.3f,2.8f), _data.perlin.hurst ) );
+    
+    sample = fbm( pos + 4.0f * r, _data.perlin.hurst );
+
+    ...
+
+<br/>
+
+    public float fbm(Vector2 pos, float hurst)
+    {
+        float t = 0.0f;
+        int numOctaves = 2;
+
+        for (int i = 0; i < numOctaves; ++i)
+        {
+            float f = Mathf.Pow(2.0f, (float) i);
+            float a = Mathf.Pow(f, -hurst);
+            
+            float perlin = Mathf.PerlinNoise(f * pos.x, f * pos.y);
+            float sample = Mathf.Clamp01(perlin); // make sure that the value is actually between 0 and 1
+
+            t += a * sample;
+        }
+
+        return t;
+    }
+
+Moving to the new implementation removed the hurst exponent and found the *q* and *r* values independently from each other, then used separately to find the final sample value.
+
+    Vector2 pos = new Vector2(xSamplePoint, zSamplePoint);
+            
+    Vector2 q = new Vector2(
+        FmbBeta(pos, 60, _data.perlin.octaves),
+        FmbBeta(new Vector2(pos.x + 5.2f, pos.y + 1.3f), 60, _data.perlin.octaves)
+    );
+    
+    float qp = FmbBeta(new Vector2(
+        pos.x + _data.perlin.domainFactorX * q[0], 
+        pos.y + _data.perlin.domainFactorY * q[1]), 
+        60, 
+        _data.perlin.octaves
+    );
+
+<br/>
+
+    public float FmbBeta(Vector2 pos, float scale = 1.0f, int octaves = 1, float lacunarity = 2f, float gain = 0.5f)
+    {
+        float total = 0;
+        float amplitude = 1;
+        float frequency = 1;
+
+        for (int i = 0; i < octaves; ++i)
+        {
+            float sample = Mathf.PerlinNoise(pos.x / scale * frequency, pos.y / scale * frequency) * amplitude;
+
+            total += sample;
+            frequency *= lacunarity;
+            amplitude *= gain;
+        }
+
+        return total;
+    }
+
+Further work on this domain warp implementation would require a closer look at the minimum and maximum output of the final FbmBeta function. Currently, we use the number of octaves and a normalization value, considering each iteration of the loop could add a maximum value of *1* to *total*. However, this results in a small cluster of values, usually below the mid height value. Using a normalizing value of *octaves/2* produced a larger range of values, but requires more testing to ensure the output never falls outside out height map range [0, 1].
+
+<br/>
+
+##### Ridged Perlin Noise
+
+Ridged Perlin noise is a simple operation on the output of the vanilla Perlin noise or the domain warp function. The operation takes first stretched the map on the range [-1, 1], then takes the absolute value of any point under 0, and remaps back to [0, 1]. This adds the effect of start ridges where the original terrain crossed it's mid height value. The operations output and implementation can be seen below.
+
+Output:
+
+| <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoise.png" width="255"> <br/> *Perlin noise [0, 2]*| <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseRidged.png" width="255"> <br/>  *Ridged Perlin noise [0, 2]* | <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseRidged2.png" width="255"> <br/>  *Ridged Perlin noise [0, 2]* |
+| ------------------------------------------------------------ | ---------------- | ---------- |
+
+Implementation:
+
+    float InvertAbs(float val)
+    {
+        val = Remap(val, 0, 1, -1, 1);
+        val = Mathf.Abs(val);
+        val *= -1;
+        val = Remap(val, -1, 0, 0, 1);
+        return val;
+    }
+
+Note, without multiplying by *-1* and remapping from [-1, 0] to [0, 1], we would just end up with the height map's inverse.
 
 ---
 
