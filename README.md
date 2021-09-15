@@ -41,8 +41,8 @@ Every mesh object in Unity has a list of vertices and a list of polygons (in thi
 
 The order of triangle group determines the direction of the triangle normal, which then determines which side of the triangle is visible to the camera (this is to cull traingles that are facing away, or on the other side of an object, that don't need to be rendered). This table below has the order of vertices that will ensure the triangle is rendered when the camera is above the triangle. Because we limit the range of the camera in the demo, we can assume the camera will (almost) always be above the flat mesh and will be visible.
 
-|<img src="http://dpiner.com/projects/MeshGenerator/images/Triangle.png" width="255"> <br/> <1, 2, 3>, <2, 3, 1>, <3, 1, 2> <br/><br/> *Vertice order where triangle normal will face up (towards the camera)*|
-|-----|
+|<img src="http://dpiner.com/projects/MeshGenerator/images/Triangle.png" width="255"> <br/> <1, 2, 3>, <2, 3, 1>, <3, 1, 2> <br/> *Vertice order where triangle normal will face up (towards the camera)*|<img src="http://dpiner.com/projects/MeshGenerator/images/TriangleMesh.png" width="255"> <br/> <1, 2, 3, 3, 2, 1> <br/>*Triangle list that represents traingle A and B*|
+|-----|----|
 
 ---
 
