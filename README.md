@@ -174,7 +174,7 @@ Here are a list of [smoothing function](https://github.com/devpin95/MeshGenerato
 
 <br/>
 
-|<img src="http://dpiner.com/projects/MeshGenerator/images/SmoothingFunctions.png" width="500"> *<b>Figure 1</b> - Output of the cosine, smoothstep, Perlin smoothstep, and linear functions on [0,1]*|
+|<img src="http://dpiner.com/projects/MeshGenerator/images/SmoothingFunctions.png" width="500"> <br/> *<b>Figure 1</b> - Output of the cosine, smoothstep, Perlin smoothstep, and linear functions on [0,1]*|
 |---|
 
 [comment]: <> (<br/>)
@@ -207,13 +207,13 @@ My first implementation (by [IQ](https://www.iquilezles.org/index.html)) of doma
 
 You can see the output below:
 
-| <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseDomainWarp1.png" width="255"> *Perlin noise [0, 2]*| <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseDomainWarp2.png" width="255">  *Perlin noise with domain warp [0, 2]* |
+| <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseDomainWarp1.png" width="255"> <br/> *Perlin noise [0, 2]*| <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseDomainWarp2.png" width="255"> <br/>  *Perlin noise with domain warp [0, 2]* |
 | ------------------------------------------------------------ | ---------------- |
 
 After looking around, I found a different [implementation](http://jsfiddle.net/fro5y0jm/15/) that broke the algorithm apart in a way that made more sense and produced a much nicer, cleaner map (after shifting the sample range):
 
 
-| <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseDomainWarp3.png" width="255"> *Perlin Noise [0, 100]* | <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseDomainWarp4.png" width="255"> *Perlin noise with domain warp [0, 100]* |
+| <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseDomainWarp3.png" width="255"> <br/> *Perlin Noise [0, 100]* | <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseDomainWarp4.png" width="255"> <br/> *Perlin noise with domain warp [0, 100]* |
 | ------------------------------------------------------------ | ---------------- |
 
 
