@@ -198,8 +198,11 @@ Perlin noise is a standard, widely-used noise function often used for terrain ge
 |<img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoise.png" width="255"> <br/> *Height map generated using a perlin noise function*|<img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseMesh.png" width="500"> *Map applied to a mesh*|
 | ---- | ---- |
 
+<br/>
 
 ##### Domain Warp
+
+<img src="http://dpiner.com/projects/MeshGenerator/images/DomainWarpMesh.png" width="1000">
 
 Domain warping is an advanced noise function that uses noise and various coefficients as input back into a noise function. Domain warping produces more interesting output from a noise function and can be used to create certain types of land formations. You can read more from someone a lot smarted than me here: [https://www.iquilezles.org/www/articles/warp/warp.htm](https://www.iquilezles.org/www/articles/warp/warp.htm)
 
@@ -293,11 +296,13 @@ Further work on this domain warp implementation would require a closer look at t
 
 ##### Ridged Perlin Noise
 
+<img src="http://dpiner.com/projects/MeshGenerator/images/RidgedPerlinNoiseMesh.png" width="1000">
+
 Ridged Perlin noise is a simple operation on the output of the vanilla Perlin noise or the domain warp function. The operation takes first stretched the map on the range [-1, 1], then takes the absolute value of any point under 0, and remaps back to [0, 1]. This adds the effect of start ridges where the original terrain crossed it's mid height value. The operations output and implementation can be seen below.
 
 Output:
 
-| <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoise.png" width="255"> <br/> *Perlin noise [0, 2]*| <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseRidged.png" width="255"> <br/>  *Ridged Perlin noise [0, 2]* | <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseRidged2.png" width="255"> <br/>  *Ridged Perlin noise [0, 2]* |
+| <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoise.png" width="255"> <br/> *Perlin noise [0, 5]*| <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseRidged.png" width="255"> <br/>  *Ridged Perlin noise [0, 5]* | <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseRidged2.png" width="255"> <br/>  *Inverse Ridged Perlin noise [0, 5]* |
 | ------------------------------------------------------------ | ---------------- | ---------- |
 
 Implementation:
