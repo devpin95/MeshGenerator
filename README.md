@@ -18,7 +18,7 @@ For this project, I explored the algorithms and techniques for generating terrai
         - [Simple Noise](#simple-noise)
         - [Perlin Noise](#perlin-noise)
         - [Octave Noise](#octave-noise)
-        - [Image Maps](#image-maps)
+        - [Image Maps](#image-maps-extra)
     - Simulations
     - Operations
 - [Design](#design)
@@ -40,6 +40,7 @@ TODO
 ---
 
 ### Important Functions
+
 ---
 #### Remapping
 One of the most used functions in this demo is the Remap function. This function is very helpful when we have one range of values that we want to translate to another range of values. For example, given a value between 0 and 1, we can translate that value to another value in the range 0 to 100. Trivially, we can just multiply the value by 100. But what if we want the value to be in the range 0 to 105? We can use the value and it's relationship to it's range to get the new value.
@@ -114,6 +115,7 @@ The goal of noise functions is to generate sequences that have no repeating sect
 <br/>
 
 #### Sampling
+
 An important part of applying noise to our generated mesh is determining the range at which we want to sample our functions. Because we have a mesh of discrete vertices, we need to break up our sample range into equal parts. We can do this by simply remapping the coordinate of interest to the sample range. We know the current dimensions of our mesh, what coordinate we're looking at, and the range we want to sample our function at. We can call our [remap](#remapping) function like this:
 
     Remap(x, 0, dim, min, max)
@@ -354,7 +356,10 @@ The summation of each octave produces a much more interesting mesh than the vani
 
 #### Image Maps (EXTRA)
 
+Image maps can be used to apply a pre-made height map to the mesh. Any image and be used as an image map, including color pictures, where the greyscale value of each pixel is used instead of it's RGB value. Images are sampled in a similar way to noise functions, the dimension of the mesh is remapped to the dimension of the image and samples are taken at integer values. Applying an image that is smaller than the mesh will result in sample points being reused and will result in a blocky mesh. The Gaussian Blur operation can be used to smooth the resulting mesh for better results.
 
+|<img src="http://dpiner.com/projects/MeshGenerator/images/map5.png" width="255"> <br/> *Pre-made height map*|<img src="http://dpiner.com/projects/MeshGenerator/images/ImageMapMesh.png" width="500"> <br/> *Height map applied to mesh*|
+|-----|-----|
 
 ---
 
