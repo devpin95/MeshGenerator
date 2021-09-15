@@ -318,6 +318,39 @@ Implementation:
 
 Note, without multiplying by *-1* and remapping from [-1, 0] to [0, 1], we would just end up with the height map's inverse.
 
+<br/>
+
+#### Octave Noise
+
+<img src="http://dpiner.com/projects/MeshGenerator/images/OctaveNoiseMesh.png" width="1000">
+
+Octave noise is a powerful extension to any noise function, where building up several sample points at different frequencies and amplitudes adds more depth and texture to a noise function. In this implementation, we use successive Perlin noise samples to create an octave noise function, though octave noise can use any noise function.
+
+Put simply, octave noise add together several samples taken with different frequencies and amplitudes. Frequency shifts the x and y coordinate where we sample our noise function, and amplitude multiplies that output. Ultimately, we end up with a function similar to
+
+    float sample = Noise(frequency * x, frequency * y) * amplitude
+
+At each octave (think of octave kind of like layers), we change the frequency and amplitude of our sample. In this implementation, we found the best result by doubling the frequency and halving the amplitude at each octave, as shown by the code snippet:
+
+    float frq = 1;
+    float amp = 1;
+    float sample = 0;
+
+    for ( int octave = 0; octave < count; ++octave ) {
+        sample += Perlin(x * frq, y * frq) * amp;
+        frq *= 2;
+        amp /= 2;
+    }
+
+
+
+*Note, in the demo, you can set any frequency and amplitude you would like for each of the 5 octaves available.*
+
+The summation of each octave produces a much more interesting mesh than the vanilla Perlin function, and provides a better starting point for further operations. The gif below shows how each layer stacks to create the final mesh.
+
+<img src="http://dpiner.com/projects/MeshGenerator/images/OctaveNoiseAnim.gif" width="1000">
+
+
 ---
 
 ## Design
