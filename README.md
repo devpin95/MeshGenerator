@@ -350,6 +350,11 @@ The summation of each octave produces a much more interesting mesh than the vani
 
 <img src="http://dpiner.com/projects/MeshGenerator/images/OctaveNoiseAnim.gif" width="1000">
 
+<br/>
+
+#### Image Maps (EXTRA)
+
+
 
 ---
 
