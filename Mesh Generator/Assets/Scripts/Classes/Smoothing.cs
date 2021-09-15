@@ -28,7 +28,7 @@ public class Smoothing
         // 3x^2 - 2x^3
         float xremap = x * x * (3 - 2 * x);
         
-        return x;
+        return xremap;
     }
 
     public static float PerlinSmoothstep(float x)

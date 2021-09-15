@@ -8,6 +8,7 @@ public class PerlinMetaData
     public float sampleMax = 1;
     public bool domainWarp = false;
     public bool ridged = false;
-    public float hurst = 0.5f;
+    public float domainFactorX = 80f;
+    public float domainFactorY = 80f;
     public int octaves = 2;
 }

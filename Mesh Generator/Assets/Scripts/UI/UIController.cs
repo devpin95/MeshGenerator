@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using JetBrains.Annotations;
 using Parameters;
 using SFB;
 using TMPro;
@@ -46,8 +47,9 @@ public class UIController : MonoBehaviour
     public TMP_InputField perlinNoiseMaxField;
     public Toggle domainWarpToggle;
     public CanvasGroup domainWarpOptions;
-    public Slider hurstSlider;
-    public TextMeshProUGUI hurstValueLabel;
+    [FormerlySerializedAs("domainWarpFactorX")] public TMP_InputField domainWarpFactorXField;
+    [FormerlySerializedAs("domainWarpFactorY")] public TMP_InputField domainWarpFactorYField;
+    public TMP_InputField domainWarpOctavesField;
     public Toggle perlinRidgedToggle;
 
     [Header("Simple Noise Inputs")] 
@@ -273,7 +275,38 @@ public class UIController : MonoBehaviour
             if (!ParsePerlinRange(data)) return;
 
             data.perlin.domainWarp = domainWarpToggle.isOn;
-            data.perlin.hurst = hurstSlider.value;
+
+            bool success;
+            float pfloat;
+            int pint;
+
+            success = float.TryParse(domainWarpFactorXField.text, out pfloat);
+            if (!success)
+            {
+                Debug.Log("X warp factor must be a float");
+                errorMessage.text = "X warp factor must be a float";
+                return;
+            }
+            data.perlin.domainFactorX = pfloat;
+            
+            success = float.TryParse(domainWarpFactorYField.text, out pfloat);
+            if (!success)
+            {
+                Debug.Log("Y warp factor must be a float");
+                errorMessage.text = "Y warp factor must be a float";
+                return;
+            }
+            data.perlin.domainFactorY = pfloat;
+            
+            success = int.TryParse(domainWarpOctavesField.text, out pint);
+            if (!success)
+            {
+                Debug.Log("Y warp factor must be a float");
+                errorMessage.text = "Y warp factor must be a float";
+                return;
+            }
+            data.perlin.octaves = pint;
+
             data.perlin.ridged = perlinRidgedToggle.isOn;
             
             if (!ParseRemap(data)) return;
@@ -799,12 +832,7 @@ public class UIController : MonoBehaviour
         overlay.SetActive(true);
         overlayText.text = message;
     }
-
-    public void UpdateHurstExponentLabel(float val)
-    {
-        hurstValueLabel.text = val.ToString("f2");
-    }
-
+    
     public void ToggleDomainWarpOptions(bool state)
     {
         if (state)
@@ -861,7 +889,7 @@ public class UIController : MonoBehaviour
 
     public void ValidateMeshDim(string str)
     {
-        const int min = 2;
+        const int min = 1;
         const int max = 15;
         
         int val;

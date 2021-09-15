@@ -243,17 +243,28 @@ public class MeshGenerator : MonoBehaviour
         {
             Vector2 pos = new Vector2(xSamplePoint, zSamplePoint);
             
-            Vector2 q = new Vector2( fbm( pos + new Vector2(0.0f,0.0f), _data.perlin.hurst ),
-                fbm( pos + new Vector2(5.2f,1.3f), _data.perlin.hurst ) );
+            Vector2 q = new Vector2(
+                FmbBeta(pos, 60, _data.perlin.octaves),
+                FmbBeta(new Vector2(pos.x + 5.2f, pos.y + 1.3f), 60, _data.perlin.octaves)
+            );
+            
+            float qp = FmbBeta(new Vector2(pos.x + _data.perlin.domainFactorX * q[0], pos.y + _data.perlin.domainFactorY * q[1]), 60, _data.perlin.octaves);
 
-            Vector2 r = new Vector2( fbm( pos + 4.0f * q + new Vector2(1.7f,9.2f), _data.perlin.hurst ),
-                fbm( pos + 4.0f * q + new Vector2(8.3f,2.8f), _data.perlin.hurst ) );
+            sample = qp / _data.perlin.octaves;
+            
+            if (_data.perlin.ridged) sample = InvertAbs(sample);
 
-            sample = fbm( pos + 4.0f * r, _data.perlin.hurst );
+            // Vector2 q = new Vector2( fbm( pos + new Vector2(0.0f,0.0f), _data.perlin.hurst ),
+            //     fbm( pos + new Vector2(5.2f,1.3f), _data.perlin.hurst ) );
+            //
+            // Vector2 r = new Vector2( fbm( pos + 4.0f * q + new Vector2(1.7f,9.2f), _data.perlin.hurst ),
+            //     fbm( pos + 4.0f * q + new Vector2(8.3f,2.8f), _data.perlin.hurst ) );
+            //
+            // sample = fbm( pos + 4.0f * r, _data.perlin.hurst );
         }
         else
         {
-            float perlin = Mathf.PerlinNoise(xSamplePoint, zSamplePoint);
+            float perlin = Mathf.PerlinNoise(xSamplePoint,zSamplePoint);
             sample = Mathf.Clamp01(perlin); // make sure that the value is actually between 0 and 1
 
             if (_data.perlin.ridged) sample = InvertAbs(sample);
@@ -363,6 +374,24 @@ public class MeshGenerator : MonoBehaviour
         }
 
         return t;
+    }
+
+    public float FmbBeta(Vector2 pos, float scale = 1.0f, int octaves = 1, float lacunarity = 2f, float gain = 0.5f)
+    {
+        float total = 0;
+        float amplitude = 1;
+        float frequency = 1;
+
+        for (int i = 0; i < octaves; ++i)
+        {
+            float sample = Mathf.PerlinNoise(pos.x / scale * frequency, pos.y / scale * frequency) * amplitude;
+
+            total += sample;
+            frequency *= lacunarity;
+            amplitude *= gain;
+        }
+
+        return total;
     }
 
     private Texture2D GenerateHeightMapTexture(int size, Vector2 dim)
