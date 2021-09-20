@@ -467,7 +467,7 @@ As the drop begins moving across the surface, the amount of sediment picked up o
 
 After some testing, I discovered that as the drop's volume approached it's minimum value, it's mass was getting smaller and smaller. This meant that the speed was growing larger and larger as the simulation continued. The table below shows a few examples of this instability:
 
-|<img src="http://dpiner.com/projects/MeshGenerator/images/HEStability1.gif" width="200">|<img src="http://dpiner.com/projects/MeshGenerator/images/HEStability2.gif" width="200">|<img src="http://dpiner.com/projects/MeshGenerator/images/HEStability3.gif" width="200">|
+|<img src="http://dpiner.com/projects/MeshGenerator/images/HEStability1.gif" width="255">|<img src="http://dpiner.com/projects/MeshGenerator/images/HEStability2.gif" width="255">|<img src="http://dpiner.com/projects/MeshGenerator/images/HEStability3.gif" width="255">|
 |---|---|---|
 
 Solution: 
@@ -493,7 +493,7 @@ Solution:
 
 Results:
 
-|<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionStability4.gif" width="200">|<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionStability5.gif" width="200">|<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionStability6.gif" width="200">|
+|<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionStability4.gif" width="255">|<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionStability5.gif" width="255">|<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionStability6.gif" width="255">|
 |---|---|---|
 
 ---
