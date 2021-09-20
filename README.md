@@ -393,8 +393,7 @@ An important natural process is the movement of water down hills and mountain sl
 
 This hydraulic erosion algorithm is a particle based simulation developed by [Nicholas McDonald](https://nickmcd.me/about/).
 
-<p align="center"><img align="center" src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionDemo1.gif" width="255"></p>
-
+<p align="center"><img align="center" src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionDemo1small.gif" width="255"></p>
 <p align="center">Hydraulic erosion visualization with 20 particles</p>
 
 The process begins by randomly selecting a position in the map for the water particle to land.
