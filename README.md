@@ -19,7 +19,8 @@ For this project, I explored the algorithms and techniques for generating terrai
         - [Perlin Noise](#perlin-noise)
         - [Octave Noise](#octave-noise)
         - [Image Maps](#image-maps-extra)
-    - Simulations
+    - [Simulations](#simulations)
+        - [Hydraulic Erosion](#hydraulic-erosion)
     - Operations
 - [Design](#design)
 
@@ -138,6 +139,7 @@ to get our sample coordinate that we pass into the noise function. Further, beca
 <br/>
 
 #### Simple Noise
+
 ---
 The simple noise algorithm is an implementation of the 2D noise function described by [Scratchapixel](https://www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1/creating-simple-2D-noise). 
 
