@@ -41,7 +41,7 @@ Every mesh object in Unity has a list of vertices and a list of polygons (in thi
 
 The order of triangle group determines the direction of the triangle normal, which then determines which side of the triangle is visible to the camera (this is to cull traingles that are facing away, or on the other side of an object, that don't need to be rendered). This table below has the order of vertices that will ensure the triangle is rendered when the camera is above the triangle. Because we limit the range of the camera in the demo, we can assume the camera will (almost) always be above the flat mesh and will be visible.
 
-|<img src="http://dpiner.com/projects/MeshGenerator/images/Triangle.png" width="200"> <br/> <1, 2, 3>, <2, 3, 1>, <3, 1, 2> <br/> *Vertice order where triangle normal will face up (towards the camera)*|<img src="http://dpiner.com/projects/MeshGenerator/images/TriangleMesh.png" width="255"> <br/> <3, 1, 2, 3, 2, 4> <br/>*Triangle list that represents traingle A and B*|
+|<img src="http://dpiner.com/projects/MeshGenerator/images/Triangle.png" width="200"> <br/> <1, 2, 3>, <2, 3, 1>, <3, 1, 2> <br/> *Vertice order where triangle normal will face up (towards the camera)*|<img src="http://dpiner.com/projects/MeshGenerator/images/TriangleMesh.png" width="255"> <br/> <3, 1, 2, 3, 2, 4> <br/>*Triangle list that represents triangle A and B*|
 |-----|----|
 
 ---
@@ -172,7 +172,7 @@ An extra step we can take to improve our simple noise function is to apply smoot
 
 <img src="http://dpiner.com/projects/MeshGenerator/images/SmoothingFuncAnim.gif" width="1000">
 
-Here are a list of [smoothing function](https://github.com/devpin95/MeshGenerator/blob/231d62b59cb02b196a669abe96e7f5d1732ed750/Mesh%20Generator/Assets/Scripts/Classes/Smoothing.cs) implemented in this demo and a graph comparing each output in Figure 1:
+Here are a list of [smoothing function](https://github.com/devpin95/MeshGenerator/blob/231d62b59cb02b196a669abe96e7f5d1732ed750/Mesh%20Generator/Assets/Scripts/Classes/Smoothing.cs) implemented in this demo and a graph comparing each output in the graph below:
 
 | Name | Function |
 | --- | --- |
@@ -183,8 +183,8 @@ Here are a list of [smoothing function](https://github.com/devpin95/MeshGenerato
 
 <br/>
 
-|<img src="http://dpiner.com/projects/MeshGenerator/images/SmoothingFunctions.png" width="500"> <br/> *<b>Figure 1</b> - Output of the cosine, smoothstep, Perlin smoothstep, and linear functions on [0,1]*|
-|---|
+<p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/SmoothingFunctions.png" width="500"></p>
+<p align="center">Output of the cosine, smoothstep, Perlin smoothstep, and linear functions on [0,1]*</p>
 
 [comment]: <> (<br/>)
 
@@ -375,6 +375,125 @@ Image maps can be used to apply a pre-made height map to the mesh. Any image and
 
 |<img src="http://dpiner.com/projects/MeshGenerator/images/map5.png" width="255"> <br/> *Pre-made height map*|<img src="http://dpiner.com/projects/MeshGenerator/images/ImageMapMesh.png" width="500"> <br/> *Height map applied to 5x5 mesh*|
 |-----|-----|
+
+---
+
+### Simulations
+
+Simulating natural processes on a generated mesh add an extra layer of believability to a terrain, creating subtle features that go a long way to imitate what our brains would expect to see.
+
+<br/>
+
+#### Hydraulic Erosion
+An important natural process is the movement of water down hills and mountain slopes called hydraulic erosion. Hydraulic erosion is the movement of sediment picked up by water as it moves across the surface of a terrain and depositing it somewhere further down the slope. On a large scale, this will create creases along mountain slopes and flatten the ground in valleys.
+
+<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionMesh1.png" width="1000">
+
+##### Algorithm
+
+This hydraulic erosion algorithm is a particle based simulation developed by [Nicholas McDonald](https://nickmcd.me/about/).
+
+<p align="center"><img align="center" src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionDemo1.gif" width="255"></p>
+
+<p align="center">Hydraulic erosion visualization with 20 particles</p>
+
+The process begins by randomly selecting a position in the map for the water particle to land.
+
+    drop.pos.x = Random.Range(0f, mapdim);
+    drop.pos.y = Random.Range(0f, mapdim);
+
+At the beginning of it's life, the has a sediment level of *0*, *0* speed in the *x* and *y* directions, and a starting volume set by the user in the parameters. 
+
+    drop.speed.x = 0;
+    drop.speed.y = 0;
+    drop.sediment = 0;
+    drop.volume = parameters.StartingVolume;
+
+The simulation continues as long as the drop has a volume above the threshold set by the user
+
+    while (drop.volume > parameters.MINVolume) {
+        ...
+    }
+
+The first step in an iteration is to save the drops initial position before applying any movement to the drop so that we a drop doesn't dig itself into a hole.
+
+    Vector2 initialPos = drop.pos;
+
+At the initial position, we find the normal of the vertex at the integer values of the position.
+
+    norm = map.SampleBetaNormalAtXY((int)initialPos.x, (int)initialPos.y);
+
+Using the normal, we can determine which way to move the drop. Using a physics-based approach, we set the speed of the drop using F=ma, where a = F/m.
+
+    forceVector = new Vector2(norm.x, norm.z);
+    Vector2 F = parameters.DT * forceVector; // force
+    float m = (drop.volume * parameters.Density); // mass
+    drop.speed += F / m;
+    drop.pos += parameters.DT * drop.speed;
+
+Here, *parameters.DT* is the time step set by the user and acts as a scaling factor.
+
+After moving the drop, we apply friction to slow the particle:
+
+    drop.speed *= 1f - parameters.DT * parameters.Friction;
+
+Now that the drop has moved across the terrain, it picked up and deposited some sediment to it's initial position. We determine how much by the distance it traveled:
+
+    float travelDistance = drop.speed.magnitude * (prevHeight - curHeight);
+    float maxsed = drop.volume * travelDistance;
+
+    if (maxsed < 0) maxsed = 0f;
+    float seddiff = maxsed - drop.sediment;
+
+where *prevHeight* was the drop's height at it's initial position and *curHeight* is the drop's height at it's current position. Here, *maxsed* is the maximum amount of sediment that the drop could have picked up between it's initial position and it's current position. *seddiff* is the difference between how much the drop could have and how much it actually has.
+
+We can set the drop's new sediment level using *seddiff*
+
+    drop.sediment += parameters.DT * parameters.DepositeRate * seddiff;
+
+Using how much sediment the drop picked up or left, we can change the height map to reflect the effects the drop is having on the terrain:
+
+    float amount = parameters.DT * drop.volume * parameters.DepositeRate * seddiff;
+    map.ChangeNode((int)initialPos.x, (int)initialPos.y, amount);
+
+Finally, we need a way to ensure that the drop slowly fades away and the loop can end. We do this with evaporation, which slowly lowers the drops volume over time:
+
+    drop.volume *= 1f - parameters.DT * parameters.EvaporationRate;
+
+As the drop begins moving across the surface, the amount of sediment picked up or deposited by the drop is determined by the distance that it travelled
+
+##### Simulation Stability
+
+After some testing, I discovered that as the drop's volume approached it's minimum value, it's mass was getting smaller and smaller. This meant that the speed was growing larger and larger as the simulation continued. The table below shows a few examples of this instability:
+
+|<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionStability1.gif" width="255">|<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionStability2.gif" width="255">|<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionStability3.gif" width="255">|
+|---|---|---|
+
+Solution: 
+- limit the particle's speed based on a set max speed and the drop's volume 
+- set a maximum iteration for the simulation
+
+
+    while (drop.volume > parameters.MINVolume && iteration < Constants.maxDropIterations) {
+        ...
+
+        if (drop.speed.magnitude > Constants.maxDropSpeed)
+        {
+            ++maxspeedcount;
+            drop.speed = drop.speed.normalized * Constants.maxDropSpeed * drop.volume;
+        }
+        
+        if (maxspeedcount > Constants.maxSpeedThreshold) break;
+
+        ...
+
+        ++iteration;
+    }
+
+Results:
+
+|<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionStability4.gif" width="255">|<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionStability5.gif" width="255">|<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionStability6.gif" width="255">|
+|---|---|---|
 
 ---
 
