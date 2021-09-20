@@ -492,7 +492,7 @@ Solution:
 
 Results:
 
-|<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionStability4.gif" width="255">|<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionStability5.gif" width="255">|<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionStability6.gif" width="255">|
+|<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionStability4.gif" width="200">|<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionStability5.gif" width="200">|<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionStability6.gif" width="200">|
 |---|---|---|
 
 ---
