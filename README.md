@@ -67,7 +67,7 @@ and we want to map *from* to the value *y*, such that
 
 Intuitively, we can show the implementation as using the proportion of our initial range to find the the value.
 
-<img src="http://dpiner.com/projects/MeshGenerator/images/Remap.png" width="255">
+<p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/Remap.png" width="255"></p>
 
 ##### Implementation
 
@@ -387,6 +387,7 @@ Simulating natural processes on a generated mesh add an extra layer of believabi
 <br/>
 
 #### Hydraulic Erosion
+
 An important natural process is the movement of water down hills and mountain slopes called hydraulic erosion. Hydraulic erosion is the movement of sediment picked up by water as it moves across the surface of a terrain and depositing it somewhere further down the slope. On a large scale, this will create creases along mountain slopes and flatten the ground in valleys.
 
 <img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionMesh1.png" width="1000">
@@ -495,6 +496,148 @@ Results:
 
 |<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionStability4.gif" width="255">|<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionStability5.gif" width="255">|<img src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionStability6.gif" width="255">|
 |---|---|---|
+
+
+#### Operations
+
+In this demo, operations are simple image manipulation functions that operate only on the height map after it has been generated. Currently, there are only 2 operations: stretch, and Gaussian blur.
+
+##### Stretch
+
+<img src="http://dpiner.com/projects/MeshGenerator/images/StretchAnim.gif" width="1000">
+
+The [stretch operation](https://github.com/devpin95/MeshGenerator/blob/46789be590497e2fc1dbec9d1846dbb29fffc512/Mesh%20Generator/Assets/Scripts/Classes/Mesh%20Operations/Operations/Implementations/MapStretch.cs) 
+is a simple remap of heights from their current range to [0, 1] or some new range defined by the user. The key to stretching is to keep track of the min and max value. For any given map, the min and max may not be 0 and 1 but somewhere in between. To avoid needing an initial loop to find the min and max before stretching, the height map stores it's current min and max as the map is being generated, and during the stretch operation, the new min and max are returned along with the new map.
+
+Algorithm:
+
+    public static (float[,], float, float) Stretch(float[,] map, int mapedge, float mapmin, float mapmax)
+    {
+        float min = float.MaxValue;
+        float max = float.MinValue;
+
+        for (int row = 0; row < mapedge; ++row)
+        {
+            for (int col = 0; col < mapedge; ++col)
+            {
+                map[row, col] = Putils.Remap(map[row, col], mapmin, mapmax, 0, 1);
+
+                if (map[row, col] < min) min = map[row, col];
+                if (map[row, col] > max) max = map[row, col];
+            }
+        }
+        
+        return (map, min, max);
+    }
+
+An interesting thing about this function is that it returns a tuple. Coming from Python, returning more than a single value from a function has a lot of utility and is a welcome feature in a language. Especially when my programming foundation is in C++ where returning more than one value from a function takes a little more effort to pull off (they didn't even teach us about tuples in our C++ classes).
+
+
+##### Gaussian Blur
+
+<img src="http://dpiner.com/projects/MeshGenerator/images/GaussianAnim.gif" width="1000">
+
+The [Guassian blur]()
+operation is the standard blur used by most image editors. The strength of the Gaussian blur comes from adding different weight to pixels further away from the center pixel. This means pixels closer to the center have a bigger influence on the result than pixels further away.
+
+Algorithm:
+
+The basic idea of a Guassian blur is [*convolution*](https://en.wikipedia.org/wiki/Kernel_(image_processing)#Convolution), where we pass a window over the image, add up all the values in the window, and use the sum to make a new image. The window in convolution is called the [*kernel*](https://en.wikipedia.org/wiki/Kernel_(image_processing)), and is a matrix of weights that we will multiply each pixel that falls into the kernel as we do convolution. In the case of Gaussian blur, our kernel is a 2D matrix of weights determined by the [Gaussian function](https://en.wikipedia.org/wiki/Gaussian_function#Two-dimensional_Gaussian_function)
+
+To improve the efficiency of the algorithm, we use the [separability](https://en.wikipedia.org/wiki/Separable_filter) of the Gaussian function to create two vectors, a vertical vector and a horizontal vector, and make two passes on the image instead of one.
+
+First, we create the 2D kernel. Note, *ksize* is an odd integer greater than 1, and *kcenter = (ksize - 1) / 2* is the center element in the x/y direction;
+
+    for (int i = 0; i < ksize; ++i)
+    {
+        float rowsum = 0;
+        for (int j = 0; j < ksize; ++j)
+        {
+            int x = j - kcenter;
+            int y = i - kcenter;
+            float gaussian = Guassian2D(x, y, ksize);
+            sum += gaussian;
+            rowsum += gaussian;
+            kernel2d[i, j] = gaussian;
+        }
+        kernel1d[i] = rowsum;
+    }
+
+where *x* and *y* are the coordinates to pass into the Gaussian function and (0,0) is at the center of the 2D matrix, *kernel2d[kcenter][kcenter]*. *rowsum* is the sum of each row and becomes an element in the 1D kernel. *sum* is the total sum of the matrix and is used to normalize the 1D kernel:
+
+    for (int i = 0; i < ksize; ++i)
+    {
+        kernel1d[i] /= sum;
+    }
+
+Now that we have our kernel, we need to do a vertical pass first:
+
+    for (int row = 0; row < dim; ++row)
+    {
+        for (int col = 0; col < dim; ++col)
+        {
+            float val = ConvolveVertical(map, dim, row, col, kernel, metaData, min, max);
+            float vnormalized = val / normal;
+            
+            if (vnormalized < mincon) mincon = vnormalized;
+            if (vnormalized > maxcon) maxcon = vnormalized;
+
+            tempgrid[row, col] = vnormalized;
+        }
+    }
+
+where *dim* is the dimensions of the height map, *mincon* and *maxcon* are the minimum and maximum value of the intermediate map. 
+
+It is important to note that we need to normalize the intermediate values before we do the horizontal pass. We define the normal as the sum of all the elements in the kernel
+
+    float normal = 0;
+    for (int i = 0; i < kernel.Length; ++i)
+    {
+        normal += kernel[i];
+    }
+
+It's easiest to think of this value as the result if all of the pixels in the kernel turned out to be *1* and we would end, effectively, summing all of the weights in the kernel. We need to do this before the horizontal pass to avoid weird math where the normal would end up being something like *2\*normal* (I got weird results using this normal, so it turned out to be easier just to normalize between convolutions).
+
+The horizontal pass is identical to the vertical pass:
+
+    for (int row = 0; row < dim; ++row)
+    {
+        for (int col = 0; col < dim; ++col)
+        {
+            float val = ConvolveHorizonal(tempgrid, dim, row, col, kernel, metaData, mincon, maxcon);
+            
+            float vnormalized = val / normal;
+
+            if (vnormalized < mincon) mincon = vnormalized;
+            if (vnormalized > maxcon) maxcon = vnormalized;
+
+            tempgrid[row, col] = vnormalized;
+        }
+    }
+
+During each convolution pass, we apply a certain border mode, where we decide how to deal with cells that hang off the edge of the grid. This demo provides five border modes: blend white, blend black, mirror, and nearest.
+
+Blend white and blend black are the simplest border modes, just using 1 or 0, respectively, for cells hanging off the grid. Mirror and nearest are more complicated because they require looking at other elements in the kernel that aren't hanging off the grid.
+
+The mirror border mode takes the opposite cell in the kernel's output value while the nearest border mode takes the closest cell that is within the bounds of the grid. The images below shows the difference between these modes:
+
+|<img src="http://dpiner.com/projects/MeshGenerator/images/BorderMirror.png" width="206"> <br/> *Mirror border mode*|<img src="http://dpiner.com/projects/MeshGenerator/images/BorderNearest.png" width="206"><br/> *Nearest border mode*|
+|---|---|
+
+Finally, we can remap *tempgrid* into the desired domain using the min and max values we tracked through the convolutions
+
+    for (int row = 0; row < dim; ++row)
+    {
+        for (int col = 0; col < dim; ++col)
+        {
+            tempgrid[row, col] = Putils.Remap(tempgrid[row, col], mincon, maxcon, 0, 1);
+        }
+    }
+
+And now, the height map has been blurred. The video below shows the whole Gaussian blur algorithm on a small scale image with a 3-cell kernel:
+
+<p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/GaussianBlurAnim.gif" width="500"></p>
+<p align="center"><strong><em>Gaussian blur visualization</em></strong></p>
 
 ---
 
