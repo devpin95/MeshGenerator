@@ -634,7 +634,7 @@ Finally, we can remap *tempgrid* into the desired domain using the min and max v
         }
     }
 
-And now, the height map has been blurred. The video below shows the whole Gaussian blur algorithm on a small scale image with a 3-cell kernel:
+And now, the height map has been blurred. The video below shows the whole Gaussian blur algorithm on a small scale image with a 3-cell kernel using the blend white border mode:
 
 <p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/GaussianBlurAnim.gif" width="500"></p>
 <p align="center"><strong><em>Gaussian blur visualization</em></strong></p>
