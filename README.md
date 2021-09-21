@@ -21,7 +21,9 @@ For this project, I explored the algorithms and techniques for generating terrai
         - [Image Maps](#image-maps-extra)
     - [Simulations](#simulations)
         - [Hydraulic Erosion](#hydraulic-erosion)
-    - Operations
+    - [Operations](#operations)
+        - [Stretch](#stretch)
+        - [Gaussian Blur](#gaussian-blur)
 - [Design](#design)
 
 ## Installation
@@ -143,7 +145,7 @@ to get our sample coordinate that we pass into the noise function. Further, beca
 ---
 The simple noise algorithm is an implementation of the 2D noise function described by [Scratchapixel](https://www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1/creating-simple-2D-noise). 
 
-|<img src="http://dpiner.com/projects/MeshGenerator/images/SimpleNoise.png" width="255"> *Height map generated using a simple noise function.* |<img src="http://dpiner.com/projects/MeshGenerator/images/SimpleNoiseMesh.png" width="500"> *Map applied to mesh*|
+|<img src="http://dpiner.com/projects/MeshGenerator/images/SimpleNoise.png" width="255"> <br/> *Height map generated using a simple noise function.* |<img src="http://dpiner.com/projects/MeshGenerator/images/SimpleNoiseMesh.png" width="500"> *Map applied to mesh*|
 | ------------------------------------------------------------ |--------- |
 
 In essence, a 2D noise function generates a grid of random numbers called a lattice. The functions takes in an x and y coordinate to the grid. Any value outside the grid wraps back around. For example, for a 5x5 lattice, given the coordinate (5, 1) will return the value at position (0, 1), noting that (0, 0) is the origin of the grid. Intuitively, for a grid of any size, we are duplicate the grid to the left, right, up, and down to create a plane of values that we can sample from at any point. Though our implementation will only be take samples from x >= 0 and y >= 0, the function also allows for negative coordinates.
