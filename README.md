@@ -25,6 +25,9 @@ For this project, I explored the algorithms and techniques for generating terrai
         - [Stretch](#stretch)
         - [Gaussian Blur](#gaussian-blur)
 - [Design](#design)
+    - [Event-based Interactions](#event-based-interations)
+    - [Coroutines](#coroutines)
+    - [Height Map Data Structure](#height-map-data-structure)
 
 ## Installation
 
@@ -645,4 +648,100 @@ And now, the height map has been blurred. The video below shows the whole Gaussi
 ---
 
 ## Design
+This section is designated for discussion on miscellaneous design choices for implementing features in the demo.
 
+#### Event-based Interactions
+Because Unity objects are object-oriented by design, we needed a way of passing information between different object when the user performs an action. For example, the UI object has several events where information from the UI is collected and passed through a [UnityEvent](https://docs.unity3d.com/ScriptReference/Events.UnityEvent.html) to the [MeshManager](https://github.com/devpin95/MeshGenerator/blob/b7f90710f07b6a4623a2910343ead8cb16963127/Mesh%20Generator/Assets/Scripts/MeshManager.cs) object so that it can coordinate multiple meshes generating a single map.
+
+More specifically, Unity [Scriptable Objects](https://docs.unity3d.com/ScriptReference/ScriptableObject.html) we used to create event assets that could be referenced by objects who need to raise events for which registered listeners would be notified. Below is the code for a generic event object
+
+    using System.Collections.Generic;
+    using UnityEngine;
+    
+    [CreateAssetMenu(menuName = "Events/CEvent")]
+    public class CEvent : ScriptableObject
+    {
+        private List<CEventListener> listeners = new List<CEventListener>();
+    
+        public void Raise()
+        {
+            foreach (var listener in listeners)
+            {
+                listener.OnEventRaised();
+            }
+        }
+    
+        public void RegisterListener(CEventListener listener)
+        {
+            listeners.Add(listener);
+        }
+    
+        public void UnregisterListener(CEventListener listener)
+        {
+            listeners.Remove(listener);
+        }
+    }
+
+and a generic event listener
+
+    using UnityEngine;
+    using UnityEngine.Events;
+    
+    public class CEventListener : MonoBehaviour
+    {
+        [SerializeField] private CEvent Event;
+        [SerializeField] private UnityEvent Response;
+    
+        private void OnEnable()
+        {
+            Event.RegisterListener(this);
+        }
+    
+        private void OnDisable()
+        {
+            Event.UnregisterListener(this);
+        }
+    
+        public void OnEventRaised()
+        {
+            Response.Invoke();
+        }
+    }
+
+Event objects are assets created and assigned to an object in the unity editor. An object with a reference to an event object can call `Event.Raise()` to notify all listeners.
+
+Event listeners are components added to game objects in the Unity editor, and provide a section for the desired event object to register with, and the function to do in response to the event being raised.
+
+To pass object in the UnityEvent objects, we simply set the Response object to a template class of the UnityEvent with the object we wish to pass along. Calling `Raise()` with the object passes it along to all registered listeners:
+
+    UnityEvent<MeshMetaData> Response;
+
+    ...
+
+    MeshMetaData data = new MeshMetaData()
+    Raise(data)
+
+[Read more about scriptable object event systems](https://blog.devgenius.io/scriptableobject-game-events-1f3401bbde72).
+
+<br/>
+
+#### Coroutines
+The intention of this demo is to provide an interactable and educational experience, which required some level of explanation of functions taking place and what they were doing, while they were doing it. If not for the sake of experiencing which routines take longer to complete than others, then for the sake of seeing what steps are taken to begin with. Therefore, we made the design choice to work in Coroutines instead of threads, to simplify the passing of information back to the user interface as operations were taking place.
+
+Using the Scriptable Object event system from above, [Coroutines](https://docs.unity3d.com/Manual/Coroutines.html) provided a simple way to yield a functions execution so that the UI (and other game objects) could be updated and rendered instead of being blocked until the operation completed. Using coroutines (instead of threads) also help avoid situations where thread-unsafe Unity API calls would not work and would make some features impossible without more sophisticated approaches. As a bonus, coroutines are simple and easy to read/debug. Take a look at the code below that shows how the MeshManager object starts a coroutine to run a hydraulic erosion simulation:
+
+    StartCoroutine(RunSimulation(data));
+    
+    ...
+
+    IEnumerator RunSimulation(ErosionMetaData data)
+    {
+        ...
+    }
+
+<br/>
+
+#### Height Map Data Structure
+At the beginning of this project, we attempted to follow the C# guideline of storing 2D arrays and flattened arrays. Some way through the project, it became increasingly harder to manage the logic of storing multiple meshes work of data in a single array. For example, `SetChunk(...)` in the [HeightMap](https://github.com/devpin95/MeshGenerator/blob/b7f90710f07b6a4623a2910343ead8cb16963127/Mesh%20Generator/Assets/Scripts/Classes/HeightMap.cs) object requires initializing a section of the map the represents a mesh anywhere in the physical 2D grid. Given a 3x3 mesh grid in physical 2D space, it proved difficult to implement and debug the `SetChunk(...)` function where we needed to convert from true 2D space to flatten 2D space.
+
+As a result, we moved to 2D arrays to simplify the process of setting arbitrary chunks of data, and implemented utility functions for converting between 2D and flattened arrays for when it was necessary to use one over another (see [Putiles.FlatArrayToTwoDArray](https://github.com/devpin95/MeshGenerator/blob/b7f90710f07b6a4623a2910343ead8cb16963127/Mesh%20Generator/Assets/Scripts/Classes/Putils.cs) and [Putils.Flatten2DArray](https://github.com/devpin95/MeshGenerator/blob/b7f90710f07b6a4623a2910343ead8cb16963127/Mesh%20Generator/Assets/Scripts/Classes/Putils.cs))
