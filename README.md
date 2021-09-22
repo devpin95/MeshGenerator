@@ -8,7 +8,7 @@ For this project, I explored the algorithms and techniques for generating terrai
 
 ## Table of Contents
 - [Installation](#installation)
-- [Usage](#guide)
+- [Usage Guide](#-usageguide)
 - [Features](#features)
     - [Generating a Mesh](#generation-a-mesh)
     - [Important Functions](#important-functions)
@@ -35,6 +35,23 @@ For this project, I explored the algorithms and techniques for generating terrai
 - TODO create WebGL build
 - Maybe a docker container?
 
+
+## Usage Guide
+This section provides a visual guide on how to navigate the program.
+
+#### Basic UI Overview
+<img src="http://dpiner.com/projects/MeshGenerator/images/GuideUIOverview.png" width="1000">
+
+- `A` - The main panel, used to set the parameters for the mesh you wish to generate. See [Main Panel](#main-panel) for more information
+- `B` - Mesh generation information. From left to right: mesh vertex count, mesh polygon count, mesh generation time
+- `C` - Main action button. This button will begin generating a mesh based on the information in the [Main Panel](#main-panel). Note, the button text will change depending on what panel information is showing.
+- `D` - UI Controls and more mesh data. 
+    - In the top right: toggle UI HUD, toggle mesh preview (current or previous), save screenshot. 
+    - Bottom left, current mesh spread (the range of possible values, red bar represents highest point in the mesh, and the blue bar represents the lowest point in the mesh).
+- `E` - The height map image of the current mesh being displayed. *Save* button will save the current height map to PNG file.
+    
+
+#### Main Panel
 
 ## Features
 
