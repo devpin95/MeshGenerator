@@ -55,8 +55,21 @@ This section provides a visual guide on how to navigate the program.
         - Main panel transparency slider in case the text is too hard to read.
 - `E` - The height map image of the current mesh being displayed. *Save* button will save the current height map to PNG file.
     
+<br/>
 
 #### Main Panel
+<p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/GuidePanelOverview.png" width="500"></p>
+
+- `A` - Main dropdown, lets you select what group of actions to take: <strong>*Generator*</strong>, <strong>*Simulations*</strong>, <strong>*Operations*</strong> 
+
+<br/>
+
+#### Mesh Generator Options
+<p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/GuideMeshGeneratorOverview.png" width="500"></p>
+
+- `B` - Main options for mesh generator
+    - *Dimensions* determines the number of 255x255-vertex meshes to lay out in a grid
+    - *Height Map Type* selects which generation mode to use for the mesh
 
 ## Features
 
