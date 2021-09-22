@@ -8,7 +8,7 @@ For this project, I explored the algorithms and techniques for generating terrai
 
 ## Table of Contents
 - [Installation](#installation)
-- [Usage Guide](#-usage-guide)
+- [Usage Guide](#usage-guide)
 - [Features](#features)
     - [Generating a Mesh](#generation-a-mesh)
     - [Important Functions](#important-functions)
