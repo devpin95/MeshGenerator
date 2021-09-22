@@ -25,7 +25,7 @@ For this project, I explored the algorithms and techniques for generating terrai
         - [Stretch](#stretch)
         - [Gaussian Blur](#gaussian-blur)
 - [Design](#design)
-    - [Event-based Interactions](#event-based-interations)
+    - [Event-based Interactions](#event-based-interactions)
     - [Coroutines](#coroutines)
     - [Height Map Data Structure](#height-map-data-structure)
 
