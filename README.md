@@ -68,8 +68,8 @@ This section provides a visual guide on how to navigate the program.
 <p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/GuideMeshGeneratorOverview.png" width="500"></p>
 
 - `B` - Main options for mesh generator
-    - *Dimensions* determines the number of 255x255-vertex meshes to lay out in a grid
-    - *Height Map Type* selects which generation mode to use for the mesh
+    - `Dimensions` - determines the number of 255x255-vertex meshes to lay out in a grid
+    - `Height Map Type` - selects which generation mode to use for the mesh
 
 
 ##### Simple Noise Panel
@@ -664,12 +664,11 @@ An interesting thing about this function is that it returns a tuple. Coming from
 
 <img src="http://dpiner.com/projects/MeshGenerator/images/GaussianAnim.gif" width="1000">
 
-The [Guassian blur]()
-operation is the standard blur used by most image editors. The strength of the Gaussian blur comes from adding different weight to pixels further away from the center pixel. This means pixels closer to the center have a bigger influence on the result than pixels further away.
+The Guassian blur operation is the standard blur used by most image editors. The strength of the Gaussian blur comes from adding different weight to pixels further away from the center pixel. This means pixels closer to the center have a bigger influence on the result than pixels further away.
 
 Algorithm:
 
-The basic idea of a Guassian blur is [*convolution*](https://en.wikipedia.org/wiki/Kernel_(image_processing)#Convolution), where we pass a window over the image, add up all the values in the window, and use the sum to make a new image. The window in convolution is called the [*kernel*](https://en.wikipedia.org/wiki/Kernel_(image_processing)), and is a matrix of weights that we will multiply each pixel that falls into the kernel as we do convolution. In the case of Gaussian blur, our kernel is a 2D matrix of weights determined by the [Gaussian function](https://en.wikipedia.org/wiki/Gaussian_function#Two-dimensional_Gaussian_function)
+The basic idea of a Gaussian blur is [*convolution*](https://en.wikipedia.org/wiki/Kernel_(image_processing)#Convolution), where we pass a window over the image, add up all the values in the window, and use the sum to make a new image. The window in convolution is called the [*kernel*](https://en.wikipedia.org/wiki/Kernel_(image_processing)), and is a matrix of weights that we will multiply each pixel that falls into the kernel as we do convolution. In the case of Gaussian blur, our kernel is a 2D matrix of weights determined by the [Gaussian function](https://en.wikipedia.org/wiki/Gaussian_function#Two-dimensional_Gaussian_function)
 
 To improve the efficiency of the algorithm, we use the [separability](https://en.wikipedia.org/wiki/Separable_filter) of the Gaussian function to create two vectors, a vertical vector and a horizontal vector, and make two passes on the image instead of one.
 
