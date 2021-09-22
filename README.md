@@ -71,6 +71,92 @@ This section provides a visual guide on how to navigate the program.
     - *Dimensions* determines the number of 255x255-vertex meshes to lay out in a grid
     - *Height Map Type* selects which generation mode to use for the mesh
 
+
+##### Simple Noise Panel
+<p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/GuideSimpleNoiseOverview.png" width="400"></p>
+
+- `Lattice Size` - Sets the dimensions of the random grid.
+- `Smoothing` - Selects the smoothing function, see [Simple Noise](#simple-noise) for more information.
+- `Frequency` - Sets the frequency of the noise function `Noise(sample + frequency)`.
+- `Scale` - Sets the scale of the noise function `Noise(sample) * scale`.
+- `Random` - Toggles to used a random seeds or a seed set by the user for generating the lattice.
+- `Sample Range` - The range of lattice values to sample from.
+- `Remap Range` - The range to remap the output of the noise function.
+- `Invert` - Sets the output, `y` to `1 - y`
+
+##### Perlin Noise Panel
+<p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/GuidePerlinNoiseOverview.png" width="400"></p>
+
+- `Sample Range` - The range of lattice values to sample from.
+- `Domain Warp` - Toggle domain warp function.
+- `Octaves` - Sets the number of octaves to use in domain warp function
+- `Warp Factor` - Sets the factor to multiply the warp function in `x` and `y` directions.
+- `Ridged (abs)` - Enables ridged perlin noise.
+- `Remap Range` - The range to remap the output of the noise function.
+- `Invert` - Sets the output, `y` to `1 - y`
+
+##### Octave Noise Panel
+<p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/GuideOctaveNoiseOverview.png" width="400"></p>
+
+- `Sample Range` - The range of lattice values to sample from.
+- `Octaves 1-5` - Toggle layer, set frequency and amplitude values. See [Octave Noise](#octave-noise) for more information.
+- `Remap Range` - The range to remap the output of the noise function.
+- `Invert` - Sets the output, `y` to `1 - y`
+
+##### Image Map Panel
+<p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/GuideImageMapOverview.png" width="400"></p>
+
+- `Add Layer` - Displays *Add Layer* dialogue
+
+<strong>CLICK ON A LAYER TO REMOVE IT FROM THE IMAGE MAP</strong>
+
+<p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/GuideAddLayerOverview.png" width="400"></p>
+
+- `A` - Click preview box to load an image from a file.
+- `B` - Name and set the remap range for the layer.
+- `Add` - Adds the layer to the image map.
+- `Cancel` - Cancels the action.
+
+<br/>
+
+#### Simulation Options
+
+##### Hydraulic Erosion Panel
+<p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/GuideHydraulicErosionOverview.png" width="400"></p>
+
+- `Time step (dt)` - The scale of the simulation.
+- `Drops` - The number of drops to simulate.
+- `Starting Volume` - The starting volume of each drop.
+- `Min Volume` - The minimum volume a drop can have before stopping the simulation.
+- `Density` - The density of a drop, effects speed.
+- `Friction` - The friction factor between the drop and terrain.
+- `Deposition Rate` - Determines how much sediment can be deposition at each time step.
+- `Evaporation Rate` - Sets how fast the drop loses volume.
+- `Flip XY` - Experimental variable, flips `x` and `y` normal components when determining acceleration.
+
+<br/>
+
+#### Operation Options
+<p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/GuideOperationsPanel.png" width="500"></p>
+
+- `A` - *Operation* dropdown, lets you select an operation to execute: <strong>*Stretch Heights*</strong>, <strong>*Gaussian Blur*</strong>
+
+##### Stretch Panel
+<p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/GuideStretchOverview.png" width="400"></p>
+
+- `Remap` - Toggles custom remap range. Off uses the current map range.
+- `Remap Range` - The range to remap the current height map.
+
+##### Gaussian Blur Panel
+<p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/GuideGaussianBlurOverview.png" width="400"></p>
+
+- `Kernel Size` - Sets the number of pixels to blur. See [Gaussian Blur](#gaussian-blur) for more information.
+- `Standard Dev.` - Sets the standard deviation of the Gaussian Function when generating the kernel weights.
+- `Border Mode` - Sets the mode for border pixels. See [Gaussian Blur](#gaussian-blur) for more information.
+
+
+<br/>
+
 ## Features
 
 This section is dedicated to showing the algorithms used to generate terrain meshes. All of these algorithms are well known, so I will not being going too far in depth, but I will show the nuances that were needed to implement them for this project.
