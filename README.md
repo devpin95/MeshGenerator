@@ -46,8 +46,13 @@ This section provides a visual guide on how to navigate the program.
 - `B` - Mesh generation information. From left to right: mesh vertex count, mesh polygon count, mesh generation time
 - `C` - Main action button. This button will begin generating a mesh based on the information in the [Main Panel](#main-panel). Note, the button text will change depending on what panel information is showing.
 - `D` - UI Controls and more mesh data. 
-    - In the top right: toggle UI HUD, toggle mesh preview (current or previous), save screenshot. 
-    - Bottom left, current mesh spread (the range of possible values, red bar represents highest point in the mesh, and the blue bar represents the lowest point in the mesh).
+    - Top right:
+        - toggle UI HUD
+        - toggle mesh preview (current or previous)
+        - save screenshot. 
+    - Bottom left:
+        - current mesh spread (the range of possible values, red bar represents highest point in the mesh, and the blue bar represents the lowest point in the mesh)
+        - Main panel transparency slider in case the text is too hard to read.
 - `E` - The height map image of the current mesh being displayed. *Save* button will save the current height map to PNG file.
     
 
