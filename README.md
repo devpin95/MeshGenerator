@@ -68,7 +68,7 @@ This section provides a visual guide on how to navigate the program.
 <p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/GuideMeshGeneratorOverview.png" width="500"></p>
 
 - `B` - Main options for mesh generator
-    - `Dimensions` - determines the number of 255x255-vertex meshes to lay out in a grid
+    - `Dimensions` - determines the number of 255x255 vertices meshes to lay out in a grid
     - `Height Map Type` - selects which generation mode to use for the mesh
 
 
@@ -82,7 +82,7 @@ This section provides a visual guide on how to navigate the program.
 - `Random` - Toggles to used a random seeds or a seed set by the user for generating the lattice.
 - `Sample Range` - The range of lattice values to sample from.
 - `Remap Range` - The range to remap the output of the noise function.
-- `Invert` - Sets the output, `y` to `1 - y`
+- `Invert` - Sets the output, `y`, to `1 - y`
 
 ##### Perlin Noise Panel
 <p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/GuidePerlinNoiseOverview.png" width="400"></p>
@@ -90,7 +90,7 @@ This section provides a visual guide on how to navigate the program.
 - `Sample Range` - The range of lattice values to sample from.
 - `Domain Warp` - Toggle domain warp function.
 - `Octaves` - Sets the number of octaves to use in domain warp function
-- `Warp Factor` - Sets the factor to multiply the warp function in `x` and `y` directions.
+- `Warp Factor` - Sets the factor to multiply the warp function in the `x` and `y` directions.
 - `Ridged (abs)` - Enables ridged perlin noise.
 - `Remap Range` - The range to remap the output of the noise function.
 - `Invert` - Sets the output, `y` to `1 - y`
@@ -98,7 +98,7 @@ This section provides a visual guide on how to navigate the program.
 ##### Octave Noise Panel
 <p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/GuideOctaveNoiseOverview.png" width="400"></p>
 
-- `Sample Range` - The range of lattice values to sample from.
+- `Sample Range` - The range of values to sample from.
 - `Octaves 1-5` - Toggle layer, set frequency and amplitude values. See [Octave Noise](#octave-noise) for more information.
 - `Remap Range` - The range to remap the output of the noise function.
 - `Invert` - Sets the output, `y` to `1 - y`
@@ -124,7 +124,7 @@ This section provides a visual guide on how to navigate the program.
 ##### Hydraulic Erosion Panel
 <p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/GuideHydraulicErosionOverview.png" width="400"></p>
 
-- `Time step (dt)` - The scale of the simulation.
+- `Time step (dt)` - The scaling factor of the simulation.
 - `Drops` - The number of drops to simulate.
 - `Starting Volume` - The starting volume of each drop.
 - `Min Volume` - The minimum volume a drop can have before stopping the simulation.
@@ -144,7 +144,7 @@ This section provides a visual guide on how to navigate the program.
 ##### Stretch Panel
 <p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/GuideStretchOverview.png" width="400"></p>
 
-- `Remap` - Toggles custom remap range. Off uses the current map range.
+- `Remap` - Toggles custom remap range. Unselected, use the current map range.
 - `Remap Range` - The range to remap the current height map.
 
 ##### Gaussian Blur Panel
@@ -159,16 +159,16 @@ This section provides a visual guide on how to navigate the program.
 
 ## Features
 
-This section is dedicated to showing the algorithms used to generate terrain meshes. All of these algorithms are well known, so I will not being going too far in depth, but I will show the nuances that were needed to implement them for this project.
+This section is dedicated to showing the algorithms used to generate terrain meshes. All of these algorithms are well known, so I will not being going too far in depth, but I will show the nuances of implement them for this project.
 
 ### Generating a Mesh
-Arguably one of the most important problems to solve with terrain generation is how to generate a mesh at all. Fortunately, Unity provides object components that make rendering meshes easy, leaving us with only the work of telling it where each vertex is and which vertices are connected to one another.
+Arguably one of the most important problems to solve with terrain generation is how to generate a mesh to begin with. Fortunately, Unity provides object components that make rendering meshes easy, leaving us with only the work of telling it where each vertex is and which vertices are connected to one another.
 
-Every mesh object in Unity has a list of vertices and a list of polygons (in this case, triangles). Both lists are flattened 2D arrays. The vertex list is a list of [3D Vectors](https://docs.unity3d.com/ScriptReference/Vector3.html) where each element represents a vertices location in 3D space. The triangles list is a list of integers where every three elements are the index of vertices in the vertex list that make up a single triangle.
+Every mesh object in Unity has a list of vertices and a list of polygons (in this case, triangles). Both lists are flattened 2D arrays. The vertex list is a list of [3D Vectors](https://docs.unity3d.com/ScriptReference/Vector3.html) where each element represents a vertices location in 3D space. The triangles list is a list of integers where every three elements are the index of vertices that make up a single triangle.
 
-The order of triangle group determines the direction of the triangle normal, which then determines which side of the triangle is visible to the camera (this is to cull traingles that are facing away, or on the other side of an object, that don't need to be rendered). This table below has the order of vertices that will ensure the triangle is rendered when the camera is above the triangle. Because we limit the range of the camera in the demo, we can assume the camera will (almost) always be above the flat mesh and will be visible.
+The order of triangle group determines the direction of the triangle normal, which then determines which side of the triangle is visible to the camera (this is to cull triangles that are facing away from the camera, or are on the other side of an object, and don't need to be rendered). The table below has the order of vertices that will ensure the triangle is rendered when the camera is above the triangle. Because we limit the range of the camera in the demo, we can assume the camera will (almost) always be above the flat mesh and each triangle will be visible.
 
-|<img src="http://dpiner.com/projects/MeshGenerator/images/Triangle.png" width="200"> <br/> <1, 2, 3>, <2, 3, 1>, <3, 1, 2> <br/> *Vertice order where triangle normal will face up (towards the camera)*|<img src="http://dpiner.com/projects/MeshGenerator/images/TriangleMesh.png" width="255"> <br/> <3, 1, 2, 3, 2, 4> <br/>*Triangle list that represents triangle A and B*|
+|<img src="http://dpiner.com/projects/MeshGenerator/images/Triangle.png" width="200"> <br/> <1, 2, 3>, <2, 3, 1>, <3, 1, 2> <br/> *Vertex order where triangle normal will face up (towards the camera)*|<img src="http://dpiner.com/projects/MeshGenerator/images/TriangleMesh.png" width="255"> <br/> <3, 1, 2, 3, 2, 4> <br/>*Triangle list that represents triangle A and B*|
 |-----|----|
 
 ---
@@ -177,41 +177,41 @@ The order of triangle group determines the direction of the triangle normal, whi
 
 ---
 #### Remapping
-One of the most used functions in this demo is the Remap function. This function is very helpful when we have one range of values that we want to translate to another range of values. For example, given a value between 0 and 1, we can translate that value to another value in the range 0 to 100. Trivially, we can just multiply the value by 100. But what if we want the value to be in the range 0 to 105? We can use the value and it's relationship to it's range to get the new value.
+One of the most used functions in this demo is the `Remap` function. This function is very helpful when we have one range of values that we want to translate to another range of values. For example, given a value between 0 and 1, we can translate that value to another value in the range 0 to 100. Trivially, we can just multiply the value by 100. But what if we want the value to be in the range 0 to 105? We can use the value and it's relationship to it's range to get the new value.
 
 The Remap function has the following signature:
 
     public static float Remap (float from, float fromMin, float fromMax, float toMin,  float toMax)
 
-Here, *from* is our original value, *fromMin* is the original minimum value, *fromMax* is the original maximum value, *toMin* is the desired minimum value, and *toMax* is the desired maximum value. Formally, 
+Here, `from` is our original value, `fromMin` is the original minimum value, `fromMax` is the original maximum value, `toMin` is the desired minimum value, and `toMax` is the desired maximum value. Formally, 
 
     from ∈ [fromMin, fromMax]
 
-and we want to map *from* to the value *y*, such that
+and we want to map `from` to the value `y`, such that
     
     from → y ∈ [toMin, toMax]
 
-Intuitively, we can show the implementation as using the proportion of our initial range to find the the value.
+Intuitively, we can show the implementation as using the proportion of our initial range to find `y`.
 
 <p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/Remap.png" width="255"></p>
 
 ##### Implementation
 
-First, we get the distance from the current value to the minimum value in our current range (*fromAbs*), then the total length of our range (*fromLen*).
+First, we get the distance from the current value to the minimum value in our current range, `fromAbs`, then the total length of our range, `fromLen`.
 
     var fromAbs  =  from - fromMin;
     var fromLen = fromMax - fromMin;
 
-Then we can find our normal (*prop*), or the proportion of the total length our value is at.
+Then we can find our normal, `prop`, or the proportion of the total length our value is at.
 
     var prop = fromAbs / fromLen;
 
-We can do the same for our target range, find the total length (*toLen*), then find the proportion of the new range we need to make up to get the new value (*toAbs*).
+We can do the same for our target range: find the total length, `toLen`, then find the proportion of the new range we need to make up to get the new value `toAbs`.
 
     var toLen = toMax - toMin;
     var toAbs = toLen * prop;
 
-But, *toAbs* is just a distance; we need to add the minimum value of our target range to get our new value (*to*).
+But, `toAbs` is just a distance; we need to add the minimum value of our target range to get our new value `to`.
 
     var to = toAbs + toMin;
 
@@ -244,19 +244,19 @@ Here is the remap function in full:
 
 ---
 
-The goal of noise functions is to generate sequences that have no repeating sections (at least as far as a human can tell). This is important for terrain generation because any repeating patterns become exceedingly obvious, especially when viewing from a distance. Further, we can use noise functions and image manipulation to initially generate realistic terrains before we apply more expensive erosion algorithms. Below are the noise functions implemented in the interactable demo.
+The goal of noise functions is to generate sequences that have no repeating sections (at least as far as a human can tell). This is important for terrain generation because any repeating patterns become exceedingly obvious, especially when viewed from a distance. Further, we can use noise functions and image manipulation to initially generate realistic terrains before we apply more expensive erosion algorithms. Below are the noise functions implemented in the interactable demo.
 
 <br/>
 
 #### Sampling
 
-An important part of applying noise to our generated mesh is determining the range at which we want to sample our functions. Because we have a mesh of discrete vertices, we need to break up our sample range into equal parts. We can do this by simply remapping the coordinate of interest to the sample range. We know the current dimensions of our mesh, what coordinate we're looking at, and the range we want to sample our function at. We can call our [remap](#remapping) function like this:
+An important part of applying noise to our generated mesh is determining the range at which we want to sample our functions. Because we have a mesh of discrete vertices, we need to break up our sample range into equal parts. We can do this by simply remapping the coordinate of interest to the sample range. We know the current dimensions of our mesh, what coordinate we're looking at, and the range we want to sample our function at. We can call our `Remap` function like this:
 
     Remap(x, 0, dim, min, max)
 
-where *x* is our mesh vertice index, *dim* is the width/height of the mesh, *min* is the lower bound of our sample range, and *max* is the upper bound of our sample range.
+where `x` is our mesh vertice index, `dim` is the width/height of the mesh, `min` is the lower bound of our sample range, and `max` is the upper bound of our sample range.
 
-For example, if we are looking at the x coordinate 15 with a mesh dimension of 255, and we want to sample our noise function in [0, 5], we can call
+For example, if we are looking at the coordinate, `x=15`, with a mesh dimension of `255`, and we want to sample our noise function in `[0, 5]`, we can call
 
     Remap(15, 0, 255, 0, 5)
 
@@ -267,14 +267,14 @@ to get our sample coordinate that we pass into the noise function. Further, beca
 #### Simple Noise
 
 ---
-The simple noise algorithm is an implementation of the 2D noise function described by [Scratchapixel](https://www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1/creating-simple-2D-noise). 
+The simple noise algorithm is an implementation of the 2D noise function developed by [Scratchapixel](https://www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1/creating-simple-2D-noise). 
 
 |<img src="http://dpiner.com/projects/MeshGenerator/images/SimpleNoise.png" width="255"> <br/> *Height map generated using a simple noise function.* |<img src="http://dpiner.com/projects/MeshGenerator/images/SimpleNoiseMesh.png" width="500"> *Map applied to mesh*|
 | ------------------------------------------------------------ |--------- |
 
-In essence, a 2D noise function generates a grid of random numbers called a lattice. The functions takes in an x and y coordinate to the grid. Any value outside the grid wraps back around. For example, for a 5x5 lattice, given the coordinate (5, 1) will return the value at position (0, 1), noting that (0, 0) is the origin of the grid. Intuitively, for a grid of any size, we are duplicate the grid to the left, right, up, and down to create a plane of values that we can sample from at any point. Though our implementation will only be take samples from x >= 0 and y >= 0, the function also allows for negative coordinates.
+In essence, a 2D noise function generates a grid of random numbers called a *lattice*. The functions takes in an *x* and *y* coordinate. Any value outside the grid wraps back around. For example, for a `5x5` lattice, given the coordinate `(5, 1)` will return the value at position `(0, 1)`, noting that `(0, 0)` is the origin of the grid. Intuitively, for a grid of any size, we are duplicate the grid to the left, right, up, and down to create a plane of values that we can sample from at any point. Though our implementation will only be take samples from `x >= 0` and `y >= 0`, the function also allows for negative coordinates.
 
-Because we are working with a 2D sampling grid, we need to do some math when our sample point lands between vertices (say we want to sample the point *(0.5, 0.25)*). We can do this with [bilinear interpolation](https://en.wikipedia.org/wiki/Bilinear_interpolation).
+Because we are working with a 2D sampling grid, we need to do some math when our sample point lands between vertices (say we want to sample the point `(0.5, 0.25)`). We can do this with [bilinear interpolation](https://en.wikipedia.org/wiki/Bilinear_interpolation).
 
 Here is the code snippet implementing bilinear interpolation
 
@@ -290,13 +290,13 @@ Here is the code snippet implementing bilinear interpolation
     // linear interpolation in the y direction (between R1 and R2)
     float p = (ymax - modY) * R1 + (modY - ymin) * R2;
 
-where *xrounded* and *yrounded* are the values were wrapped back around the lattice after going off the edge.
+where `xrounded` and `yrounded` are the values were wrapped back around the lattice after going off the edge.
 
 <br/>
 
 ##### Smoothing
 
-An extra step we can take to improve our simple noise function is to apply smoothing to our results. Because our lattice is a random grid of values between 0 and 1, the resulting height map will look blocky, with straight lines between points. Adding a smoothing function to the value returned from the simple noise function allows us to map to a function that has a smoother transition between 0 and 1.
+An extra step we can take to improve our simple noise function is to apply *smoothing* to our results. Because our lattice is a random grid of values between 0 and 1, the resulting height map will look blocky, with straight lines between points. Adding a smoothing function to the value returned from the simple noise function allows us to map to a function that has a smoother transition between 0 and 1.
 
 <img src="http://dpiner.com/projects/MeshGenerator/images/SmoothingFuncAnim.gif" width="1000">
 
@@ -314,23 +314,13 @@ Here are a list of [smoothing function](https://github.com/devpin95/MeshGenerato
 <p align="center"><img src="http://dpiner.com/projects/MeshGenerator/images/SmoothingFunctions.png" width="500"></p>
 <p align="center">Output of the cosine, smoothstep, Perlin smoothstep, and linear functions on [0,1]*</p>
 
-[comment]: <> (<br/>)
-
-[comment]: <> (Applying simple noise to a mesh provides mediocre results, though not surprisingly. Only after applying blur can we get a decent looking terrain.)
-
-[comment]: <> (|<img src="http://dpiner.com/projects/MeshGenerator/images/SimpleNoiseMesh.png" width="500">| <img src="http://dpiner.com/projects/MeshGenerator/images/SimpleNoiseMeshBlur.png" width="500"> |)
-
-[comment]: <> (| ------------------------------------------------------------ | ----- |)
-
-[comment]: <> (| *A simple noise height map applied to a mesh* | *Same height map after default Gaussian blur operation* |)
-
 <br/>
 
 #### Perlin Noise
 
 ---
 
-Perlin noise is a standard, widely-used noise function often used for terrain generation. In this demo, I used the Unity pre-packaged [Perlin function](https://docs.unity3d.com/ScriptReference/Mathf.PerlinNoise.html), but added some features to extend it's output.
+Perlin noise is a standard, widely-used, noise function often used for terrain generation. In this demo, I used the Unity API [Perlin function](https://docs.unity3d.com/ScriptReference/Mathf.PerlinNoise.html), but added some features to extend it's output.
 
 |<img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoise.png" width="255"> <br/> *Height map generated using a perlin noise function*|<img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseMesh.png" width="500"> *Map applied to a mesh*|
 | ---- | ---- |
@@ -341,16 +331,16 @@ Perlin noise is a standard, widely-used noise function often used for terrain ge
 
 <img src="http://dpiner.com/projects/MeshGenerator/images/DomainWarpMesh.png" width="1000">
 
-Domain warping is an advanced noise function that uses noise and various coefficients as input back into a noise function. Domain warping produces more interesting output from a noise function and can be used to create certain types of land formations. You can read more from someone a lot smarted than me here: [https://www.iquilezles.org/www/articles/warp/warp.htm](https://www.iquilezles.org/www/articles/warp/warp.htm)
+Domain warping is an advanced noise function that uses noise and various coefficients to sample value that are then input back into a noise function. Domain warping produces more interesting output and can be used to create certain types of land formations. You can read more from someone a lot smarted than me here: [https://www.iquilezles.org/www/articles/warp/warp.htm](https://www.iquilezles.org/www/articles/warp/warp.htm)
 
-My first implementation (by [IQ](https://www.iquilezles.org/index.html)) of domain warp produced weird results, with may more white that I wanted but still created an interesting pattern. When applying it to a mesh, artifacts in the height map was too high and left shard edges on peaks. 
+My first implementation (by [IQ](https://www.iquilezles.org/index.html)) of domain warp produced weird results, with may more white than I wanted, but still created an interesting pattern. When applying it to a mesh, too many artifacts height map left shard edges on peaks. 
 
 You can see the output below:
 
 | <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseDomainWarp1.png" width="255"> <br/> *Perlin noise [0, 2]*| <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseDomainWarp2.png" width="255"> <br/>  *Perlin noise with domain warp [0, 2]* |
 | ------------------------------------------------------------ | ---------------- |
 
-After looking around, I found a different [implementation](http://jsfiddle.net/fro5y0jm/15/) that broke the algorithm apart in a way that made more sense and produced a much nicer, cleaner map (after shifting the sample range):
+After looking around, I found a different [implementation](http://jsfiddle.net/fro5y0jm/15/) that broke the algorithm apart in a way that made more sense and produced a much nicer, cleaner, map (after shifting the sample range):
 
 
 | <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseDomainWarp3.png" width="255"> <br/> *Perlin Noise [0, 100]* | <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseDomainWarp4.png" width="255"> <br/> *Perlin noise with domain warp [0, 100]* |
@@ -395,7 +385,7 @@ My first implementation used a variable called the *hurst exponent*, which was u
         return t;
     }
 
-Moving to the new implementation removed the hurst exponent and found the *q* and *r* values independently from each other, then used separately to find the final sample value.
+Moving to the new implementation removed the hurst exponent and calculated and used the `q` and `r` values independently.
 
     Vector2 pos = new Vector2( xSamplePoint, zSamplePoint );
             
@@ -435,7 +425,7 @@ Moving to the new implementation removed the hurst exponent and found the *q* an
         return total;
     }
 
-Further work on this domain warp implementation would require a closer look at the minimum and maximum output of the final FbmBeta function. Currently, we use the number of octaves and a normalization value, considering each iteration of the loop could add a maximum value of *1* to *total*. However, this results in a small cluster of values, usually below the mid height value. Using a normalizing value of *octaves/2* produced a larger range of values, but requires more testing to ensure the output never falls outside out height map range [0, 1].
+Further work on this domain warp implementation would require a closer look at the minimum and maximum output of `FbmBeta()`. Currently, we use the number of octaves and a normalization value, considering each iteration of the loop could add a maximum value of `1` to `total`. However, this results in a small cluster of values, usually below the mid-height value. Using a normalizing value of `octaves/2` produced a larger range of values, but requires more testing to ensure the output never falls outside out height map range `[0, 1]`.
 
 <br/>
 
@@ -443,11 +433,11 @@ Further work on this domain warp implementation would require a closer look at t
 
 <img src="http://dpiner.com/projects/MeshGenerator/images/RidgedPerlinNoiseMesh.png" width="1000">
 
-Ridged Perlin noise is a simple operation on the output of the vanilla Perlin noise or the domain warp function. The operation takes first stretched the map on the range [-1, 1], then takes the absolute value of any point under 0, and remaps back to [0, 1]. This adds the effect of start ridges where the original terrain crossed it's mid height value. The operations output and implementation can be seen below.
+Ridged Perlin noise is a simple operation on the output of the vanilla-Perlin noise function. The operation first stretches the map on the range `[-1, 1]`, then takes the absolute value of any point under `0`, and remaps back to `[0, 1]`. This adds the effect of start valleys where the original terrain crossed it's mid-height value. The operations output and implementation can be seen below.
 
 Output:
 
-| <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoise.png" width="255"> <br/> *Perlin noise [0, 5]*| <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseRidged.png" width="255"> <br/>  *Ridged Perlin noise [0, 5]* | <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseRidged2.png" width="255"> <br/>  *Inverse Ridged Perlin noise [0, 5]* |
+| <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoise.png" width="255"> <br/> *Perlin noise `[0, 5]`*| <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseRidged.png" width="255"> <br/>  *Ridged Perlin noise `[0, 5]`* | <img src="http://dpiner.com/projects/MeshGenerator/images/PerlinNoiseRidged2.png" width="255"> <br/>  *Inverse Ridged Perlin noise `[0, 5]`* |
 | ------------------------------------------------------------ | ---------------- | ---------- |
 
 Implementation:
@@ -461,7 +451,7 @@ Implementation:
         return val;
     }
 
-Note, without multiplying by *-1* and remapping from [-1, 0] to [0, 1], we would just end up with the height map's inverse.
+Note, without multiplying by `-1` and remapping from `[-1, 0]` to `[0, 1]`, we would just end up with the inverse height map.
 
 <br/>
 
@@ -469,9 +459,9 @@ Note, without multiplying by *-1* and remapping from [-1, 0] to [0, 1], we would
 
 <img src="http://dpiner.com/projects/MeshGenerator/images/OctaveNoiseMesh.png" width="1000">
 
-Octave noise is a powerful extension to any noise function, where building up several sample points at different frequencies and amplitudes adds more depth and texture to a noise function. In this implementation, we use successive Perlin noise samples to create an octave noise function, though octave noise can use any noise function.
+Octave noise is a powerful extension to any noise function, where building up several sample points at different frequencies and amplitudes adds more depth and texture to output. In this implementation, we use successive Perlin noise samples to create an octave noise function, though octave noise can use any noise function.
 
-Put simply, octave noise add together several samples taken with different frequencies and amplitudes. Frequency shifts the x and y coordinate where we sample our noise function, and amplitude multiplies that output. Ultimately, we end up with a function similar to
+Put simply, octave noise add together several samples taken with different frequencies and amplitudes. Frequency shifts the `x` and `y` coordinate where we sample our noise function, and amplitude multiplies that output. Ultimately, we end up with a function similar to
 
     float sample = Noise(frequency * x, frequency * y) * amplitude
 
@@ -508,7 +498,7 @@ Image maps can be used to apply a pre-made height map to the mesh. Any image and
 
 ### Simulations
 
-Simulating natural processes on a generated mesh add an extra layer of believability to a terrain, creating subtle features that go a long way to imitate what our brains would expect to see.
+Simulating natural processes on a generated mesh adds an extra layer of believability to a terrain, creating subtle features that go a long way to imitate what our brains would expect to see in nature.
 
 <br/>
 
@@ -520,17 +510,17 @@ An important natural process is the movement of water down hills and mountain sl
 
 ##### Algorithm
 
-This hydraulic erosion algorithm is a particle based simulation developed by [Nicholas McDonald](https://nickmcd.me/about/).
+This hydraulic erosion algorithm is a physics based simulation developed by [Nicholas McDonald](https://nickmcd.me/about/).
 
 <p align="center"><img align="center" src="http://dpiner.com/projects/MeshGenerator/images/HydraulicErosionDemo1small.gif" width="255"></p>
 <p align="center">Hydraulic erosion visualization with 20 particles</p>
 
-The process begins by randomly selecting a position in the map for the water particle to land.
+The process begins by randomly selecting a position in the map for the water drop to land.
 
     drop.pos.x = Random.Range(0f, mapdim);
     drop.pos.y = Random.Range(0f, mapdim);
 
-At the beginning of it's life, the has a sediment level of *0*, *0* speed in the *x* and *y* directions, and a starting volume set by the user in the parameters. 
+At the beginning of it's life, the has a sediment level of `0`, `0` speed in the `x` and `y` directions, and a starting volume set by the user in the parameters. 
 
     drop.speed.x = 0;
     drop.speed.y = 0;
@@ -551,7 +541,7 @@ At the initial position, we find the normal of the vertex at the integer values 
 
     norm = map.SampleBetaNormalAtXY((int)initialPos.x, (int)initialPos.y);
 
-Using the normal, we can determine which way to move the drop. Using a physics-based approach, we set the speed of the drop using F=ma, where a = F/m.
+Using the normal, we can determine which way to move the drop. Using a physics-based approach, we set the speed of the drop using `F = ma`, where `a = F/m`.
 
     forceVector = new Vector2(norm.x, norm.z);
     Vector2 F = parameters.DT * forceVector; // force
@@ -559,7 +549,7 @@ Using the normal, we can determine which way to move the drop. Using a physics-b
     drop.speed += F / m;
     drop.pos += parameters.DT * drop.speed;
 
-Here, *parameters.DT* is the time step set by the user and acts as a scaling factor.
+Here, `parameters.DT` is the time step set by the user and acts as a scaling factor.
 
 After moving the drop, we apply friction to slow the particle:
 
@@ -573,9 +563,9 @@ Now that the drop has moved across the terrain, it picked up and deposited some 
     if (maxsed < 0) maxsed = 0f;
     float seddiff = maxsed - drop.sediment;
 
-where *prevHeight* was the drop's height at it's initial position and *curHeight* is the drop's height at it's current position. Here, *maxsed* is the maximum amount of sediment that the drop could have picked up between it's initial position and it's current position. *seddiff* is the difference between how much the drop could have and how much it actually has.
+where `prevHeight` was the drop's height at it's initial position and `curHeight` is the drop's height at it's current position. Here, `maxsed` is the maximum amount of sediment that the drop could have picked up between it's initial position and it's current position. `seddiff` is the difference between how much sediment the drop could have and how much it actually has.
 
-We can set the drop's new sediment level using *seddiff*
+We can set the drop's new sediment level using `seddiff`
 
     drop.sediment += parameters.DT * parameters.DepositeRate * seddiff;
 
@@ -588,17 +578,19 @@ Finally, we need a way to ensure that the drop slowly fades away and the loop ca
 
     drop.volume *= 1f - parameters.DT * parameters.EvaporationRate;
 
-As the drop begins moving across the surface, the amount of sediment picked up or deposited by the drop is determined by the distance that it travelled
+As the drop begins moving across the surface, the amount of sediment picked up or deposited by the drop is determined by the distance that it travelled.
+
+Running this simulation with many drops, the terrain begins the deform and the effects of water moving across the terrain begin to appear.
 
 ##### Simulation Stability
 
-After some testing, I discovered that as the drop's volume approached it's minimum value, it's mass was getting smaller and smaller. This meant that the speed was growing larger and larger as the simulation continued. The table below shows a few examples of this instability:
+After some testing, we discovered that, as the drop's volume approached it's minimum value, it's mass was getting smaller and smaller and it's speed grew larger and larger, making the drop movement erratic. The table below shows a few examples of this instability:
 
 |<img src="http://dpiner.com/projects/MeshGenerator/images/HEStability1.gif" width="255">|<img src="http://dpiner.com/projects/MeshGenerator/images/HEStability2.gif" width="255">|<img src="http://dpiner.com/projects/MeshGenerator/images/HEStability3.gif" width="255">|
 |---|---|---|
 
 Solution: 
-- limit the particle's speed based on a set max speed and the drop's volume 
+- limit the particle's speed based the drop's volume 
 - set a maximum iteration for the simulation
 
 
@@ -627,14 +619,14 @@ Results:
 
 #### Operations
 
-In this demo, operations are simple image manipulation functions that operate only on the height map after it has been generated. Currently, there are only 2 operations: stretch, and Gaussian blur.
+In this demo, operations are simple image manipulation functions that operate only on the height map after it has been generated. Currently, there are only 2 operations: *stretch*, and *Gaussian blur*.
 
 ##### Stretch
 
 <img src="http://dpiner.com/projects/MeshGenerator/images/StretchAnim.gif" width="1000">
 
 The [stretch operation](https://github.com/devpin95/MeshGenerator/blob/46789be590497e2fc1dbec9d1846dbb29fffc512/Mesh%20Generator/Assets/Scripts/Classes/Mesh%20Operations/Operations/Implementations/MapStretch.cs) 
-is a simple remap of heights from their current range to [0, 1] or some new range defined by the user. The key to stretching is to keep track of the min and max value. For any given map, the min and max may not be 0 and 1 but somewhere in between. To avoid needing an initial loop to find the min and max before stretching, the height map stores it's current min and max as the map is being generated, and during the stretch operation, the new min and max are returned along with the new map.
+is a simple remap of heights from their current range to `[0, 1` or some new range defined by the user. The key to stretching is to keep track of the min and max value. For any given map, the min and max may not be 0 and 1, but somewhere in between. To avoid needing an initial loop to find the min and max before stretching, the height map stores it's current min and max as the map is being generated. During the stretch operation, the new min and max are returned along with the new map.
 
 Algorithm:
 
@@ -657,22 +649,20 @@ Algorithm:
         return (map, min, max);
     }
 
-An interesting thing about this function is that it returns a tuple. Coming from Python, returning more than a single value from a function has a lot of utility and is a welcome feature in a language. Especially when my programming foundation is in C++ where returning more than one value from a function takes a little more effort to pull off (they didn't even teach us about tuples in our C++ classes).
-
 
 ##### Gaussian Blur
 
 <img src="http://dpiner.com/projects/MeshGenerator/images/GaussianAnim.gif" width="1000">
 
-The Guassian blur operation is the standard blur used by most image editors. The strength of the Gaussian blur comes from adding different weight to pixels further away from the center pixel. This means pixels closer to the center have a bigger influence on the result than pixels further away.
+The Gaussian blur operation is the standard blur used by most image editors. The strength of Gaussian blur comes from differing weight to pixels further from the center pixel. This means pixels closer to the center have a bigger influence on the result than pixels further away.
 
 Algorithm:
 
-The basic idea of a Gaussian blur is [*convolution*](https://en.wikipedia.org/wiki/Kernel_(image_processing)#Convolution), where we pass a window over the image, add up all the values in the window, and use the sum to make a new image. The window in convolution is called the [*kernel*](https://en.wikipedia.org/wiki/Kernel_(image_processing)), and is a matrix of weights that we will multiply each pixel that falls into the kernel as we do convolution. In the case of Gaussian blur, our kernel is a 2D matrix of weights determined by the [Gaussian function](https://en.wikipedia.org/wiki/Gaussian_function#Two-dimensional_Gaussian_function)
+The basic idea of Gaussian blur is [*convolution*](https://en.wikipedia.org/wiki/Kernel_(image_processing)#Convolution), where we pass a window over the image, add up all the values in the window, and use the sum to make a new image. The window in convolution is called the [*kernel*](https://en.wikipedia.org/wiki/Kernel_(image_processing)), and is a matrix of weights that we multiply each pixel by that sits under the kernel. In the case of Gaussian blur, our kernel is a 2D matrix of weights determined by the [Gaussian function](https://en.wikipedia.org/wiki/Gaussian_function#Two-dimensional_Gaussian_function)
 
 To improve the efficiency of the algorithm, we use the [separability](https://en.wikipedia.org/wiki/Separable_filter) of the Gaussian function to create two vectors, a vertical vector and a horizontal vector, and make two passes on the image instead of one.
 
-First, we create the 2D kernel. Note, *ksize* is an odd integer greater than 1, and *kcenter = (ksize - 1) / 2* is the center element in the x/y direction;
+First, we create the 2D kernel. Note, `ksize` is an odd integer greater than `1`, and `kcenter = (ksize - 1) / 2` is the center element in the x/y direction;
 
     for (int i = 0; i < ksize; ++i)
     {
@@ -689,7 +679,11 @@ First, we create the 2D kernel. Note, *ksize* is an odd integer greater than 1, 
         kernel1d[i] = rowsum;
     }
 
-where *x* and *y* are the coordinates to pass into the Gaussian function and (0,0) is at the center of the 2D matrix, *kernel2d[kcenter][kcenter]*. *rowsum* is the sum of each row and becomes an element in the 1D kernel. *sum* is the total sum of the matrix and is used to normalize the 1D kernel:
+where
+- `x`, `y` - the coordinates to pass into the Gaussian function, and `(0,0)` is at the center of the 2D matrix, `kernel2d[kcenter][kcenter]`
+- `rowsum` - the sum of each row and becomes an element in the 1D kernel.
+- `sum` - is the total sum of the matrix and is used to normalize the 1D kernel:
+
 
     for (int i = 0; i < ksize; ++i)
     {
@@ -712,7 +706,10 @@ Now that we have our kernel, we need to do a vertical pass first:
         }
     }
 
-where *dim* is the dimensions of the height map, *mincon* and *maxcon* are the minimum and maximum value of the intermediate map. 
+where
+- `dim` - dimensions of the height map
+- `mincon` - minimum value in the intermediate map
+- `maxcon` - maximum value in the intermediate map
 
 It is important to note that we need to normalize the intermediate values before we do the horizontal pass. We define the normal as the sum of all the elements in the kernel
 
