@@ -33,7 +33,11 @@ For this project, I explored the algorithms and techniques for generating terrai
 
 #### Install Application
 - [Windows Installer](http://dpiner.com/projects/MeshGenerator/MeshGeneratorSetup.exe)
+  
+
 - [Archive (ZIP)](http://dpiner.com/projects/MeshGenerator/MeshGeneratorArchive.zip)
+    - Extract all files to the same directory
+    - Start demo by running MeshGenerator.exe
 
 [comment]: <> (- TODO create WebGL build)
 
