@@ -31,9 +31,13 @@ For this project, I explored the algorithms and techniques for generating terrai
 
 ## Installation
 
-- TODO create build and make installer
-- TODO create WebGL build
-- Maybe a docker container?
+#### Install Application
+- [Windows Installer](http://dpiner.com/projects/MeshGenerator/MeshGeneratorSetup.exe)
+- [Archive (ZIP)](http://dpiner.com/projects/MeshGenerator/MeshGeneratorArchive.zip)
+
+[comment]: <> (- TODO create WebGL build)
+
+[comment]: <> (- Maybe a docker container?)
 
 
 ## Usage Guide
