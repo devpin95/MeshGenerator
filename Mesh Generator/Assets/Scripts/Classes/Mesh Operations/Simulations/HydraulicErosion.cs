@@ -1,18 +1,16 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using Parameters;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public static class HydraulicErosion
 {
     private const float HydraulicParticleInitialVolume = 1f;
-    private const float HydraulicParticleMinVolume = 0.1f;
-    private const float HydraulicParticleMaxSediment = 1f;
-    private const float HydraulicParticleDensity = 1f;
-    private const float HydraulicParticleDepositionRate = 0.05f;
-    private const float HydraulicParticleEvaporationRate = 0.001f;
-    private const float HydraulicParticleFriction = 0.05f;
-    private const float DT = 1.2f;
-    
+
     public class HydraulicParticle
     {
         public HydraulicParticle(Vector2 npos) {pos = npos;}
@@ -22,6 +20,16 @@ public static class HydraulicErosion
         public float volume = HydraulicParticleInitialVolume;
         public float sediment = 0;
     }
+
+    public class SimKeyFrame
+    {
+        public float x;
+        public float y;
+        public float volume;
+        public float sediment;
+        public float speed;
+        public float angle;
+    }
     
    
     public static IEnumerator Simulate(HeightMap map, HydraulicErosionParameters parameters, CEvent_String checkpointNotification)
@@ -29,6 +37,8 @@ public static class HydraulicErosion
         // https://github.com/weigert/SimpleErosion/blob/master/source/include/world/world.cpp
         
         int mapdim = map.WidthAndHeight();
+        
+        Debug.Log(parameters.FlipXY);
 
         for (int drops = 0; drops < parameters.DropCount; ++drops)
         {
@@ -38,35 +48,60 @@ public static class HydraulicErosion
                 yield return null;
             }
 
+            List<SimKeyFrame> frames = new List<SimKeyFrame>();
+
             HydraulicParticle drop = new HydraulicParticle(Vector2.zero);
 
             float x = Random.Range(0f, mapdim);
             float y = Random.Range(0f, mapdim);
             
-            float xoffset = Random.Range(-1f, 1f) * parameters.Radius; // get a random offset in the x direction
-            float yoffset = Random.Range(-1f, 1f) * parameters.Radius; // get a random offset in the y direction
+            // float xoffset = Random.Range(-1f, 1f) * parameters.Radius; // get a random offset in the x direction
+            // float yoffset = Random.Range(-1f, 1f) * parameters.Radius; // get a random offset in the y direction
             // float sediment = 0; // how much sediment the current drop is holding
             // float xpos = x; // the current x pos
             // float ypos = y; // the current y pos
 
-            drop.pos.x = x + xoffset;
-            drop.pos.y = y + yoffset;
+            drop.pos.x = x;
+            drop.pos.y = y;
             drop.speed.x = 0;
             drop.speed.y = 0;
             drop.sediment = 0;
             drop.volume = parameters.StartingVolume;
 
-            while (drop.volume > parameters.MINVolume)
+            int iteration = 0;
+            int maxspeedcount = 0;
+
+            while (drop.volume > parameters.MINVolume && iteration < Constants.maxDropIterations)
             {
+                SimKeyFrame frame = new SimKeyFrame();
+                
+                if (Constants.db_DebugMode && drops < Constants.db_DropRecordLength)
+                {
+                    frame.sediment = drop.sediment;
+                    frame.volume = drop.volume;
+                    frame.x = drop.pos.x;
+                    frame.y = drop.pos.y;
+                    frame.speed = drop.speed.magnitude;
+                    
+                    frames.Add(frame);
+                }
+
                 // make sure the drop is still in the bounds of the mesh
                 if (map.SampleOutOfBounds(drop.pos.x, drop.pos.y)) break;
 
                 Vector2 initialPos = drop.pos;
                 Vector3 norm;
-                if ( parameters.FlipXY ) norm = map.SampleBetaNormalAtXY((int)initialPos.x, (int)initialPos.y);
-                else norm = map.SampleBetaNormalAtXY((int)initialPos.y, (int)initialPos.x);
+                
+                norm = map.SampleBetaNormalAtXY((int)initialPos.x, (int)initialPos.y);
 
-                Vector2 F = parameters.DT * new Vector2(norm.x, norm.z); // force
+                frame.angle = Vector2.SignedAngle(norm, Vector2.right);
+
+                Vector2 forceVector;
+
+                if (parameters.FlipXY) forceVector = new Vector2(norm.z, norm.x);
+                else forceVector = new Vector2(norm.x, norm.z);
+
+                Vector2 F = parameters.DT * forceVector; // force
                 float m = (drop.volume * parameters.Density); // mass
 
                 // a = F/m
@@ -78,18 +113,26 @@ public static class HydraulicErosion
                 if (map.SampleOutOfBounds(drop.pos.x, drop.pos.y)) break;
 
                 // apply friction
-                drop.speed *= 1f - (parameters.DT * parameters.Friction);
+                drop.speed *= 1f - parameters.DT * parameters.Friction;
+
+                if (drop.speed.magnitude > Constants.maxDropSpeed)
+                {
+                    ++maxspeedcount;
+                    drop.speed = drop.speed.normalized * Constants.maxDropSpeed * drop.volume;
+                }
+
+                if (maxspeedcount > Constants.maxSpeedThreshold) break;
+
+                // if ( drop.speed.magnitude > 1 ) Debug.Log("BIG SPEED BOIIIIII");
 
                 // figure out sediment levels
-                float prevY;
-                if (parameters.FlipXY) prevY = map.SampleMapAtXY((int) initialPos.x, (int) initialPos.y);
-                else prevY = map.SampleMapAtXY((int) initialPos.y, (int) initialPos.x);
+                // the height at our initial position
+                float prevHeight = map.SampleMapAtXY((int) initialPos.x, (int) initialPos.y);
 
-                float curY;
-                if (parameters.FlipXY) curY = map.SampleMapAtXY((int) drop.pos.x, (int) drop.pos.y);
-                else curY = map.SampleMapAtXY((int) drop.pos.y, (int) drop.pos.x);
+                // the height at our current position
+                float curHeight = map.SampleMapAtXY((int) drop.pos.x, (int) drop.pos.y);
                 
-                float travelDistance = drop.speed.magnitude * (prevY - curY);
+                float travelDistance = drop.speed.magnitude * (prevHeight - curHeight);
                 float maxsed = drop.volume * travelDistance;
 
                 if (maxsed < 0) maxsed = 0f;
@@ -100,48 +143,29 @@ public static class HydraulicErosion
 
                 float amount = parameters.DT * drop.volume * parameters.DepositeRate * seddiff;
                 
-                if ( parameters.FlipXY ) map.ChangeNode((int)initialPos.x, (int)initialPos.y, amount);
-                else map.ChangeNode((int)initialPos.y, (int)initialPos.x, amount);
+                map.ChangeNode((int)initialPos.x, (int)initialPos.y, amount);
                 
                 // do some evaporation
-                drop.volume *= 1f - (parameters.DT * parameters.EvaporationRate);
+                drop.volume *= 1f - parameters.DT * parameters.EvaporationRate;
+
+                ++iteration;
             }
 
-            // do the trace for MaxInterations
-            // for (int i = 0; i < parameters.MaxIterations; ++i)
-            // {
-            //
-            //     // make sure the sample is still in bounds
-            //     if (map.SampleOutOfBounds(particle.pos.x, particle.pos.y)) break;
-            //     
-            //     
-            //     // get the normal at the random position
-            //     Vector3 norm = map.SampleNormalAtXY((int)particle.pos.y, (int)particle.pos.x);
-            //     
-            //     
-            //     if (Putils.normIsUp(norm)) break; // we are either straight up or off the map, so we need to stop
-            //     
-            //
-            //     float deposit = sediment * parameters.DepositeRate * norm.y;
-            //     float erosion = parameters.ErosionRate * (1 - norm.y) * Mathf.Min(1, i * parameters.IterationScale);
-            //
-            //     map.ChangeCell((int)particle.pos.y, (int)particle.pos.x, deposit - erosion);
-            //
-            //     particle.speed.x = parameters.Friction * particle.speed.x + norm.x * parameters.Speed * 10;
-            //     particle.speed.y = parameters.Friction * particle.speed.y + norm.z * parameters.Speed * 10;
-            //     
-            //     
-            //     if (particle.speed.x == 0 && particle.speed.y == 0) break;
-            //
-            //     particle.pos.x = x;
-            //     particle.pos.y = y;
-            //     x += particle.speed.x;
-            //     y += particle.speed.y;
-            //
-            //     sediment += erosion - deposit;
-            // }
+            if (Constants.db_DebugMode && drops < Constants.db_DropRecordLength)
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.Append("x,y,Volume,Sediment,Speed,Angle\n");
+
+                foreach (var frame in frames)
+                {
+                    sb.AppendLine(frame.x + "," + frame.y + "," + frame.volume + "," + frame.sediment + "," + frame.speed + ", " +  frame.angle);
+                }
+
+                string filename = @"C:\Users\devpi\Documents\projects\MeshGenerator\WriteupMaterials\Drop" + drops + "OutputCSV.csv";
+                
+                File.WriteAllText(filename, sb.ToString());
+            }
             
-            // yield return null;
         }
 
         yield break;

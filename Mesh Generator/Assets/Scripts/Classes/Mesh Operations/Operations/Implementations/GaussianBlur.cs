@@ -9,12 +9,19 @@ public static class GaussianBlur
         float[,] tempgrid = new float[dim, dim];
         float[] kernel = FlatKernel(metaData.KernelSize);
 
+        // for (int i = 0; i < kernel.Length; ++i)
+        // {
+        //     Debug.Log(kernel[i]);
+        // }
+
         float normal = 0;
 
         for (int i = 0; i < kernel.Length; ++i)
         {
             normal += kernel[i];
         }
+        
+        // Debug.Log("Normal: " + normal);
         
         // keep track of the min/max as we convolve each col
         float mincon = float.MaxValue;
@@ -105,6 +112,8 @@ public static class GaussianBlur
         {
             kernel1d[i] /= sum;
         }
+
+        // Debug.Log("Normal: " + sum);
         
         return kernel1d;
         

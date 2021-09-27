@@ -268,9 +268,6 @@ public class CameraController : MonoBehaviour
 
         Destroy(rt);
         rt = null;
-        
-        screenshotPreview.gameObject.SetActive(true);
-        screenshotPreview.sprite = Putils.Tex2dToSprite(ss);
 
         string filename = "MeshCapture" + Putils.DateTimeString();
         string windowTitle = "Mesh Capture (" + _windowWidth + "x" + _windowHeight + ")";
@@ -280,6 +277,10 @@ public class CameraController : MonoBehaviour
             try
             {
                 File.WriteAllBytes(path, bytes);
+                
+                screenshotPreview.gameObject.SetActive(true);
+                screenshotPreview.sprite = Putils.Tex2dToSprite(ss);
+                
                 StartCoroutine(HideScreenshotPreview());
             }
             catch (Exception e)
@@ -293,6 +294,7 @@ public class CameraController : MonoBehaviour
 
     IEnumerator HideScreenshotPreview()
     {
+        Debug.Log("Starting screenshot coroutine");
         while (screenshotCG.alpha < 1)
         {
             screenshotCG.alpha += 0.15f;
@@ -307,6 +309,7 @@ public class CameraController : MonoBehaviour
             yield return new WaitForSeconds(0.018f);
         }
         
+        screenshotCG.alpha = 0;
         screenshotPreview.gameObject.SetActive(false);
     }
 }

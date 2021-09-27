@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Parameters;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 public static class Putils
 {
@@ -44,6 +45,19 @@ public static class Putils
             for (int x = 0; x < width; ++x)
             {
                 int index = x + y * width;
+
+                if (y >= width || x >= height)
+                {
+                    Debug.Log("Grid x or y out of bounds");
+                    return null;
+                } 
+                
+                if (index > flat.Length)
+                {
+                    Debug.Log("Flat arrow index of bounds");
+                    return null;
+                }
+                
                 grid[y, x] = flat[index];
             }
         }

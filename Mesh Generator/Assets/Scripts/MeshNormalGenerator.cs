@@ -64,12 +64,8 @@ public class MeshNormalGenerator : MonoBehaviour
             for (int x = 0; x < Dim; ++x)
             {
                 Vector3 newvert = new Vector3(x, 0, z);
-
-                float y = 0;
-
-                y = SamplePerlinNoise(x, z);
                 
-                newvert.y = y;
+                newvert.y = SamplePerlinNoise(x, z);
                 vertlist.Add(newvert);
             }
         }
@@ -161,6 +157,7 @@ public class MeshNormalGenerator : MonoBehaviour
             EmptyVisualVertList();
         }
         
+        Debug.Log("verts");
         var grid = Putils.FlatArrayToTwoDArray(_vertices, Dim, Dim);
         for (int y = 0; y < Dim; ++y)
         {
@@ -265,7 +262,10 @@ public class MeshNormalGenerator : MonoBehaviour
 
     private void DrawVerticeNormals()
     {
+        Debug.Log("grid");
         var grid = Putils.FlatArrayToTwoDArray(_vertices, Dim, Dim);
+        
+        Debug.Log("vert grid");
         var vertgrid = Putils.FlatArrayToTwoDArray(_vertobjs.ToArray(), Dim, Dim);
 
         for (int y = 0; y < Dim; ++y)

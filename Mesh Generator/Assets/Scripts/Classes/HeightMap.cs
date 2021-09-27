@@ -326,48 +326,64 @@ public class HeightMap
         // return norm.normalized;
     }
 
-    public Vector3 SampleBetaNormalAtXY(int r, int c)
+    public Vector3 SampleBetaNormalAtXY(int row, int col)
     {
         Vector3 normal = Vector3.zero;
 
         // direct neighbors
-        if (r + 1 < _meshedge) normal += Vector3.Normalize(new Vector3(map[r, c].y - map[r + 1, c].y, 1f, 0)) * NeighborWeight;
-        if (r - 1 >= 0) normal += Vector3.Normalize(new Vector3(map[r - 1, c].y - map[r, c].y, 1f, 0)) * NeighborWeight;
-        if ( c + 1 < _meshedge ) normal += Vector3.Normalize(new Vector3(0, 1f, map[r, c].y - map[r, c + 1].y)) * NeighborWeight;
-        if ( c - 1 >= 0 ) normal += Vector3.Normalize(new Vector3(0, 1f, map[r, c-1].y - map[r, c].y)) * NeighborWeight;
+        // up
+        if (row + 1 < _meshedge) 
+            normal += Vector3.Normalize(new Vector3(map[row, col].y - map[row + 1, col].y, 1f, 0)) * NeighborWeight;
+        
+        // down
+        if (row - 1 >= 0) 
+            normal += Vector3.Normalize(new Vector3(map[row - 1, col].y - map[row, col].y, 1f, 0)) * NeighborWeight;
+        
+        // right
+        if ( col + 1 < _meshedge ) 
+            normal += Vector3.Normalize(new Vector3(0, 1f, map[row, col].y - map[row, col + 1].y)) * NeighborWeight;
+        
+        // left
+        if ( col - 1 >= 0 ) 
+            normal += Vector3.Normalize(new Vector3(0, 1f, map[row, col-1].y - map[row, col].y)) * NeighborWeight;
         
         // diagonals
         float sqrt2 = Mathf.Sqrt(2);
-        if (r + 1 < _meshedge && c + 1 < _meshedge)
+        
+        // up right
+        if (row + 1 < _meshedge && col + 1 < _meshedge)
         {
-            float val = map[r, c].y - map[r + 1, c + 1].y;
+            float val = map[row, col].y - map[row + 1, col + 1].y;
             normal += Vector3.Normalize(new Vector3(val/sqrt2, sqrt2, val/sqrt2)) * DiagonalWeight;
         }
 
-        if (r + 1 < _meshedge && c - 1 >= 0)
+        // up left
+        if (row + 1 < _meshedge && col - 1 >= 0)
         {
-            float val = map[r, c].y - map[r + 1, c - 1].y;
+            float val = map[row, col].y - map[row + 1, col - 1].y;
             normal += Vector3.Normalize(new Vector3(val/sqrt2, sqrt2, val/sqrt2)) * DiagonalWeight;
         }
         
-        if (r - 1 >= 0 && c + 1 < _meshedge)
+        // down right
+        if (row - 1 >= 0 && col + 1 < _meshedge)
         {
-            float val = map[r, c].y - map[r - 1, c + 1].y;
+            float val = map[row, col].y - map[row - 1, col + 1].y;
             normal += Vector3.Normalize(new Vector3(val/sqrt2, sqrt2, val/sqrt2)) * DiagonalWeight;
         }
         
-        if (r - 1 >= 0 && c - 1 >= 0)
+        // down left
+        if (row - 1 >= 0 && col - 1 >= 0)
         {
-            float val = map[r, c].y - map[r - 1, c - 1].y;
+            float val = map[row, col].y - map[row - 1, col - 1].y;
             normal += Vector3.Normalize(new Vector3(val/sqrt2, sqrt2, val/sqrt2)) * DiagonalWeight;
         }
 
         return normal;
     }
     
-    public bool SampleOutOfBounds(float x, float y)
+    public bool SampleOutOfBounds(float row, float col)
     {
-        return (y < 0 || y >= WidthAndHeight()) || (x < 0 || x >= WidthAndHeight());
+        return (col < 0 || col >= WidthAndHeight()) || (row < 0 || row >= WidthAndHeight());
     }
 
     public void ChangeNode(int row, int column, float amount)
@@ -497,9 +513,9 @@ public class HeightMap
         return height;
     }
 
-    public float SampleMapAtXY(int x, int y)
+    public float SampleMapAtXY(int row, int col)
     {
-        return map[x, y].y;
+        return map[row, col].y;
     }
 
     public void SetMapHeights(float[,] grid, float remapmin, float remapmax)
