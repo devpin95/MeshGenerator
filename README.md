@@ -37,7 +37,7 @@ Windows
 - [ZIP](http://dpiner.com/projects/MeshGenerator/MeshGeneratorArchive.zip)
 
 Linux
-- [targz](http://dpiner.com/projects/MeshGenerator/MeshGenerator_Linux_x86_64.tar.gz)
+- [tar.gz](http://dpiner.com/projects/MeshGenerator/MeshGenerator_Linux_x86_64.tar.gz)
 
 Mac OS X
 - [ZIP](http://dpiner.com/projects/MeshGenerator/MeshGenerator_Mac_x86Apple.app.zip)
