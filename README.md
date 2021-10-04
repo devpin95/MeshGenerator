@@ -32,10 +32,15 @@ For this project, I explored the algorithms and techniques for generating terrai
 ## Installation
 
 #### Install Application
+Windows
 - [Windows Installer](http://dpiner.com/projects/MeshGenerator/MeshGeneratorSetup.exe)
-
-
 - [Archive (ZIP)](http://dpiner.com/projects/MeshGenerator/MeshGeneratorArchive.zip)
+
+Linux
+- [targz](http://dpiner.com/projects/MeshGenerator/MeshGenerator_Linux_x86_64.tar.gz)
+
+Mac OS X
+- [ZIP](http://dpiner.com/projects/MeshGenerator/MeshGenerator_Mac_x86Apple.app.zip)
 
 
 ## Usage Guide
